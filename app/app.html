@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surge Alert Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ink:#0e0e10;          /* bench ground, cooler than the phone */
+  --ink-2:#151517;
+  --app-bg:#141414;       /* Wayfare's own ground */
+  --surface:#1c1c1d;
+  --surface-2:#242426;
+  --line:#2c2c2e;
+  --line-soft:#232325;
+  --text:#f3f3ef;
+  --muted:#96968c;        /* grey biased warm/olive toward the lime */
+  --muted-2:#6e6e66;
+  --lime:#c8f24c;         /* Wayfare accent */
+  --lime-dim:#9dbf3c;
+  --amber:#f2b34c;        /* semantic: medium risk */
+  --ember:#f2704c;        /* semantic: high risk */
+  --sky:#7cc4f2;          /* semantic: informational */
+  --radius:14px;
+  --radius-sm:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:0 16px;
+  padding-block:28px 56px;
+}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+
+/* ---------- masthead ---------- */
+.masthead{display:flex;flex-direction:column;gap:10px}
+.eyebrow{
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime-dim);
+}
+h1{
+  font-size:clamp(26px,3.4vw,38px);line-height:1.08;margin:0;font-weight:800;
+  letter-spacing:-.02em;text-wrap:balance;
+}
+.dek{margin:0;color:var(--muted);max-width:62ch;line-height:1.55;font-size:15px}
+.sim-note{
+  display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+  border:1px solid var(--line);border-radius:999px;padding:5px 12px;
+  font-size:12px;color:var(--muted);background:var(--ink-2);
+}
+.sim-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex:none}
+
+/* ---------- bench ---------- */
+.bench{display:grid;grid-template-columns:minmax(0,412px) minmax(0,1fr);gap:26px;align-items:start}
+@media (max-width:880px){.bench{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- phone ---------- */
+.phone{
+  width:100%;max-width:412px;height:790px;background:var(--app-bg);
+  border:1px solid #2f2f31;border-radius:28px;overflow:hidden;
+  display:flex;flex-direction:column;position:relative;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);
+}
+.statusbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 20px 6px;font-size:13px;font-weight:600;color:var(--text);
+  font-variant-numeric:tabular-nums;flex:none;
+}
+.statusbar .glyphs{display:flex;gap:4px;align-items:center;opacity:.8}
+.statusbar .bar{width:3px;background:var(--text);border-radius:1px}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px 8px;scrollbar-width:thin}
+.screen::-webkit-scrollbar{width:5px}
+.screen::-webkit-scrollbar-thumb{background:#3a3a3c;border-radius:3px}
+
+.navbar{
+  flex:none;display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line-soft);padding:9px 6px 14px;background:var(--app-bg);
+}
+.navbar button{
+  background:none;border:0;color:var(--muted-2);font-family:inherit;font-size:10.5px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:2px;
+}
+.navbar button[aria-current="page"]{color:var(--text)}
+.navicon{width:17px;height:17px;display:block}
+
+/* search + rows */
+.searchrow{display:flex;gap:8px;padding:10px 0 12px}
+.pill{
+  flex:1;background:var(--surface);border:0;border-radius:999px;padding:13px 16px;
+  color:var(--text);font-family:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer;
+}
+.pill.ghost{flex:none;color:var(--text);padding-inline:18px;font-weight:600}
+.pill .ph{color:var(--muted)}
+
+.sect-label{
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);
+  font-family:"JetBrains Mono",ui-monospace,monospace;margin:16px 0 8px;
+}
+.place{display:flex;align-items:center;gap:12px;padding:11px 0;cursor:pointer;background:none;border:0;width:100%;text-align:left;font-family:inherit}
+.place:hover .place-t{color:var(--lime)}
+.place-badge{
+  width:38px;height:38px;border-radius:50%;background:var(--surface-2);flex:none;
+  display:grid;place-items:center;font-weight:700;font-size:14px;color:var(--text);
+}
+.place-txt{min-width:0;flex:1}
+.place-t{font-size:14.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place-s{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.place-dist{font-size:11.5px;color:var(--muted-2);font-variant-numeric:tabular-nums;flex:none;font-family:"JetBrains Mono",monospace}
+
+/* ---------- forecast card ---------- */
+.fcard{
+  border-radius:var(--radius);padding:15px;margin-top:4px;
+  background:var(--surface);border:1px solid var(--line-soft);
+  display:flex;flex-direction:column;gap:12px;
+}
+.fcard.is-high{border-color:rgba(242,112,76,.42);background:linear-gradient(180deg,rgba(242,112,76,.09),transparent 62%),var(--surface)}
+.fcard.is-medium{border-color:rgba(242,179,76,.36);background:linear-gradient(180deg,rgba(242,179,76,.08),transparent 62%),var(--surface)}
+.fcard.is-clear{border-color:rgba(200,242,76,.36);background:linear-gradient(180deg,rgba(200,242,76,.08),transparent 62%),var(--surface)}
+
+.fc-kicker{font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+.fc-head{font-size:17px;line-height:1.32;font-weight:700;margin:0;text-wrap:balance}
+.fc-head .mult{font-variant-numeric:tabular-nums}
+.mult-high{color:var(--ember)} .mult-medium{color:var(--amber)} .mult-clear{color:var(--lime)}
+.fc-sub{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:999px;
+  border:1px solid rgba(200,242,76,.34);color:var(--lime);background:rgba(200,242,76,.06);
+}
+.chip.neutral{border-color:var(--line);color:var(--muted);background:none}
+
+.advice{
+  background:var(--surface-2);border-radius:var(--radius-sm);padding:11px 12px;
+  font-size:13.5px;line-height:1.5;
+}
+.advice strong{color:var(--lime);font-variant-numeric:tabular-nums}
+.advice .was{color:var(--muted);text-decoration:line-through;font-variant-numeric:tabular-nums}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  flex:1;min-width:112px;border-radius:999px;padding:11px 14px;font-family:inherit;
+  font-size:13.5px;font-weight:700;cursor:pointer;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--text);
+}
+.btn:hover{border-color:#3d3d40}
+.btn.primary{background:var(--lime);color:#171a0c;border-color:var(--lime)}
+.btn.primary:hover{background:#d4fa5f}
+.btn.armed{border-color:var(--lime);color:var(--lime);background:rgba(200,242,76,.08)}
+.btn:focus-visible,.pill:focus-visible,.place:focus-visible,.navbar button:focus-visible,
+.ctl select:focus-visible,.ctl input:focus-visible,.tgl:focus-within{outline:2px solid var(--lime);outline-offset:2px}
+
+.alts{display:flex;flex-direction:column;gap:2px}
+.alt{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft)}
+.alt:first-child{border-top:0}
+.alt-n{flex:1;font-size:13.5px;font-weight:600}
+.alt-m{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.alt-p{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* chart */
+.chartwrap{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 8px 4px}
+.chart{display:block;width:100%;height:96px}
+.axis{font-family:"JetBrains Mono",monospace;font-size:8.5px;fill:var(--muted-2)}
+.axis-v{font-family:"JetBrains Mono",monospace;font-size:8.5px;fill:var(--muted-2)}
+
+.basis{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;color:var(--muted-2);
+  line-height:1.5;
+}
+
+/* ride list */
+.tier{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;font-family:inherit;color:var(--text)}
+.tier[aria-pressed="true"]{background:rgba(200,242,76,.05)}
+.tier-art{width:44px;height:34px;border-radius:7px;background:repeating-linear-gradient(135deg,#2a2a2c,#2a2a2c 5px,#232325 5px,#232325 10px);flex:none}
+.tier-mid{flex:1;min-width:0}
+.tier-n{font-size:14.5px;font-weight:700}
+.tier-e{font-size:12px;color:var(--muted);margin-top:2px}
+.tier-d{font-size:11.5px;color:var(--muted-2);margin-top:1px}
+.tier-right{text-align:right;flex:none}
+.tier-p{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.tier-was{font-size:11.5px;color:var(--muted-2);text-decoration:line-through;font-variant-numeric:tabular-nums}
+.seat{font-size:10.5px;color:var(--muted-2);font-weight:600}
+.leasttag{font-size:10px;font-weight:700;color:var(--lime);border:1px solid rgba(200,242,76,.4);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:1px}
+.modemult{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;padding:1px 6px;border-radius:4px;margin-top:3px;display:inline-block}
+.modemult.mm-low{color:var(--lime);border:1px solid rgba(200,242,76,.4)}
+.modemult.mm-med{color:var(--amber);border:1px solid rgba(255,183,77,.4)}
+.modemult.mm-high{color:var(--ember);border:1px solid rgba(255,107,74,.4)}
+
+.surgebar{
+  display:flex;flex-direction:column;gap:9px;padding:12px;border-radius:var(--radius-sm);
+  background:linear-gradient(180deg,rgba(242,112,76,.11),transparent 70%),var(--surface);
+  border:1px solid rgba(242,112,76,.34);margin:10px 0 2px;
+}
+.surgebar-top{display:flex;align-items:baseline;gap:9px}
+.surgebar-m{font-size:19px;font-weight:800;color:var(--ember);font-variant-numeric:tabular-nums}
+.surgebar-t{font-size:13.5px;font-weight:700}
+.surgebar-s{font-size:12.5px;color:var(--muted)}
+
+.paybar{display:flex;align-items:center;gap:11px;padding:11px 0 4px;border-top:1px solid var(--line-soft);margin-top:8px}
+.paybar-ic{width:52px;height:30px;border-radius:999px;background:var(--surface-2);flex:none;display:grid;place-items:center;font-size:12px;color:var(--muted)}
+.paybar-t{flex:1;font-size:13.5px;font-weight:700}
+.paybar-s{font-size:12px;color:var(--muted)}
+.cta{
+  width:100%;border:0;border-radius:12px;padding:15px;background:#ededea;color:#141414;
+  font-family:inherit;font-size:15.5px;font-weight:800;cursor:pointer;margin-top:8px;
+}
+.cta:hover{background:#fff}
+.cta:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+
+/* requested / matched */
+.big-status{font-size:19px;font-weight:800;margin:14px 0 4px}
+.progress-rail{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin:12px 0}
+.progress-rail i{display:block;height:100%;width:38%;background:var(--lime);border-radius:2px;animation:slide 1.7s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){.progress-rail i{animation:none;width:100%}}
+.tipladder{display:flex;gap:8px;margin-top:9px}
+.tipbtn{flex:1;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:999px;padding:9px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;font-variant-numeric:tabular-nums}
+.tipbtn[aria-pressed="true"]{border-color:var(--lime);color:var(--lime);background:rgba(200,242,76,.09)}
+.driver{display:flex;align-items:center;gap:12px;padding:13px 0}
+.driver-av{width:46px;height:46px;border-radius:50%;background:var(--surface-2);flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted)}
+.pin{display:flex;gap:7px;margin-top:6px}
+.pin i{width:34px;height:42px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:17px;font-variant-numeric:tabular-nums}
+.eta-pill{display:inline-block;background:var(--lime);color:#171a0c;font-weight:800;font-size:13px;padding:6px 13px;border-radius:999px;margin-top:12px}
+
+/* ---------- instrument panel ---------- */
+.panel{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card h2{
+  font-size:12px;letter-spacing:.11em;text-transform:uppercase;margin:0 0 13px;
+  color:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:500;
+}
+.ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ctl label{font-size:12px;color:var(--muted);font-weight:600}
+.ctl select,.ctl input[type=range]{
+  width:100%;background:var(--surface);color:var(--text);border:1px solid var(--line);
+  border-radius:8px;padding:9px 10px;font-family:inherit;font-size:13.5px;
+}
+.ctl input[type=range]{padding:0;height:30px;accent-color:var(--lime);border:0;background:none}
+.timeval{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--lime);font-variant-numeric:tabular-nums}
+.tgls{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.tgl{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:7px 13px;cursor:pointer;font-size:13px;font-weight:600;background:var(--surface)}
+.tgl input{accent-color:var(--lime);margin:0}
+.jump{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.jump button{
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:8px;
+  padding:7px 11px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+}
+.jump button:hover{color:var(--text);border-color:#3d3d40}
+
+/* engine readout */
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ro{background:var(--ink-2);padding:11px 12px;min-width:0}
+.ro-k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);font-family:"JetBrains Mono",monospace}
+.ro-v{font-size:17px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;font-family:"JetBrains Mono",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro-v.sm{font-size:12.5px;font-weight:500;white-space:normal}
+.v-high{color:var(--ember)} .v-medium{color:var(--amber)} .v-low{color:var(--lime)} .v-silent{color:var(--muted)}
+
+.trace{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;line-height:1.75;
+  color:var(--muted);background:var(--surface);border-radius:10px;padding:12px;
+  overflow-x:auto;white-space:pre;margin-top:13px;
+}
+.trace b{color:var(--text);font-weight:500}
+.trace .ok{color:var(--lime)} .trace .no{color:var(--muted-2)}
+
+.evalrow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+.evalrow:last-child{border-bottom:0}
+.evalrow span:last-child{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;font-weight:700}
+.win{color:var(--lime)}
+.note{font-size:12.5px;color:var(--muted);line-height:1.6;margin:12px 0 0}
+.note a{color:var(--lime)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Wayfare · surge forecast</div>
+    <h1>Surge Alert Bench</h1>
+    <p class="dek">The forecast feature from the Wayfare boards, running on a real engine. Move the clock and the numbers on the phone recompute — multiplier, confidence band, sample size and the leave-by recommendation all come out of the same model the evaluation was scored against, not out of a fixture file.</p>
+    <div class="sim-note"><span class="sim-dot"></span> Simulated Bengaluru fare history · not real Uber data</div>
+  </header>
+
+  <div class="bench">
+    <!-- ============ PHONE ============ -->
+    <div class="phone">
+      <div class="statusbar">
+        <span id="sb-clock">9:15</span>
+        <span class="glyphs">
+          <i class="bar" style="height:7px"></i><i class="bar" style="height:10px"></i><i class="bar" style="height:13px"></i>
+        </span>
+      </div>
+      <div class="screen" id="screen"></div>
+      <nav class="navbar" id="navbar"></nav>
+    </div>
+
+    <!-- ============ PANEL ============ -->
+    <div class="panel">
+      <section class="card">
+        <h2>Conditions</h2>
+        <div class="ctl-grid">
+          <div class="ctl">
+            <label for="route">Route</label>
+            <select id="route"></select>
+          </div>
+          <div class="ctl">
+            <label for="dow">Day</label>
+            <select id="dow">
+              <option value="1">Tuesday</option>
+              <option value="0">Monday</option>
+              <option value="2">Wednesday</option>
+              <option value="3">Thursday</option>
+              <option value="4">Friday</option>
+              <option value="5">Saturday</option>
+              <option value="6">Sunday</option>
+            </select>
+          </div>
+          <div class="ctl">
+            <label for="time">Time <span class="timeval" id="timeval">9:15am</span></label>
+            <input type="range" id="time" min="0" max="1425" step="15" value="555">
+          </div>
+        </div>
+        <div class="tgls">
+          <label class="tgl" for="rain"><input type="checkbox" id="rain"> Raining</label>
+          <label class="tgl" for="event"><input type="checkbox" id="event"> Event nearby</label>
+        </div>
+        <div class="jump">
+          <button type="button" data-jump="107">1:47am — no data</button>
+          <button type="button" data-jump="492">8:12am — before</button>
+          <button type="button" data-jump="555">9:15am — peak</button>
+          <button type="button" data-jump="604">10:04am — after</button>
+          <button type="button" data-jump="1125">6:45pm — evening</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Engine output</h2>
+        <div class="readout" id="readout"></div>
+        <div class="trace" id="trace"></div>
+      </section>
+
+      <section class="card">
+        <h2>Evaluation · held-out test set</h2>
+        <div id="evalbox"></div>
+        <p class="note" id="evalnote"></p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ ENGINE (ported from engine.py, parity-checked) ============ */
+/*
+ * Surge Alert forecast engine — JavaScript port.
+ *
+ * Direct port of engine.py. Same matching rules, same confidence gate, same
+ * percentile maths, same clipping to India's 0.5x-2.0x regulatory band.
+ * verify_parity.py checks both implementations agree on a shared test vector,
+ * so the numbers on screen are the same numbers the eval was run against.
+ *
+ * Rows are unpacked from a compact array-of-arrays to keep the payload small:
+ *   [routeIdx, dow, minutes, rain, event, multiplier]
+ */
+
+const SURGE_CAP = 2.0;
+const SURGE_FLOOR = 0.5;
+const MIN_OBSERVATIONS = 8;
+const CONFIDENT_OBSERVATIONS = 20;
+const MATERIAL_SAVING = 0.15;
+const DEFAULT_HORIZON_MIN = 90;
+const RISK_MEDIUM = 1.25;
+const RISK_HIGH = 1.55;
+
+function clipMult(x) {
+  return Math.max(SURGE_FLOOR, Math.min(SURGE_CAP, x));
+}
+
+function percentile(sorted, p) {
+  if (!sorted.length) return 1.0;
+  if (sorted.length === 1) return sorted[0];
+  const idx = p * (sorted.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+// round-half-away-from-zero, matching Python's behaviour closely enough for
+// two-decimal money and multipliers
+function round2(x) {
+  return Math.round((x + Number.EPSILON) * 100) / 100;
+}
+
+function matchRows(rows, routeIdx, dow, minutes, rain, event, halfWindow, strict) {
+  const weekend = dow >= 5;
+  const out = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (r[0] !== routeIdx) continue;
+    if ((r[1] >= 5) !== weekend) continue;
+    const raw = Math.abs(r[2] - minutes);
+    const delta = Math.min(raw, 1440 - raw);
+    if (delta > halfWindow) continue;
+    if (strict && (r[3] !== rain || r[4] !== event)) continue;
+    out.push(r[5]);
+  }
+  return out;
+}
+
+function matchPopulation(rows, dow, minutes, halfWindow) {
+  const weekend = dow >= 5;
+  const out = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if ((r[1] >= 5) !== weekend) continue;
+    const raw = Math.abs(r[2] - minutes);
+    const delta = Math.min(raw, 1440 - raw);
+    if (delta > halfWindow) continue;
+    out.push(r[5]);
+  }
+  return out;
+}
+
+function forecast(rows, routeIdx, minutes, dow, rain, event) {
+  rain = rain || 0;
+  event = event || 0;
+  let widened = false;
+
+  let vals = matchRows(rows, routeIdx, dow, minutes, rain, event, 45, true);
+  if (vals.length < MIN_OBSERVATIONS) {
+    vals = matchRows(rows, routeIdx, dow, minutes, rain, event, 45, false);
+    widened = true;
+  }
+  if (vals.length < MIN_OBSERVATIONS) {
+    vals = matchRows(rows, routeIdx, dow, minutes, rain, event, 90, false);
+    widened = true;
+  }
+
+  let scope = 'route';
+  if (vals.length < MIN_OBSERVATIONS) {
+    const pop = matchPopulation(rows, dow, minutes, 45);
+    if (pop.length >= MIN_OBSERVATIONS) { vals = pop; scope = 'population'; widened = true; }
+  }
+
+  const n = vals.length;
+  if (n < MIN_OBSERVATIONS) {
+    return {
+      status: 'silent', routeIdx, atMinutes: minutes, nObservations: n, widened, scope,
+      basis: `Only ${n} comparable trips on record`, reasons: [],
+    };
+  }
+
+  vals.sort((a, b) => a - b);
+  const point = clipMult(percentile(vals, 0.5));
+  const low = clipMult(percentile(vals, 0.25));
+  const high = clipMult(percentile(vals, 0.75));
+
+  const sizeTerm = Math.min(1.0, (n - MIN_OBSERVATIONS) / (CONFIDENT_OBSERVATIONS - MIN_OBSERVATIONS));
+  const spreadTerm = Math.max(0.0, 1.0 - (high - low) / 0.9);
+  let confidence = 0.60 * sizeTerm + 0.40 * spreadTerm;
+  if (widened) confidence *= 0.85;
+  if (scope === 'population') confidence *= 0.70;
+  confidence = Math.round(Math.max(0, Math.min(1, confidence)) * 1000) / 1000;
+
+  const risk = point >= RISK_HIGH ? 'high' : point >= RISK_MEDIUM ? 'medium' : 'low';
+
+  const reasons = [];
+  if (rain) reasons.push('Heavy rain');
+  if (event) reasons.push('Event nearby');
+  if (dow < 5 && minutes >= 420 && minutes <= 630) reasons.push('Weekday morning peak');
+  else if (dow < 5 && minutes >= 1020 && minutes <= 1230) reasons.push('Weekday evening peak');
+  if ((dow === 4 || dow === 5) && minutes >= 1260) {
+    reasons.push(dow === 4 ? 'Friday night demand' : 'Saturday night demand');
+  }
+
+  return {
+    status: 'ok', routeIdx, atMinutes: minutes,
+    multiplier: round2(point), bandLow: round2(low), bandHigh: round2(high),
+    risk, confidence, nObservations: n, widened, scope,
+    basis: scope === 'route'
+      ? `Based on ${n} similar trips on this route`
+      : `No history on this route yet - based on ${n} city-wide trips at this hour`,
+    reasons: reasons.slice(0, 2),
+  };
+}
+
+function trajectory(rows, routeIdx, startMinutes, dow, horizonMin, stepMin, rain, event) {
+  horizonMin = horizonMin || DEFAULT_HORIZON_MIN;
+  stepMin = stepMin || 15;
+  const out = [];
+  for (let t = startMinutes; t <= startMinutes + horizonMin; t += stepMin) {
+    const f = forecast(rows, routeIdx, t % 1440, dow, rain, event);
+    if (f.status === 'ok') {
+      out.push({ minutes: t % 1440, multiplier: f.multiplier, confidence: f.confidence });
+    }
+  }
+  return out;
+}
+
+function leaveBy(rows, routeIdx, startMinutes, dow, baseFare, horizonMin, rain, event) {
+  horizonMin = horizonMin || DEFAULT_HORIZON_MIN;
+  const now = forecast(rows, routeIdx, startMinutes, dow, rain, event);
+  if (now.status !== 'ok') return null;
+
+  const curve = trajectory(rows, routeIdx, startMinutes, dow, horizonMin, 15, rain, event);
+  if (!curve.length) return null;
+
+  let best = curve[0];
+  for (const p of curve) if (p.multiplier < best.multiplier) best = p;
+  if (best.minutes === startMinutes % 1440) return null;
+
+  const savingRatio = (now.multiplier - best.multiplier) / now.multiplier;
+  if (savingRatio < MATERIAL_SAVING) return null;
+
+  return {
+    minutes: best.minutes,
+    multiplier: best.multiplier,
+    fareThen: Math.round(baseFare * best.multiplier),
+    fareNow: Math.round(baseFare * now.multiplier),
+    saving: Math.round(baseFare * (now.multiplier - best.multiplier)),
+  };
+}
+
+function leaveByPlanned(rows, routeIdx, nowMinutes, plannedMinutes, dow, baseFare, rain, event) {
+  const planned = forecast(rows, routeIdx, plannedMinutes % 1440, dow, rain, event);
+  if (planned.status !== 'ok') return null;
+
+  const candidates = [];
+  for (let t = nowMinutes; t <= plannedMinutes; t += 15) {
+    const f = forecast(rows, routeIdx, t % 1440, dow, rain, event);
+    if (f.status === 'ok') candidates.push([t, f.multiplier]);
+  }
+  if (!candidates.length) return null;
+
+  let best = candidates[0];
+  for (const c of candidates) if (c[1] < best[1]) best = c;
+  if (best[0] >= plannedMinutes) return null;
+  if ((planned.multiplier - best[1]) / planned.multiplier < MATERIAL_SAVING) return null;
+
+  return {
+    minutes: best[0] % 1440,
+    multiplier: best[1],
+    plannedMinutes: plannedMinutes % 1440,
+    plannedMultiplier: planned.multiplier,
+    fareThen: Math.round(baseFare * best[1]),
+    farePlanned: Math.round(baseFare * planned.multiplier),
+    saving: Math.round(baseFare * (planned.multiplier - best[1])),
+  };
+}
+
+function easesIn(rows, routeIdx, startMinutes, dow, horizonMin, rain, event) {
+  horizonMin = horizonMin || 180;
+  for (let t = startMinutes; t <= startMinutes + horizonMin; t += 15) {
+    const f = forecast(rows, routeIdx, t % 1440, dow, rain, event);
+    if (f.status === 'ok' && f.multiplier < RISK_MEDIUM) return t - startMinutes;
+  }
+  return null;
+}
+
+function fmtTime(minutes) {
+  const m = ((minutes % 1440) + 1440) % 1440;
+  const h24 = Math.floor(m / 60);
+  const mm = m % 60;
+  const suffix = h24 < 12 ? 'am' : 'pm';
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(mm).padStart(2, '0')}${suffix}`;
+}
+
+function fmtClock(minutes) {
+  const m = ((minutes % 1440) + 1440) % 1440;
+  const h24 = Math.floor(m / 60);
+  const mm = m % 60;
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(mm).padStart(2, '0')}`;
+}
+
+
+/* ============ DATA ============ */
+const META = {"routes": [{"id": "R2", "origin": "Smoky Docky Brookefield", "destination": "Indiranagar", "baseFare": 288.45, "distance": "2.1 mi", "plannedMinutes": null}, {"id": "R1", "origin": "Nextdoor Multiverse Co-Living", "destination": "Embassy Tech Village", "baseFare": 212.0, "distance": "9.1 mi", "plannedMinutes": 555}, {"id": "R5", "origin": "Sandhya Digital 4K", "destination": "Koramangala", "baseFare": 143.2, "distance": "3.4 mi", "plannedMinutes": null}, {"id": "R3", "origin": "514, 5th Main Rd", "destination": "Marathahalli", "baseFare": 161.64, "distance": "1.8 mi", "plannedMinutes": 1125}, {"id": "R4", "origin": "Balaji Theatre", "destination": "Old Madiwala", "baseFare": 96.0, "distance": "2.2 mi", "plannedMinutes": null}], "nTrips": 13629};
+const EVAL = {"cutoff": "2026-08-06", "n_train": 8690, "n_test": 4939, "coverage": 1.0, "baseline": {"tp": 1279, "fp": 356, "fn": 417, "tn": 2887, "precision": 0.782262996941896, "recall": 0.754127358490566, "f1": 0.7679375562894025, "accuracy": 0.843490585138692}, "forced": {"tp": 1390, "fp": 187, "fn": 306, "tn": 3056, "precision": 0.8814204185161699, "recall": 0.8195754716981132, "f1": 0.8493736633058356, "accuracy": 0.9001822231220895}, "spoken": {"tp": 1390, "fp": 187, "fn": 306, "tn": 3056, "precision": 0.8814204185161699, "recall": 0.8195754716981132, "f1": 0.8493736633058356, "accuracy": 0.9001822231220895}};
+const ROWS = (function(){
+  const packed = "abals,dfo35,jzp69,ifk4y,d4khd,d4m43,hhxwz,g908g,fmjhs,amqup,ci6pf,e2ey9,h6tv7,k0035,bvwkz,k03ci,kmm0h,fmtgx,mi33n,bksa9,htk35,a0ohf,h75bl,gvx4h,fbqsx,fy8ds,ig6pd,r6u0g,h78vk,mib01,i50he,bw9rn,j2quq,irjsh,irkdv,cu4hc,gkze8,drusw,i56gh,miir5,hir3l,nri0j,je78z,dgp6a,hiu9c,hiv75,hivht,dgtm9,hu6cx,fca9d,cuflf,k0w4x,v9h2o,h7ttd,hub5d,w788g,ga4q9,zmvcg,uybaq,14bgqa,zy568,jelbl,c85tf,hufsh,hj7e9,wilrk,bwy9d,p0xps,sgjow,lwkfm,f1coj,bvm2r,kmb0j,nfhhd,lk2mb,115z29,13cn5t,13cnep,eowhs,i4iio,17pzb7,173idd,131fpd,gvmyo,nqvpf,ir3b6,g98ch,d4vk4,edx1e,l95hd,edy4i,j2jcw,htls3,h77cx,d55fl,bw81u,j2p4w,irh4x,ig937,k0h8i,fn8n5,kbu6a,k0loh,lw1aa,f0txc,kbv7l,s4tfl,i5876,rtl4z,kyd8g,15vcld,1av5a9,1av5tt,zbf7l,hiw8w,srg75,r79s3,ubn9d,nrnyb,nggw2,knchu,i5ghs,blhxd,i5hqb,n5aio,j38ao,is0ap,n5edc,q9s5c,s57ls,wtruo,u0nuo,q9tmo,fyzsz,kyt4y,dscsh,ngq9s,ezufc,ezvt6,iqqyx,j20gb,fmgjs,edknc,fmj48,fbatl,17eqdl,1auci1,13nw97,173iiz,165sy1,12q70p,1818sp,jdhvs,y1o0b,sqn7t,pmakr,josw8,l903t,kmjbd,edtl5,ciiko,fbo3t,edzd5,8gjew,mth6z,cioej,h79sb,f0mkr,f0nd6,dggsp,b9u6i,igaru,fyex8,gw6tk,igf4a,kybm0,kn3nt,jpe2w,je5oo,g9sga,zmjih,kn6h4,zmkzv,19ay15,h7mh4,11i1xl,jpiyw,10kcaz,14mfd7,gwe6g,16hux7,k0scq,u0dvv,g9yh6,mty6j,dgua0,q9nuy,glcso,sgdsa,r7hs8,mu6a2,riqoa,p0vns,ngpfu,fz0gb,dsdhn,fnt3d,knm6g,iqrip,ci28j,h6n0x,iquhf,kb1ao,gk7rk,n47dd,m6ifn,l8t3n,f03gw,jzw5u,zx0up,zak0h,12exhv,165slt,10urdf,16h1jl,gvmky,ycx8z,gvopc,dg3kg,kmkk0,jov81,jdn81,abs2b,j2ff5,i4r4g,bw2hf,driqb,g9jm8,b9r9s,htr83,ctzv7,fydg3,fn82b,fc0nm,f0slu,a100g,fyk9f,h7j68,h7jo0,k0p3k,15vbip,158ufn,16hswh,11t8ur,yowb7,lky8i,1093v5,13dhg3,hu4b6,1094ep,vvswh,w71zn,irus0,jebyq,ngf9t,k0tao,miq6p,nrp3n,j3574,l9tg0,h7t3l,14h00g,d5qj5,bllap,opl1s,l9zyo,n5guo,j3e34,gwr4i,p0xjk,fxn4o,gk4uw,eoq56,edj14,ht68p,g90bc,paxcr,ycuaj,115zmh,18nopn,13nw9l,11shej,1aj521,zx2qj,htbh4,mhvoa,fxwpk,whhsp,sqnob,uauor,e2ioo,jdjx7,k01ll,drbx4,i4nq1,dg3tl,fbja1,g997d,ee0ig,c7ct7,g9ie1,fbu3d,ig8bd,ky4wp,cisbd,fyf8a,drrmi,lvz4p,bl5cq,i557f,gw7bv,lw0bd,nrg2h,hipsr,j2wk9,g9rtm,fnb2y,htz2w,fc388,q9ehn,ubiah,1090pl,1av4gr,15k3ff,158v2z,18d8pl,14xmu1,17qryz,1327vf,15k47v,158vq3,l9p20,zbeqh,gl8ew,ignrs,pycuy,ds6s9,d5puh,miuc8,o31so,oeae2,fyw9l,ll6c8,wo3yw,wzcka,13ul20,14sau0,e3ivv,ga7a3,wcxi0,10q95m,w1py2,dsehk,eomqp,h6lep,d4ieb,ezye9,kxgwz,92j8i,ifo2r,s4201,od7mq,qjvj7,m6jz5,bkhnm,ozpi9,od8m9,lk40y,v8gwx,11h8kh,12ey8z,lvdr4,14wv4z,1audk1,fmnkw,kb7q8,q8q76,12q89v,fxwrk,s46ap,xf7s1,mt5ls,dra8w,dg2aq,k03vk,gkild,gvr6q,ep3s1,ep3vl,ayba8,ee0bl,ayftt,d56n7,b9rs3,e2xgj,mtl7k,l9ich,fc0tc,bwew0,pmx0h,tdrq9,t2jdt,umqeb,vkg2p,tdsip,e361s,14b42r,jpgv4,k0q8w,18zq01,11t9r7,14xnc1,18oiht,10vl41,epqjk,12r0kh,y2gwz,s4yw1,fyqow,m7i3n,i5fmp,jpmqo,ll2e8,n59nk,o2zok,jpq3k,o3202,az49v,dh10h,v9k9u,ht0h5,km7l5,bkdgp,fxpgp,fmhgp,e2bsa,lk0vc,abip7,jon6x,e2dgo,fxtyj,h6sff,cthyg,nfkob,i4k6h,dr9t4,dr9t6,i4lgp,8504o,ifuy2,7ika0,hi60a,ifvoq,ifw4r,m6re3,bvxnt,gvrxn,h70vd,ctq7f,joycp,fy4fd,gvuw9,kxy20,ep76z,f0gvc,j2k15,g9fmw,htmy3,htnhn,dgd7u,i4yaz,kbmei,e2vzf,epg15,epg8a,dgi3v,gkwfd,d5anc,fyfjf,fbynf,dgkko,irm3s,cu54b,kn3e3,gw97v,fyjqg,dgnsb,kyd2j,fc3e1,gwaaz,dgoiw,irpuy,mikmg,cizhl,e36nd,fc4x5,ba25l,acd0p,h7mln,i5dwq,fyr3d,hu82x,misbt,jpnsb,q9nl6,z0cmi,sgdd4,yp4fc,xrfqg,ydyaw,1173s8,14bhgo,y2qw8,qwbzc,pnejs,y2tbe,opp7s,riucq,muaeg,bk8hc,kxdde,fxook,gk6eq,dr1o1,ozlps,eot68,f02pd,fxtpt,h6s6r,edpf5,ook6p,fmppt,ifur7,f0a7l,8gb75,h6yup,kbf1v,bksc3,dg7sh,fy4j7,bw1v7,j2jn5,kxzjm,i4ur4,cioj4,fbuup,kmwa8,ee65t,fyenl,d59yo,htub5,hin3k,igd9t,iromo,i588h,c7pyo,c7rao,igieo,jpgoi,f0ynm,eehv4,9pyup,gl6up,fnh81,pybaq,e3bar,cudpv,ll12o,i5fhu,kykkw,9etv7,misvk,n5a7k,ll4s1,rtw8g,12r834,11tipc,zmv00,13dq7k,cjcmr,z0fsi,fyze9,10vvw2,f1agh,u0ptc,kxcoy,eom4g,iqpa9,ezv5v,h6jnk,g8uf4,ci0g1,e28ht,eoq0w,hhuww,fxp34,ci3b4,fmhc1,ht6rm,jon5s,n49c1,sfb7n,sqjy9,m6ksg,jdh4y,18yy2r,17q0ar,sqn41,eozb4,w69xd,l8zur,dg2f6,jdkua,bvxa8,h716q,h732b,fbnur,j2ji8,gkoox,bkwjn,ee1hf,h76v4,kmt4x,ee4jl,dgghv,d5bk0,cu39d,h7ha8,pmxdv,vkfwj,srb7l,10vi9t,12fpab,k0qo2,15vcxv,13opj5,15vdoj,kyhaa,10kcqp,t2nur,x4rlt,tp5tt,opeir,hiz7m,jpnuo,jpo8w,k0xvm,fyute,m7m2o,r7eww,fyvcz,lwekg,q9q6a,nrudc,r7h8g,oecxs,mu7eq,hj6o1,eq210,mu96o,c87gj,eq3y9,eevep,fcl4x,lv3yj,fb72i,d4jwp,g8xhm,9dq14,dftoo,iqvm3,dfufc,kb32h,iqweg,abirs,td0cp,16h0gb,g9348,lk4lk,165snd,mhv2g,kb7d4,15jci1,13z66h,11ha15,11siob,y1oll,q8r4b,e2jyg,i4nkb,g98cp,f0abv,ir808,bw1s9,o2csr,cilvv,gvy2w,bkyx4,ee4qy,g9n60,cu1ag,d5a2y,gw4qy,himko,b9w7c,htvuz,kbtfs,fyj61,ody6j,fnb7u,qkmq1,gl2fc,ridhn,166kll,10vjk9,r76ru,wi9hl,10kcll,nrngo,oe5e1,n580b,hj095,n5afc,oe9hm,hj1l5,igsug,ds8sp,mixoo,eq097,o34qw,p0ux4,jptoq,o35my,huetl,kysco,fnr61,c85e3,k1408,mu8y2,knl8q,fmemo,gvd77,o1v9v,jzseq,h6no0,gvfgw,h6q1e,fmjmb,sqj2p,t1scz,15jaz5,zak7l,17eqoj,1aucwh,ir05s,19lfpt,18chsh,11simp,10ut01,htbv4,xf7o1,kmhzm,nqvgz,dg429,h713m,gvuxd,nr34g,ep85t,c7dg1,fmzo3,f0j0y,c7fm9,f0mkx,hij9t,hik0j,fyec2,7j34g,py53k,m7axc,m7brk,gwb0w,zbbgz,ngc0g,13zwwj,12qyvl,1ajx01,166lht,kyhxs,vkkk1,irumo,kc2mp,mtz4h,mtzkg,eptqr,igpar,o2zma,fnlw3,dgys3,babip,o32aa,nrtw2,e3h78,hj3pt,opk7k,e3j69,s57m8,ngnte,igwr7,a1j4h,kyumo,mj1u8,ifi1l,a040q,l8o0q,dqz6g,bvjyw,h6obd,amowo,tzhzt,r6d5l,qv4pn,whel7,12exsp,18cgyj,14wvh7,12eza3,173k0r,123rix,w6997,xf7q3,ookwr,um3kr,m6p97,a0ie1,h7062,hic0q,kmpi3,7itg8,8rroa,d56ah,a0tay,ig90a,ciqqi,g9n15,gw5cq,ac61n,gkx08,fc0be,pmuxn,jpdlm,odyzd,kbwrg,wtes9,13omzd,166k0r,jphei,17fjtl,hu3o8,11tb17,gl6fu,g9zvc,hu7fc,gl9so,epuqj,irye0,miuoo,kyoey,qkyl4,p0tso,eq0bd,eq0bd,s57ru,u0od4,mu8pk,nryzc,bahp5,f1cbf,jeo7u,gk1i8,92der,eondt,gvcbk,axuow,cta75,hhuu8,jdajl,fb7oj,9dpk1,n46hs,ci483,e2ckh,l8uqp,e2eck,13nv1d,fxu00,lvco0,toaeb,14wu8z,18yxer,13z55v,123q01,1160m9,17q04h,14lmqp,173jq9,11ha03,zx3fn,zlv1d,s4603,10utep,lvggz,pb2g3,q8s4j,c73qa,hi61v,4e7vk,hi7ky,ctobn,c78gx,fy3hd,k06ox,qk6qq,9pdi8,ep6sj,aycio,edzoh,h74pt,fbqar,epbmq,ee38h,epbts,9pkwy,httsy,ige3l,ac86a,fc1y9,igg83,158uar,13onmr,j2zz6,174an7,10kc9t,mtwm8,ydpup,n56lc,pbush,s4zq9,l9so2,j37qa,f18ip,p0ty8,p0u1s,lwgv6,rirhe,fcjtu,fz10g,8fv3c,92cru,h6jje,gvciy,dfw17,g92g9,lk4h5,8rfft,g96qx,e2jhk,ctlyh,gvpd4,d4vmy,dg5d5,ifyuh,ep4h7,ir817,edwq2,fbmlm,h71yi,ig1gp,g9dt5,cijs8,gkn8r,htm3u,cil62,gkrvs,ig7hl,jp60b,bkzzd,jp8yx,dgijt,bwckr,e30rt,drv8o,gw963,c7pbd,f0vhn,hu0yx,g9vvu,cu9yj,dgr3f,kygix,blca0,k0ror,bld0q,a184p,j34bv,n57zd,oe6so,pbxre,x4xk8,eepk9,x4y5k,rtx48,un3s8,109dpk,wtrzc,14mpt4,zmxbc,d5und,7jl7v,w7ca2,xrk16,is6g9,84mi9,j1ygg,fxltd,fmdtf,9do34,ci2i9,g8x2p,iflf7,d4mnk,ci629,i4gkx,f0435,d4ovl,dfxkg,f04qa,i4jci,c71rk,eozea,b9dgx,i4m40,b9f8x,i4nox,lviyb,b9h6a,ify0j,ep3qp,lkbu9,f0cfl,lkcj7,gkkab,fbn01,drhdc,p02wg,9phf6,fy9bn,mthtd,jp4ts,kmuk1,htq0h,hiipf,cir77,dghgx,g9nzl,je25t,g9p68,kbt2p,d5dbl,epmcx,f0vcg,cu7n5,bl9m9,irsxd,d5k1f,d5kmq,hu5gx,cud81,fnjoz,kncj4,ll3qq,lwcfm,epwq9,sgcz6,sgdtc,14071s,zy4fk,xg8kw,cul69,fyynl,132jaq,ga7qp,1174s0,wttgw,vw4a8,te8oi,acrld,hugtt,ezw03,bka9t,jzr5w,axvk1,gvf0g,fxpj4,amoqo,eosxt,lv9oh,dr43k,i4gsh,j26yo,x3vnn,zajsx,ulznn,yzblt,vuy6b,15ujpf,13z4jl,xqdvl,edpqa,h6utc,fbg5c,g96f4,d4t6o,mhxmp,m6pa9,nqwqp,fmrep,jdmo1,ctn9d,i4ssh,odkaq,gvvgh,ee0zk,ee0zn,kmsqp,g9j9e,ig7nn,htr42,e2wn6,epdz4,c7iip,gw2pt,cirk2,bwb41,httog,l9g74,h7eip,cu39d,fc0u9,d5d35,fna80,fyjep,j2ww1,s4szl,1091mr,16t14x,14b56p,166kht,15vc1v,dgqrm,116s75,16huf5,kbzwi,166mdd,xfzb7,11i2rn,ubmdd,x4rgh,oe5hd,oe5vn,jpmm8,bwqdd,fccld,k0ybk,bwtc3,ububm,opklc,pnb0i,hufsy,knkw2,kccu8,p0xfk,dfop4,g8ubs,axu2x,b92mj,edgeg,axwy1,d4kw9,jzumh,wsmyx,yzc7f,jdhhk,kb7nu,nfle0,12q8az,ycx3d,xf7ux,gkemi,hi5xk,htf2j,fy0jv,cig5l,mi22x,ig00b,dg7k9,fy5jc,gkmyw,g9ex6,ig5jc,i4yfe,l9dhn,epetm,d58qx,g9nnv,9ppjf,i55s9,mtrrd,sraq1,pmxe1,13ddqh,15vaiz,1326rt,12qykr,19aybv,15vcll,1a8og9,158wcr,158wp7,x4qx5,jeb9o,nrnig,irv61,h7olm,jplmy,gwhe0,i5frd,kc45l,lwbez,igqiy,igqyz,kc6ob,7up6x,epxzf,pnb0o,eq0nd,p0w5k,oefig,pc5ai,o37rc,ezuhc,iqrki,dfqdt,jzq8h,kaz81,fxo2a,g8wwh,e29w0,cte35,i4fyr,g90r4,lvbbl,xf4b5,s434h,m6l8w,115zwz,14aej5,131gi9,15jd8z,l8yz7,pxj83,rsyoj,htekz,fxzki,dg3o2,hi79v,i4ogh,kxufm,e2mj5,ir7tf,fbn0w,f0fkg,bw2s1,h740j,gvvip,an6fl,dgceo,mi9zm,7u6og,fn4b6,pbhzm,gw51t,fyglt,lvzm9,drtjl,je3ip,kn1w0,eeb68,drv4g,fnafn,124fpt,lw4cw,181zmb,174a35,jphzk,18d98x,10936b,c7thu,15ve1d,116txt,y2gwh,knas1,blfo2,gl9hs,hj0y8,oe95e,mivwy,l9xsh,anwep,kyr4g,ql3gy,dsdjl,fcki9,i47yx,6vopn,fb656,kxhi0,kb0wr,kb1p7,dfus9,fbau0,i4gbf,sqjiz,qjw0p,o20yg,14adi1,18cgpl,14lmmx,17erob,1audp5,165tln,11h9sp,108bo9,12q87t,qv82j,sqo2h,nfn2z,f0909,hi72y,ifyhl,lkc60,ep97e,c7dy0,gkpzt,f0kpl,htr6g,c7hzu,gw4bf,i52je,d5aag,kbrtm,f0s0p,irnbu,tdra1,fyk2g,b9zyy,mikns,drxne,x4nh5,oe0ew,1749nd,14xm6x,ydn17,17fjvd,1av5y1,xfyl5,zbdy3,kn8pm,12frx5,tdwwp,mipnd,p0na1,e3cd7,igowq,pbwwo,ll3h6,mu1p4,h7s0p,igrq0,gwleh,ngl96,q9qai,j3bmh,qw9ay,n5hp4,dfntv,jznc1,kxcyo,ede02,6kgrm,ht10h,5mtcx,g8x7k,gk736,hhwv5,fxqcg,cteci,mhrhg,mt02p,1817kx,m6lr4,1aud29,16sa3l,14lmeb,15ukrl,y1nqb,kb7tu,kmgkg,lvffm,hi50j,kbc81,e2lyb,fmtsw,fy2ox,hticj,kxxpf,8rplv,jds68,ee083,k0a3n,lvpi8,gvxer,e2vhd,hii5c,ayizl,dgfoj,fn3vm,nra8x,f0noj,h7bmo,dgiea,m75yb,ky8m8,f0s4g,irmox,i57dt,r73fl,f0uhu,n50wy,o2qxs,132541,p0gps,13om8z,w6xnl,xr4v7,zxspt,13zvxd,13zvxd,12qxsx,xr55t,y2dr5,17fi75,xfwyp,1a8nj5,174acj,19ayox,14xnfl,15vd29,158wbl,14b7mp,d5kde,12r0yp,kyijk,o2wip,qkt7n,jecv4,mtz6q,eptgg,fyrxc,kylup,cj7fn,ansyp,gwjtv,ophgi,n5au8,hj21v,m7na8,ll89s,t2yu8,cjeg1,kyt7l,ct8vc,fme0b,g8vvt,h6maw,axw2x,g8yll,a08tk,g8zvu,abi3w,abizt,dfx49,ht8vd,hi0bv,qjwmg,fbd48,fbd9l,hta20,l8xbd,i4jvt,gkdux,jgckr,rvs89,wkch5,qbmjv,rklex,tr9ey,uozor,rvve0,ori7e,qy6az,orj3f,qbqln,u2l9n,s76i1,kmqqw,ayf55,f0j6x,jp3mz,gvzhn,g9jai,kmuy1,fn294,ctxyh,935bd,htsrv,i54o9,htwdl,epk6j,fyl0p,fncq1,9pvl7,irrl5,gwcko,dgrft,hu33d,igkfe,g9wtl,jpkrt,c7w17,m7hk8,111c88,gwl0p,hj2ax,1aeiug,1b106g,19s208,t2vmw,15keju,v9kq2,z0ffs,15kfhk,f19ez,dh2sp,13dsa0,ru08a,xrjsa,srrqg,tphrc,ezvjm,ht0vm,gk2uo,fb580,fb643,fb86o,hhwtt,8g375,gvi7l,d4nox,fmlio,gvkj4,edoc0,ifrg0,ctjzl,f08oi,f09bk,dg3oz,f0auo,hti5s,fbm9d,edxma,kxx81,irasx,g9ek3,kbi41,irbzl,gvwvn,an62a,kbkkz,h77ht,kbnsh,gktf7,8rvw1,ee629,gw2yb,drs4x,g9ptd,kbtv5,e3301,pmv5d,kn4fk,ciz03,i599s,blaeo,cu8mo,lw5o3,l9p2o,ayvjo,h7o1d,k0tdd,j34dt,jpm41,irws1,jeelt,s51tc,igp82,rtto0,r7d0w,fccz5,mu27k,y2msw,tpbn4,ydx68,vw10w,xg90w,t2xyo,huek3,132k1e,wtt6a,eetdd,cjecx,pnels,joeiq,a03pd,jdadc,kb0aq,fxp35,hhxj4,jzuma,kxlc3,rsudf,1auce9,ifqyq,y1m69,11h8ar,16h1dv,14adqb,jzyiq,14advl,1a7wap,15uksj,zx2wx,13ny0x,zlv5t,tzlkz,kxr2b,jou9v,j2dmp,gvqwy,edute,ig074,j2hj4,l97cy,drite,j2kao,fmzsw,hifcx,gvyf5,9e9kz,ig5vl,k0dj7,g9ngj,9po5f,c7mrk,fn8w1,fc0cj,lksqr,i57ib,m7ayp,tp1c1,wtetf,1325tt,14b43l,11i24h,kyhds,p0ltt,oe5dt,hizeo,lwchs,epwg3,jpqip,n5dc2,epyrl,knh8i,yp7uq,pncn4,h7zcz,l8lah,kazuz,ht4qx,c6v0p,jokcp,fmi4r,edk5l,ifn7u,o1zd5,pm62x,tzhvv,td16x,zx0zt,19a5e3,13z4jt,13cnm1,zlt57,14wuh5,f05l6,1818ej,kmfpm,165tah,g94p4,15ulaj,11ha8b,edqh6,uauq2,g993c,htg96,l953e,bkvyg,kbk20,an7ij,jp43t,h78zt,d57bf,dgg94,c7l6x,c7mvd,igea2,bl6mh,igf4b,l9kp5,o2q4p,py5vt,z02bv,o2rd6,xr4cr,mtufc,j303s,eeg0a,hiu4q,py9c8,cub60,14mfm3,w7155,1329ah,17qthl,zbf49,l9qrs,qksax,lw8aw,tdxft,irvd4,fnjew,knc94,ds5u2,knfk9,q9qfc,fcg7d,i5lqh,12af0q,y8c08,17wow8,anxft,f196x,glg97,111iyw,pne8a,gwr7u,hj8ek,eolw1,8fvdd,d4gr4,ci3de,jdbm9,fmhao,ctefk,eotxt,jzvpu,jon83,10887n,7tndc,zlsk3,mhuq8,joq6q,vjrwz,xf7yp,odcgj,i4low,hi4y8,lvgls,ep0gi,9dzdc,hi6c2,j2djk,ctpqp,j2hox,fmwcx,htkls,92yky,htnyp,gvz6b,gw0gh,d56s2,c7hg2,gw2dv,epf81,5njip,b9u35,i55sh,jpcib,eebip,p0etv,igg9e,m7atv,s4tub,op80h,nrikx,qknmb,xfvwx,hu0r4,lkvv4,17fidt,158uoh,17qrkh,lkxn4,15k4sx,13dh03,kn8i8,zbeqb,zxw2b,nrn0w,gl7bm,jec9c,fys41,e3d02,irytu,miv0y,pnahe,kyqs3,bae8h,d5tld,i5moh,kcaxf,51ok3,n5gnk,nryvk,fz1w1,gvb8b,bkb4q,eoons,gk4go,gvec8,e2d97,edlug,ci76i,m6k4b,rhljv,1aud23,15ukex,18npi1,1584ex,jordk,tod3v,pb1jt,pmahl,kba3c,6w3bs,fxziw,k03rv,fbkd4,htgrf,gvrh7,bw0ux,drhuj,l97bt,kxzkp,hifiw,ky28p,jp5jt,gkswp,aykbe,fbwpk,drqc8,drqca,e2z6h,iro2g,l9kt5,py5ax,s4t7f,qvv2z,d5f8a,ng9g9,o2qjf,10k9ln,13df15,1091wb,w6yzf,14b595,174aqh,ngct4,xr6xn,14xnh7,10kcbf,irtp6,jebfg,tp5ll,qks9l,ngezd,qksih,k0ue2,j35ay,mituj,mu2e2,irztk,ga3q1,u0kew,blqah,jd76p,c6qxu,gk49t,gk4tf,i4bmq,gk540,g8x7m,g8y5c,f009u,fxqap,c6w2p,dfug1,ht6ap,jzush,mt0wx,hhzoh,paxr5,n4aao,kxmw0,zlsm9,16s95v,nfjmo,165skh,jopuq,fmnmo,m6nfk,xqfxd,h6vc2,vjsip,um3j5,h6yap,i4o69,fmwf5,b9kv7,gvvmo,bkuhs,fmy3m,gko9s,dgb1f,i4wbn,jdv6p,drlnk,gkt9c,i50o2,dggv5,drqxv,igbqa,eean5,rtjz5,je5sx,y2ctf,ydlr5,xfw9t,13on8h,wi6w3,11t8yp,15vc6b,17qrvl,h7lpe,14mf37,pbsww,1821up,uy3oh,n563k,s4yw1,vvtk3,oe5ep,mtyxt,miqjn,fyr4y,j34rm,d5nkx,fcbj5,k0wbk,fytib,cj9nl,lweqq,fywgx,ll7he,o3468,f18mb,8610h,j3cip,mu8gw,f1b1d,amjft,i4a0a,g8usp,fxobu,ezyy0,e2a0b,fxpt4,dftm1,d4l9m,fxqco,bkfhl,ht94b,d4sdn,k00tl,hi7xl,l9357,7inhm,hti5n,drf6x,htip5,i4ru1,i4t2h,kxy0b,an4h4,f0gob,i4xrf,ctwq2,kbmeg,gw1ih,kmw30,irhrf,gw2i2,irj3c,ng4bv,igbxk,ky8x7,eeaax,fc0a2,dgmnd,cu5k8,drvsa,drwdn,hu17t,kbyej,epqg8,bwofd,k0v1k,gwi5l,pyf8q,fnld7,gwkmh,yp3vs,x4xgo,srm22,c81rf,yp560,11iaay,132h60,14xx9k,r7hew,124sfe,zy57s,zbomg,wilka,v9nhm,te8q2,dqxyr,edfjn,fmegg,ht2k2,e28dt,h6ltc,ht3jn,ctawg,edinn,hhxgy,gk7zm,fxsa9,i4h0w,c6zsk,gvlf4,htd68,fbh9v,amx9s,lvh2p,3rpww,kmk37,fmtgz,drek1,l95df,h73ht,hicvl,lvooh,jdsxd,mtf03,gvyi8,irdwx,i4xpt,drm7l,ac0oi,f0lgw,irgc1,fn303,drnu9,e2ycx,gkwdv,htyy8,jpe7m,igho3,hit69,m7df5,eefua,fc700,e3anl,hu5f4,dgtv5,qkucw,eemr7,v9hiq,13oyb4,fyxm9,10kmgg,zbos2,blnxv,h7ycz,n5hwx,tphma,cjgab,gk30h,e285d,iqtky,jzutf,nqphd,lvber,t1ry9,whdz5,l8ugx,qjwap,kxmo0,yzblt,1089xf,q8pds,13nww1,lk5j4,19a6yp,zx35t,xf729,jdiv6,fmojm,td4ox,mhxq8,lk8w1,hi9kz,hiadf,h724g,edzep,ircch,i4xoh,drm4h,g9k03,lkocj,f0qyr,a0ymb,jpc1s,l9ite,kn1xe,htx37,fn9aa,ng9a9,odz5t,rtls1,t2k3n,xr4jl,z02v5,zbbi9,wtf9d,i59qa,13266b,yov0h,1326td,ngbr6,14b58h,12fq69,19xfep,13zxab,14b5xd,qkq2o,pbs1s,12fr29,c7u0w,11i2df,12r0oz,zxvy9,ydpkx,tdx1d,pn2mb,fc9j4,i5f29,o30ao,irzb7,is000,l9wea,is0jm,fnn7n,kc7wj,ngm80,85zwk,anwht,gwo03,rir2a,lwj7m,mu936,gwr0j,gwrer,bvgy2,eonm1,g8vk8,bkc5l,d4knc,jok5k,bvn49,h6owa,paxah,paxjd,q8n61,v8gax,uaqyx,jdg7c,14acp5,123ow9,173hl7,ycuh5,yo349,10urgp,15jbyh,18chhn,14aert,wsqff,uau4p,v8k5l,nqvwr,lvifd,ay954,ifz0o,a0kg9,hti8b,d4yob,dg7ih,fy51m,d547e,htq6h,fn5e1,eph8o,c7l6x,fbzwq,g9ryg,fyk0a,q9e8b,n50uh,kyd3c,fncga,ighmw,m7cp4,ngayw,irr2g,166k95,158v49,15vcsr,14meq3,n54sq,kyi16,t2o7d,pyb9n,t2ow9,xg0jt,jeea4,irxqj,mu13e,dgy4r,hj1l5,anuff,o32a0,m7n7v,k0zrd,hj421,q9r9m,8h8cp,nrvm0,n5etk,qw9u0,glgll,m7qh4,is7d6,eomz6,ljw29,e2769,j209c,i4brl,bkd8w,abi8i,jdez5,sqjgz,jontc,qv4cx,ulzbl,zx0sz,14ad77,htahe,lvdzm,14wvtd,13ny1f,tzlsj,k015f,whiz5,k018y,bvw42,lvhsh,ep4ep,kbemr,htj0z,ir975,dg9lf,f0gpc,jp2hc,htob5,drm8g,kbm1e,bkz82,fbutv,gku4y,jp8nk,ac500,l9gnn,g9phu,dgln5,166j83,14b4cx,16hslt,16t1qp,13oonl,17fj9t,166ljn,10vklt,kc15c,e3amo,q9jv7,w72fn,n56xd,m7hzl,miqxc,jedhs,nghqq,f13gx,hj0ep,hu93l,fccyb,o3234,n5d02,fyx01,rtyfk,fyy37,fnqfk,j3ck1,oefte,knmj7,jznvf,kxdsp,ht0gp,fb5cq,fb5y2,ifkre,g8xqw,fxr4o,jomft,l8teh,dfw0o,gvi57,o1yu1,11h8ex,1a7vtn,m6mag,ir0ey,lvfo8,kmhjs,nfn89,bkod5,lka58,j2e3e,bvye3,hthw9,d4xw8,drf16,kxx5l,lvowp,ayg49,ayhln,drq6x,85hay,ee8uy,kbro9,c7lp4,irmc8,i57q0,mijvc,py5wb,sg2ah,tdsnv,11t7ix,you6x,13zvyx,e37iw,14b5cp,12qzdl,min4o,yowd5,12qzq1,13opnd,11tau1,v9ct7,uy4bd,c7x3s,e3deh,fccij,kyn15,gwk4b,bwrq1,ga509,bwtsp,fcgbd,uycm0,ngntm,fnql5,i5nbt,sgihk,jpvmh,cuogp,mj1lm,km4gw,gk2ow,fmdeq,9dmxu,bvjmq,g8wio,fmgm9,bkdsx,jdbqc,axxlu,kb4bl,to9i9,nqr6r,10uq3l,qv529,t1swz,11sg81,w66jl,11h80x,qv5r6,14llsx,15834x,1aud43,11shk1,13cof7,1audpd,ctijm,1584dd,sqn4x,11siw3,kb97m,g96w1,f0940,fy2ub,e2odc,g9di8,kxz1d,cikdd,drjqb,drk4i,drmsj,bw881,fbv1d,htt41,irlb6,q9c9t,jpdk1,n50f7,kbvmp,p0gkh,tdsf7,srbhd,w6yap,14b5gj,13oogx,ngcbm,1av541,1a8o0z,1327s1,1av603,15vdib,l9py8,jeb8i,h7nhe,sg7oh,nro4j,hu82p,m7js2,epv8h,ds63k,lwcpu,pn8o2,ll6n4,ds9b5,opmcg,s58rk,eet7n,s59wg,igxk0,jpvxe,gwrkx,la38g,m7t9c,i4a3t,fxmng,dfre2,ht31k,edh9l,d4k4o,eor8p,kb1nv,ifmi2,6km3t,f0161,gk8q1,edld5,h6q96,e2cyw,jdeax,fbcix,ctg89,ht9bc,ednvt,ifrl5,ifs88,qjyp5,fmoa3,jorjf,fmoyz,g96ay,f08x4,e2jmx,bknhl,c752i,e2l9n,ep4bv,ep5ns,mtbvv,d508b,n4o2x,lkj1k,f0koa,f0lt4,a0ucr,jpag8,fyg6h,ang88,gkyzt,fyi7f,eplns,jpfxm,eehew,g9y95,cj4a0,bwo15,o2yw8,ga1d4,srjl6,pn6eg,epvjd,c7zor,x4xka,1170vc,gwnop,fnpwp,1174iw,hufop,11idwo,hufqh,yp9ii,ga9ux,o37op,fmc1d,eomuo,kawtt,fb5o0,g8ws0,j24fl,ifo6r,ht836,92mr4,d4pwx,eowoi,kb9o3,fmpir,gvnu9,e2k6o,h6zn4,l94oh,j2h0y,drgs3,odm5v,fmz5d,fy9f5,drlwx,j2nap,l9b77,jp643,bl04x,jdy9f,g9msz,e2z76,hine9,civg2,l9isx,hiods,fyk6o,fykj4,kn50x,fykxe,hu0kx,k0oxc,c7ru9,k0r5d,gl5bk,ngdbl,kyi40,fnhpv,jed4g,jplo3,eptf8,bwp83,anrjn,igpww,n5a5s,epvqp,umzu8,e3fhv,jppdd,187u7m,cj9gx,i5jht,ga54h,17wnsg,1b122a,1b12y8,c85df,j3fqr,g8t1f,iflc3,i4cu8,h6nb5,i4d34,b96o2,ctdmp,kmb9c,kxlmo,kb4jn,joo1s,10jhvn,d4pfo,14llc1,11h83l,xqdmp,14llkx,13z54x,kmfsw,1audq9,16sb5t,y1o03,14ww5d,yo5hf,1161vn,xqg3l,pxj29,drdhd,ifxoh,hths0,8gdq9,joypt,f0f5t,lkf5u,kxzk2,a0oxs,mi7nl,aygcg,higg2,bkybn,epbuq,hiha9,htq2q,anark,htvr7,fyh4w,fn8n4,fyhvn,g9qkg,mii80,kn32b,lw1q9,je5xe,n50ld,lw2o1,sg2df,srayp,tp0ld,y2cjl,umqv5,kn5oi,12foox,13ongj,y2dvl,174a0x,h7l8i,11i269,zmn0j,kyhxe,wia4h,uy3pd,tdxhd,m7h4y,ll0ch,ll1dv,ga08x,glcub,pyhmo,ripkw,r7hxe,q9su8,culhf,bwvy9,r7io2,mu7r4,eq1mr,r7k1u,is6kh,kyugw,llblu,gaagx,amj4a,fb3m1,g8tvt,dfpl7,fb5or,iqs09,ifkug,dfsy0,fb8lk,i4g21,jdeob,rstjd,i4gso,zx0nd,yzb49,14acuj,13nw3t,131fgp,mhw5m,rhq4p,fbhqj,fxzyj,gkhqg,g9ars,edvpm,e2nm3,gkocq,i4w23,i4wp5,fbtop,drr63,lkpsb,kn0uj,j2uo8,nrhc9,g9sax,rtkp5,sratn,qkn49,p0gi3,dgp54,o2rpo,j2zpk,16t1qh,rtnt4,16htor,18d9mx,166lu3,lw7t6,kyiiw,rtqmj,kc2yx,fnl8o,mu2iw,hua2w,7jhxl,miw96,knia2,nrwp4,ubwne,n5g7c,n5h3c,is5or,b905s,km577,gk2dt,d4ggj,9ov0z,l8nki,ezx5e,ctaq9,9dr4g,kb2fk,paxg3,i4h00,v8gep,zajv5,s43gx,13cnkj,1a7wb7,19a6vn,17ermb,vuzkg,123qj5,x3y6p,y1o29,ozthv,pb2z5,hteog,abro1,ir783,cignk,htjyp,h73bk,e2pzl,jduhe,irdht,epbgx,kbm4z,kmvbm,9ec7k,ctyq9,ee6z6,bl2ky,c7k7l,bwdsg,g9pox,h7fip,igf0y,gw9e9,jpehd,lw368,youc1,lw4k0,nrkb4,q9hhs,14b5zn,124i8h,16hu35,19xggj,i5c9c,1a8pap,124j69,mtx8w,bleq8,fc9ci,lw8ur,ll0cx,lw98x,jpniq,lwdci,gwln5,nglu8,nrvgy,az70z,pndap,cunrn,8hcus,knm6q,gaaoh,jof6h,kxehm,9ow4a,dqzx5,eopp7,ctb8a,h6s0q,zx121,14llw9,hta8o,13co2h,13nwm3,17pzq3,19wnkp,jdhei,13z5ax,15ukyh,mhvh4,k002g,w69ax,v8k0r,rkjq1,xi2aj,y4jmg,qbmsb,qmvh6,stknt,tg40r,n7eag,nfvoa,f0ic8,gkpnc,c7gnt,d56fs,gkt3v,drod4,hij89,ac2zc,httjt,jp8wo,drs48,ayord,nrhnc,116q3d,11t7q1,109121,10vijd,17fi55,12fpp7,12fpqx,zbcd5,15k3mh,18d8nt,1av5ll,1a8om3,14mfdl,13dhll,n55g8,10949n,zbeqj,yoxp5,wia3d,116u8r,nrnh4,rtqs8,jpleh,kc2hl,rij4r,o2yjf,5crmj,kc655,hj1cp,miu57,j38bd,fnmmx,m7m1m,f15ll,ll520,fcee1,miv6i,lwe54,fnnbt,tpbyw,n5cpk,rtxui,kc908,c83fd,kc9nf,ql1eg,j3dlm,kcc7s,mj0gp,kyujg,igyfs,knmje,d4k9u,ezzs2,i4fj7,l8t7l,pax7l,wsndv,n4bc4,10urhf,kb6xu,123py9,htbz4,vv0yp,wsqld,qk02q,nqvfl,g97j4,ay6xu,e2ktf,fmsmb,lkbj6,gvu3l,c7a5d,kxysj,aydls,ep9r4,ee276,abz8j,ee2xs,e2un5,j2nz5,dgfdt,ee9nn,bl540,cu50h,n4zj4,kycbl,pmwrl,fnbts,tp0mb,mikdc,z02jn,o2rmo,z02ox,166joh,1091k1,12qy3l,11t8rl,14mdup,181zxf,18d8ip,174an5,xr78h,xr7fl,irtnk,miobm,zmn6r,zbeu9,ubmqp,rtqsh,igmow,gwh5t,k0v8g,jee8y,i5hb7,iryn4,opi8w,opiea,p0rky,f16xt,s55uo,hj4bn,pnasi,j3cbk,igvz4,jpuxt,eeun5,mua8y,fb7ah,h6muj,d4jvt,92hrc,ifm3t,edj55,dfu7f,f02g8,g9355,fmnah,c723u,84z1m,f08vd,htfqj,mt8h7,fbjl5,fbju3,g9ai1,m6tkb,dg6qz,gklm4,j2j3d,gkns8,gvwiz,ep9ij,77lgq,k0ctl,fbtkb,ky4bt,ee5k9,h7bhn,httt6,drs88,f0sff,h7hux,epmnf,ighm1,jph0o,cj5ex,mtzxm,opfai,fys8b,1aehew,hj1ux,18j36w,az2uh,cj9nv,17wmnc,1b10ru,1b1160,11tld6,qwbe0,q9up4,q9v6y,ubyy2,r7m20,d4fzn,hhru9,ht3jl,i4c8g,hhvlf,fb81d,gvg1d,kb4mp,dfwq9,f04fl,dr701,fbeep,jzywh,dr835,ir0z4,ifsqb,bvto1,fmoog,jorzl,ifwa9,l9229,k0434,h6zw3,ir7ap,jdofl,a0k4w,edw6o,kmp9t,drl4h,ig67n,fbvqp,d58dv,cu0vn,ac5ps,h7esz,bl5rk,fc16a,htxkh,hipf7,d5els,c7q42,fndip,hit9t,cj181,fyng0,fnhf7,kyj3l,cudtf,dgve9,l9tki,irxgw,k0vow,qw4hc,pbygi,sgc8g,h7tbl,v9hrk,anv5f,12g01e,gle9d,c8301,y2pgy,cjc8h,14mpyo,12rb00,gwpo1,eq241,vw41c,bwxgz,d5w1f,fcjub,p0wxe,lv35u,8fxs3,e2802,mhn9c,eopxd,eoqyp,g8ypt,fxqio,g8z41,d4m0w,h6pds,f030h,nfi9t,kmddu,1auchv,173io1,kxocg,19woe9,l8xtu,w69hf,edqtc,l8z0h,nqvgj,mt60x,lvgw2,gkh1f,fbk76,cifwg,kmmtd,fmwub,j2j28,a0oua,drk01,fbr41,dgda8,hihmp,i4zuo,ee5q8,fyekh,ephc3,fbyo1,kbrnn,d5cch,fnao1,n516o,tdsht,zmkap,13oncx,zxsub,lw4hu,13zw75,17qr9d,10karl,14b64h,10kc77,11i2bn,11i2gx,qkrlv,gwf0g,mtxhc,fnhmo,irv42,riio3,k0txf,ll0ow,gl83k,mu0le,ga18i,gwitc,mu1tu,hj18g,rimww,jppdu,nrtc0,pn9hc,te45c,n5ewy,lwj9d,jemwx,cjf9d,q9v9c,la2v5,joeiw,bk9cb,eooay,ct955,hhtft,ezzns,ifma1,h6oco,dfu6h,gvi6g,abitm,q8n2j,w65u1,10ur61,14adc9,1audu1,14lnnt,zan7v,9p6oa,kb9qh,mt6dl,gvo94,bko5m,fxzyi,ep24p,htk3t,hic7g,dgcp7,htp6x,gksi1,e2wjs,gw2o8,jp8wb,cu1u1,fyfig,d5bex,epjbc,kbua2,d5e2y,g9rm2,tp155,f0vt4,irqdk,16t0gb,n52q2,m7d8q,14xm15,158vrd,fc6x6,v9ayx,12frkb,1328qx,11i289,j32mg,u0dor,n55vu,jpk7e,u0ebv,hu58q,w72h5,pybnt,n570o,miqa3,kyjt5,jpm4o,fyt1n,gla6g,hu8wb,een49,n5cqw,i5k23,s55my,ll6ru,miyko,k12h5,e3kzt,cjert,bwyh5,llbew,k14ug,abbkg,h6jps,edf69,jda37,edhn5,d4jwx,pxdqo,lk2fn,sqjbl,kb5e8,amt1s,13nw41,15ujyp,15jc0j,108b2p,1aj55f,13z5sh,lk780,pb1w1,mt5oz,odd03,gkg5s,gkgls,j2d1u,dg45t,i4p03,drdw2,ay9xt,f0d75,92uvk,jdp01,b9l1u,g9e36,m6xsh,an5ow,ee0cz,c7d1s,kmsgh,7itn4,drknl,irf0x,jp58x,epd5d,g9ms2,aym6r,fn782,j2u37,fyh1t,fc1aq,op68h,op6s1,p0fyr,n50r5,v98ep,f0wk0,q9glu,13dfkh,mtuxe,11t98z,124hub,174bkj,zxvip,hu442,uy39t,vkksx,tp5qr,pybkh,qw1w3,n580g,m7ihd,h7pw0,fyt00,kym8h,ba9ht,ll3m8,mu3bk,d5sgh,ll89c,o34nm,knis0,fchw1,miyxc,k13o2,ga9ap,lwjkg,eq3f5,mu9jk,pc5xu,riuc0,joeqh,hhr2x,h6k7v,eoot7,gvefu,ci40p,dfuhl,m6ijc,pm5ll,g92l4,vuxw9,11600p,14lmmx,14lmu1,xqfq1,123rdl,qk02h,pb2mx,q8sih,e2jo9,fxztl,d4w0p,fbli0,9e4t5,e2qc9,e2qhm,kxyop,kmqhm,htlne,cttjv,fy8gr,c7eop,fydqw,htti1,je1g8,ee93s,g9ot4,fygd5,dgk2g,je49k,lw1qx,dgnoa,jpemz,py5sr,tp0d5,kydcr,kbwka,fc55k,13onmj,12qy3d,1av4d7,17qriz,19azh7,13zyu1,15k5jv,eprbw,lkzbs,11i32x,jpkew,ydpzv,jpmmz,ds5ax,fcd08,lwd7c,c81zt,ga5g9,8sgnt,is315,c84nt,dsbmh,n5g0o,r7k2g,hj861,fmiow,s428x,vjokh,nqqzk,x3w2p,od8wy,jzxnk,kmfxc,1818td,15jcpv,jdk4h,lk8ip,kxs81,hi6ht,jdm5c,bkp5v,dg4v7,fmt7m,hi99c,c784g,fy2zl,bkroj,htjfl,j2jhe,lvoo4,ee0v4,fmzhe,h76ld,drmw3,irhwh,f0orl,gkysi,b9y3k,kyba9,j2w0z,je4yo,irnxe,iroiq,lkue8,qkn4x,srb4z,uxz8h,16t0gx,12qxnl,15vbfl,10kag3,k0pr4,y2ggx,f102q,12fswx,opd7l,xg0kh,p0mcj,ignfm,fyrc2,i5fxc,gwhwj,fcco1,i5hnk,ophnk,cjaar,te3ts,srn6q,vw1r4,o3480,la0ma,t2ysi,o365e,llag2,fz2hs,jd694,fmc2z,dfoq1,bvizt,od33d,dfs4p,j23e1,h6oa2,mszjd,bvpex,gvip4,dfxpn,g94h4,ift63,i4kq0,c73ca,amxrc,fxz1k,e2kkp,amz57,k046j,o28q0,hiaqz,lke7d,h74rt,mi6g9,bkw89,mi8yw,f0krv,fyb57,anaax,htqwb,e2wx5,jp7jd,htsdm,htup7,g9okp,f0s8b,g9qzv,i56w8,k0my2,ng8yy,fc33d,bwiej,g9u21,g9ui1,hit61,a1489,hiu3v,lkxgq,k0r6z,fyobv,e3a21,kc1ez,irvqg,fca22,usk88,dgwh5,fnl7t,xwzjc,1b0ylm,153go8,16nnfu,1b0zs8,18uc2w,1b102w,1b10a0,1b10dm,epyi1,c827f,cujl5,vks88,zbmy0,wts4o,c84kp,h7xd5,c84yx,ydzvu,srq94,ga90p,ritm0,fxkc2,iqpwx,e25tg,ammk2,i4e28,g8ywh,l8s8h,e2bxt,od6ep,a0bar,e2fzl,hi2i9,gkcvm,f06pc,dr8q9,h6uwh,i4q9c,hti7l,j2h4h,l95o1,l97e9,gvwhd,i4ur5,fmz02,f0jn7,ee3n6,jdx2r,ctzcj,d58og,f0o4w,b9ttf,d5als,lvxv7,hinsi,9pr5f,f0shf,f0smr,9prow,fc22b,iggxd,je7u8,fnek1,i5cds,lw78w,e39rn,p0mpe,eekc1,kc31s,gwhgz,ll20i,t2r3k,r7d4g,p0pkg,124qsw,epyi9,xg81e,11ibsi,dh5gx,glj5d,kyv3l,oeh2o,chzcz,i496q,axtmo,fxqrl,iqvup,jolog,f01ts,iqwg1,hhz7l,jdf42,w65z7,15jb9d,15jbb5,od9j4,m6lqa,165sld,1aucu9,1auda9,1a7wht,jdhvk,zalxf,h6ups,gvmdc,i4lhe,jdkhv,f09mr,gvrr4,ep48w,drfup,fbo1t,b9l1d,d50g1,epb9e,ctx4x,g9jcx,fn2yp,fbw78,epg8x,midxc,igb9c,9375s,fc05c,m7874,dglc0,kn2ip,pbnsz,hiqip,t2io3,d5f9e,py60z,ydlkx,fylkw,12qydf,1av4jn,15k3cx,k0q0w,13ooub,13dghv,17fk5d,eeiv4,hu680,kyjsz,jee80,mu0hs,lwbnk,lwc5e,gwk3l,l9vuo,vkqyo,kyou9,i5k3l,j3bb4,huddt,nrvr4,ubvia,sggsg,kcb5s,k1477,pc682,fmc5l,hhs95,jzonc,gvb9l,8r5mw,h6nwq,ctcga,dr360,iqwqy,kxlhn,pm6a2,ht954,131f2h,15832h,131g95,odbpl,td4nf,f07re,pxivd,pb215,lvgzt,l90sr,edu6i,gvqq1,cifrd,h703u,lvl6w,jdp1m,69qa1,fmv2g,i4tqh,h743v,cikp7,dgb2i,cim2w,gvy8a,f0j9l,i4wy1,epb9k,c7hsa,cu0ej,nrc7d,cu1vt,irkp6,igd57,nrfex,pmvux,n5021,rtkp7,pmx1n,qknkb,w6xu3,19ax55,x4o09,lw4ne,10kabv,13dfih,1ajwcr,18zpvv,ydog9,13ops9,kyhag,yox8p,zmnbd,pyao8,m7g94,y2h1n,umv4b,wtiyz,uy409,h7o7c,qkt6z,wibt5,m7imj,ll1u0,j35mw,d5nd5,knczu,gwj9l,ds5u3,gwjd4,glayx,miu88,hubgp,lwers,c826h,p0tag,pnaiy,n5edk,oedhk,pc360,ngo3s,nrwnc,is420,s58y0,mizig,o36q0,gli2z,llave,oefyg,u0pze,k14wb,hj8w9,gvas1,hhsb7,edggg,fb6s1,dr041,pm0wg,eopxu,ljydt,ezzyo,nfhxv,xqcer,zajo1,1089ox,11h7wz,10uqvn,1aud75,10us0h,qjz2q,odbio,ycwyb,ozteb,pmamp,ifuds,jdk5v,htdqr,dg32p,fy3f5,gvwur,an6mo,c7e1c,ctv80,fbseq,hihox,dgg29,anbmb,epf2p,i51ch,je09e,c7l1s,d5b9t,epij6,m7aj7,kycgh,htzf5,wi5u9,rtmfn,16t0nl,hissw,jph8w,gl4nk,166lw1,ydonn,166m8j,kyhg2,mtwsw,12fs0j,13298x,zbexd,rtq4x,kyia8,l9r68,vvtn7,m7hhs,n57ys,ayyz6,fyrv7,h7qoh,jeg9d,f14r5,oe9hu,ll4r4,jpq4x,oeahe,mu5ci,l9yog,pnbgw,pc40g,hufip,eom8p,ct7q3,fmcpn,b928r,eosuy,joml5,f02qh,bkhi0,t1s2h,q8n8b,td195,w66hl,11sgbf,zak7t,mt2sa,16h123,173i6x,12ezkr,14aevt,j29y0,dg0bc,123ra1,uau3d,m6nyy,sqniz,rsxzt,ozti1,kmhw9,mt5w9,e2jyx,kxs4b,k02xn,hi717,abtlk,an460,ig3a2,epas8,fy9ax,bkxso,htpnf,jdz8a,bwcbd,f0sih,nri6w,kydlm,u09gb,v987t,vkgwr,mttp8,m7cyi,l9nve,mimmw,166kyj,18d921,14memx,18d9g9,u0e6x,mip7c,l9t21,hu8k9,fnl97,ll448,m7m6w,j38ux,p0rbt,opiu0,n5c7u,ll5qw,pyhw8,sro9k,pnaxk,hudzs,gwqe1,ao0ux,hhti9,lv6ow,hhv6o,eosdf,sqjj7,xqcip,nfild,13z44j,131eox,mt2zm,18186b,18cgtd,ozr6o,joq00,y1n1f,mt3vm,zluu9,ciazm,zx3xf,um31d,h6vq8,tzm03,r6h5v,g968w,n4ele,edrxe,lk99e,k02le,i4nmp,jowo0,edxk2,ep6xt,htl0j,d52u8,epa1u,ig4m9,ig543,k0bxd,fn0o1,i4ye9,m71gk,9ecpt,dgggx,epfkw,f0oiq,je1pd,dgjs1,epi5d,fn7vm,e31lv,h7f4x,irmu8,h7gdd,nrgyp,kn3oh,fc49s,zmk2p,158u8z,n52xs,12fppf,158uqp,10vjab,18d8pt,116sf5,z05nn,nrmaq,ydotd,iglsw,sg7j5,gl8dc,p0n1f,lw9sz,hiyqq,iry5e,s555u,d5sv5,i5llv,f18gx,igvc1,ql1nk,t2y3k,eq15v,is4bk,ga8dd,v9mn4,ga929,ru1eo,jpwrm,fb31l,dqwq1,c6rvt,jd8dl,jd8h5,fme7d,l8nzd,edg4p,amodk,axx0p,jzsvc,d4l2h,gvfmy,eot0p,jde5n,h6qqx,dr59l,ci82x,jzy09,htaax,fbfe3,iftk9,mt5ex,htdgr,i4nsb,cifop,kxueh,gkj3d,edy3t,gvwbt,f0i21,fmzor,fn0tl,fy9t5,kbmuh,i502w,htru1,h7b1l,gw2jv,cir1m,drrah,h7dbe,htujs,f0prf,gkx7t,ky9d6,d5crv,eeciw,hirqh,g9uuh,c7skr,gwesp,h7nft,cucoa,kyjhm,rtsh4,hu7oq,oe7qi,kc4rs,wie7e,sgc6g,jegx5,rin54,wtoiw,qkxt4,xrey0,109bmy,f17xn,k10rt,wtr6w,az5kb,12ra5k,jpuw9,11iei0,mj0kq,1176g8,eomcx,9owc1,eop69,gk4q9,km8mp,eoqb6,dftv5,kmak3,eosc1,axzxv,h6rlf,kb581,j27hs,ifqgh,jdg4w,gkd2p,nflbo,fxwfm,gkeer,k00xf,ep0kx,jour5,ctmup,jdn75,c781d,fmu9c,fmusz,gkkj6,ig0q9,ep6b5,dg88h,jp0xd,8gir5,drk4x,lvqsy,ee31s,drm7m,mtjlf,dro8i,g9lm9,bwai8,drptd,9pn1v,irjhv,irjsj,8rz00,n4xgx,gw6sx,d5cvl,gkyup,kbxyp,i5b01,jeaeq,78240,miq5u,epusx,fcbw1,mu0xc,p0oqa,yduya,vvyy8,v9j02,anv75,10vsvm,dh08j,a1esz,y2oz4,zmvoy,11ibe8,x4zxs,igv3n,109egi,f19pt,acpkj,wtsq8,blnzl,1597xs,bag1d,bwx4j,zy774,un65u,fns4x,rit2o,ru1v6,xgc4w,f1ctt,gva69,iqqkk,abcqo,joh6o,fxow0,e29qa,f01kz,ifog1,fmk3m,n49c2,m6k03,sqkch,16s8xt,12exj5,15uk5d,14adtt,ir0ea,mt4oy,zlv2b,rsxvn,pxj41,fbhz6,g98ap,c75a9,dg4ub,mi1s0,fy2wz,gkkaq,ctqgx,gvwox,fmyv4,jduo1,931a9,lkl35,ac1tu,i4zwh,drou9,je0sg,dgl6o,q9cub,s4t6p,lktxd,o2qkj,je6tc,rtlkx,y2ddt,vvpxd,15vbnn,15k343,g9v5s,1av4u9,13zxc1,18d98j,174bgj,i5ccg,14xo5f,xfzb5,gl6bm,12fsox,12r1fl,xr8w3,rtqpv,bleo2,riiip,pbver,lwa9s,rikht,fysld,ll328,fnkw1,igqgw,irz40,lwcqo,is0ox,n5d4y,ds9mp,t2wjk,eq01t,pc2ma,huemb,pykw0,m7qo0,o36f4,la1z4,e3mgy,gwrur,amirs,bk8ju,bvj2i,jzpoo,bvl1k,edidk,ctbuy,eor7t,fb8aw,jdg94,1aucqx,131f7t,14wukr,15jbrd,eox6y,15jc0b,15ukll,w696x,gvo20,ir3uy,htea0,fbi2y,jdma1,f0avf,drdmw,f0czu,g9c0a,dg79k,bkw09,8rslm,e2uh4,e2uyx,fn1qi,p09l5,eebpk,mii2z,jpde1,g9rm0,xr495,zmjk9,x4n9l,i5a6k,lw4y0,h7kui,17fiyx,19xfnt,kygne,n55zc,pbuob,j3409,tp6h5,kc2mh,knbd7,n57wp,kncui,cufih,f143u,p0q6i,n5ayw,ga3ux,f17k9,ga689,jekcq,oee14,nrxc8,78cw9,m7rpk,i5owb,jpvnv,km4eq,kaw5s,d4hn5,eop76,c6ths,gk6s0,kb1w3,jddg0,y1l01,tzi1d,kb5ao,j2842,12exu9,173jbl,16h28h,i4k28,yo4yb,16sb69,q8qz7,i4l1s,n4dqo,uxbdd,ooky9,d4v81,ctn2p,fbknl,ir6vk,e2o28,edwur,jp1ld,j2lch,j2lht,ctv2o,gvyq9,j2n2p,cio42,j2oeq,ac2dv,gw234,i50ep,6a1g0,fyeq9,fbyoi,e31g0,g9pxv,htwya,je3te,je66o,rtllf,j2ydu,pbpch,wtf4h,zxt01,12fpg1,p0ikw,11t95f,16t21d,mtv9u,13dg41,13oq35,vvspd,mtyab,pbus3,pbuvl,n57o0,gl8yb,a1aq8,igpjl,mu2s1,n5efk,l9z6a,knlzk,i4avt,amm1k,edguz,9dqai,ifm6y,fmhuh,fbajc,hhymw,kb3yw,13z3o9,14llaz,17pzbt,14wul7,16h1qx,joqe0,1583yx,18yysb,ooknv,lvfyw,qk0ih,kxqu1,jdkih,fbhsp,c77a3,ir7yy,d515n,e2qvt,h78d6,ky2xl,8glax,i4ysb,ciqxk,cu1zt,dgjq3,dgjvc,hin89,hio2g,htyjf,p0f89,umpwb,m7bmj,j2zkq,xfwpl,19axjt,1av57f,12fql5,13zxg9,k0qqg,yoxg9,pn1y1,zmndn,wtiu1,v9c4b,u0el5,l9spm,lwac8,epuah,fnkuy,kc6u0,p0r6i,q9qqg,fcgbd,w79sq,lwgpl,jekwp,pncnu,az9ll,muaag,ifgwx,gk1r7,fmcbk,iqq00,jd7mr,eootd,jd9r4,gve75,kb09v,iquap,iqv8g,fbbds,h6rmq,r6di9,payle,1089pd,nqsgy,173iw1,14lmld,15jcip,joqsg,16h2jl,12q8gx,zx3oh,xqfvn,vv0v7,yo5y9,lk881,kmjc0,hteht,bvw80,htew1,gkhr7,d4vts,9pa8x,kbdya,gvso3,joy5d,7ip42,htjoh,fbqzn,ig5up,dgfkx,ooza8,htrkw,43bxc,a0v8i,htt9c,b9uw3,gw4tc,937z5,je2eb,dru3l,g9qxt,h7hgg,i58gz,j2ye8,qvwpv,10vi75,zmk0z,lw4dc,kby00,zbcdf,1av59f,yowrl,qkr1c,12r0o3,jpjky,s4z35,i5dr6,kna3m,jpkyo,igns2,irwgx,jpmqp,f12zl,igpeo,f13fk,een4y,hu99d,gldpd,qkzaa,ll8v4,o35k2,knk0w,igwo0,mu8f4,kcd43,cjfkz,gaaea,blqu9,i47vt,iqrop,ljxux,iqt49,fb754,n459k,jdasp,gvgfd,ht6jv,ht6w9,ifoa1,axzxl,i4gx5,fxuaz,joqax,j2be2,ir36x,dg2cr,h6wyz,fbigb,k02y1,g98o9,edunc,dg694,k05t4,ig089,abv1l,kbl9k,h78h5,hihnv,lvunf,jdyzs,fydk8,h7cfd,jp9nv,irkdk,ac60b,e30x5,mto89,htwh5,j2v8p,gl015,k0mei,bwgh4,gw9m0,iggko,c7r6y,gwca0,irrxk,ba4mh,fngbt,kn949,jebc9,aywo9,miort,6wtt5,g9yp6,h7pbd,dgv57,kykdk,l9t2i,fnjjd,ba8rt,11719m,14067c,az3qj,s56w8,t2wyy,hj52h,132j3c,10kmqw,11icdm,zbomg,1174h4,vw3l4,f1a97,e3kq1,p0x9m,kyup6,oegru,j1xyp,chz1t,jd7zn,n43ox,dqzhv,hhu43,d4j77,fmhrl,j244y,axy9f,8rbu9,9p229,ctfht,gvkkx,fbfg1,gvmcx,jorch,fxxte,n4fht,k03aq,c7643,h6zu8,kxvu9,fmvw0,kmokz,i4sz7,drhtc,htl80,h74hd,fy6uo,fbqcx,mi75d,epapc,drl4j,ctwxc,gw0qa,k0elv,gktip,h7cog,htuer,gkxf8,b9waa,k0ktu,mtq7k,kyb74,je4s1,h7h0y,eecfl,bwgxe,htzcj,h7iep,j30tt,d5j00,jpjsg,eeinl,gl7ao,lw8j4,e3cog,cufn5,s52ya,ga2cz,vvze8,9ewmr,1b104w,19s2wg,1a3bhs,1b11kg,kyrld,19s52o,is4dt,hufsj,mua0g,axrsw,fb4zk,edg77,fxnpd,fbav4,m6iyp,n49vl,v8i9s,lk6f8,l8ydc,vjsar,h6x34,jdoar,bkrwj,d4yte,h720w,gvu0y,htjy8,kmpc3,j2jwj,ee0w2,epbb4,b9pj5,cips3,e2wsj,bw9c1,h7ark,epeo0,hijur,hikzl,hilxd,fbykg,epi9u,igf0j,igf7n,1278e8,18r8ap,16vtc1,t5dtu,ww8jk,1axx6r,11w22o,1axyf5,1axznl,11kvi9,14papt,q16ww,tpav4,pbzuo,ubszm,nrtoi,oechs,ll81u,tpem8,pnbwi,eesn7,pc4ua,gv9s8,ht095,bk9fs,o1rez,dfq89,h6lca,ci2vf,ht5mz,edjwo,b96yy,g8zt5,mhs7f,ycu4p,12exu3,kb7bc,14ae89,zalqj,td4zt,h6w09,m6oy1,ifufc,o24jt,htemi,fxzre,ir51n,i4o23,pp6x4,tg4zt,vbll6,q0kjv,vy3bf,cttft,h777t,ctw7c,c7fd5,ctyx4,epeo8,h7bbd,ee6o9,fn56z,f0o7f,fn8p4,i558p,igf0o,cu5mx,hipzc,hiq6g,op7gp,gwaoa,xfvpl,igi16,zbbnv,11hzk9,qkojs,17qqvf,wtg09,oe2a0,116sln,12qzpn,15vdah,zxvwp,knax8,fyr2i,f12iw,k0xs9,pygp4,mu3t4,ngnm2,is3ig,miybs,opmx4,cje8b,pc554,dh4nd,gk24y,9dm1c,jd89e,i4b9t,jddar,gk8nk,gk95f,ht7v6,j2635,v8fwz,w65ox,w666p,x3vtd,d4pea,16s9jn,fbdu8,1aud75,mt3gw,1160nl,i4jiq,zlu6p,173jpv,xqfrl,y1ok1,sqnwx,g96fk,f0att,fy1aq,h71zk,dg7kh,ctqoh,b9k5v,fbnbk,k0amp,f0i8h,dgbkg,mtiz5,fybps,h7ccw,f0pg4,fyi8j,jpd5d,lw1ar,m7avk,sg2kx,tp15f,zbbpt,13dett,fc5qo,18zpxt,19xfwx,13op1v,fc6xc,15vd8z,174bir,15vde9,qvzyo,j32fm,sg82b,qkt3l,oe5xt,n58lu,hiz80,igp3k,o3040,igrwz,fnnkh,k10gi,hj5sg,huett,lwia8,k130y,m7r0w,pnd5e,llbps,fmbtl,fmc2g,8r4bc,dfoux,h6k0p,msvh5,edh7e,f002h,hhx3s,jzuop,lvaqh,wsna3,16s8wr,ht9lm,qjwuw,w66zd,gvkka,ir07u,11sijd,w69ax,td4ux,pb2jd,edsbc,hi7q1,edv16,hth94,d4xju,edwt7,fmv2z,mtdne,g9ehk,ee36g,bw74o,fya6z,fn2vu,8gmmx,h7a6w,fbwpk,gw3kq,dghzs,epg63,gw6mx,f0s48,igfff,iggbc,htza2,rtl7f,g9t94,l9lzu,f0v6g,t2job,12foyj,g9ufu,14mdjv,17fijf,gwd3s,pbs48,14xno9,1328ez,l9pi2,14b6sb,15k53t,x4qvt,lkztl,pybtl,hix96,qw1qz,p0mmx,dgvkq,pbzmi,jpqoo,e3gwr,pc108,8h7to,d5s49,rtxqw,nruoo,j3aze,c832z,hj6jd,cumop,mu848,oefh6,jpvmg,j3eqj,fz1i3,blq55,jd6u8,bvk81,fmesg,fmfoh,a06qq,c6uua,edk4i,nqqlf,j26zk,td0yp,v8g9v,td19d,ulzvl,xf4v5,13nwbn,qjy8w,lve5e,13nxlt,l8xk0,13cpb5,19lg83,g955u,josgx,pmb1d,k01i9,jdm75,ay7kw,j2elc,j2gpt,e2p5t,gklls,f0hcw,g9gkh,jdu02,dgbxc,f0k4g,gw0m9,f0m3k,a0w6b,h7di8,g9pr4,kn1sy,igejm,lks6a,hipeq,j2wkh,iro4k,mtrqb,d5fa8,e35b6,srb35,f0vds,umqqp,sg31f,116r35,13zvz5,10ka8z,kyfqa,174ash,15vcm9,1av5ib,1820v5,11taar,14mfdt,jeba8,y2h7l,mipwh,vvuap,ga0ip,ll1ur,ll25d,igp40,kymu8,fcd43,bwtnl,l9xy8,az42p,mu5eo,miy74,pykgy,eq0yr,k12lc,i5nq8,ngp40,ris9s,eq31d,eevs2,l8mp6,ht1m0,kxf3d,ezz1k,dftbc,l8rjd,gvg4q,edk15,gvh49,fxroo,gvj8q,fmlnv,bkiqw,ci8rs,cthnu,gvl7u,f078r,j2ca0,hi5wp,ctm7d,ctovc,fmu95,f0dm3,fy3qi,gkkx7,f0eqx,j2igb,kmqjt,b9n1k,epbqg,gw04o,ky44o,droh6,8gnft,e2x7s,iriuh,fye3s,jp99k,g9prf,i55pn,cu4iz,f0t2j,i56p6,irp0r,drz1n,kn7c9,jpip5,aywbs,eeizv,jecdn,i5eco,i5ep4,9es4r,fnjqj,ga149,fyu97,ga3cb,qkxbc,r7ei0,182a3s,124rvu,zbn56,cukmh,e3j1l,11icfc,hj5nv,t2yeg,1174iw,h7xyh,xrjvs,pymp4,ezur4,ezv04,j1ygg,kxer7,j21bl,fb75d,d4lyp,abho2,gvhf5,j2582,hhzcj,lk69f,kxp9t,fmo4x,bvu28,iftrm,hi4s0,lk90y,ay6uo,kxsc1,fmrxs,drdgy,gkj8x,8gddc,ep78w,jp0xd,fy6nn,k0bao,lkir5,fy90w,hifxs,e2vu8,j2pwy,ctzjl,g9lki,ee6yb,epfld,mtnjl,anhf6,d5e29,jpdgw,j2x83,m7asx,kbwtv,eegmr,h7liq,jpk4w,k0tgz,dgu5t,fnib5,gl8mp,ga0hd,kc3n6,s535e,sgcc0,epwj7,gwlv5,uyar4,k10hf,qw8qb,13dqi8,xg8j6,xg8s0,uycj6,109e9c,11tlm8,fcinl,vkvzk,e3lo1,t304w,t30xc,ru2r4,kcdv4,gaawh,dfnpe,h6j28,nqio0,fxl6o,ifk3m,dr1c1,edikh,iqu82,axxc0,abgcj,ctd8g,e2bpe,iqwoz,gvibm,vux35,xqcn5,ulz9d,v8ght,wsnr7,jdh8g,kb7ia,173jcx,mhvk2,14wvpd,jzzcw,mt5q8,i4lvm,htev7,ir4w2,gki2o,jovy8,bw1c0,edy4j,j2j9d,i4uv5,ep9kx,fbqyr,d54aq,h77ya,kmukk,epcap,lvta9,irghu,k0eo2,gw1og,htsar,h7buo,m751e,bwbup,l9gap,i53ya,hin43,85j0g,ky9j5,h7fcx,irm69,bl64j,kyawx,n4yv7,miiyp,o2q80,hir9e,1326pv,124hj5,17qrcx,1327ur,17qs3n,mtw74,124iwz,wtimb,l9ria,knbr5,ga1ds,rttj4,fnkhs,ga281,k0x36,az2gz,mu4e8,n5eo0,ll802,i5m4h,bae81,nrwcg,jekub,cum69,i5o01,p0whs,cjev5,m7rwg,gliyo,dfpoo,fb4zu,ezxu0,j218p,edjnt,iqvpn,ifn9k,g8zpk,kb3gr,kb4eg,ay0lk,rsu89,yo2iz,zak0b,10uqvd,14llhl,12q6ff,eowp4,18npc9,yzdqj,12ezux,kb8ei,o23wr,m6ow9,sfft5,ir3d5,edtzd,b9gjs,cihjd,h71xn,jdqiw,f0f0q,dg98o,dga6j,gko21,g9glm,hif7u,e2v9k,ng0nf,dgi4o,k0ia1,m785l,kn2iz,dgnwq,lkuh4,eee6g,r74i3,lkv9k,124h6z,14b6dn,n54i4,18oimh,10vl1l,jpjbe,zbex5,rihft,ayxe0,jee4r,kc4qw,irya1,gwjbd,een61,cj8cr,c8157,nrtag,ql0zs,dh2rt,pyl1m,pc40a,e3lah,kccp6,ga9u1,jenih,q9vka,lv3rl,hhsup,j20b4,abehe,e2ahf,e2b81,jolle,i4fdf,g905u,ux7pv,11h7kh,yo2vn,od95e,13z4cx,jzxqq,13nwlv,19a6j5,108axf,nfky8,131gpf,11hac1,gke4w,pxjrl,fxzir,ir4lt,c75qo,ep6mq,ctrv5,e2q4x,htlsg,an6j7,htnwx,e2xn4,ciqz5,935sg,hil5d,irjkh,9pnww,bwe6q,fyhw1,je58z,iggcy,ng9w3,rtlox,g9uts,17qrwx,j313o,1a8onl,1328y9,zxvtf,13oqfn,aywi8,kc2fn,ngggi,kndg2,rimc2,h7slt,glcb4,fyvo1,blkep,nru4w,pn9w0,oec7k,ql0r6,dscer,knkk0,oef9u,m7ro2,8hcup,h6ic9,fb3a0,d4ggp,j1zmj,dqz4q,eora2,h6puh,uaq8r,w65zt,13cn15,vuxzv,yo2xl,18yxnf,14wuzd,ooiu2,htba0,whhw9,rsyah,pmaop,kb9nd,hi6ft,fmv2w,dg7a0,ctqfv,e2pll,h74gr,fbqmy,abzfd,gvz15,h7995,jdxlm,f0mzd,b9t7g,lvx5m,fyexm,ee9g8,gkzx6,lktnd,kn4rc,jpf4q,lkufs,zxs2j,1a8ms9,166kk9,12fq1n,cu9ne,l9oig,1av597,14b66z,14meu1,174b89,z05az,hiv6g,g9xqw,yoyc9,riift,nro7t,ngfrt,m7iai,ga120,fnl7f,kyniw,az2hl,aclp5,qky6w,eepp7,qw7rs,sgemw,cjcgr,pc5i2,glijc,fz1w9,mst9d,fmd9c,9dmn7,lv5b5,e28ps,e2a3l,e2aap,lk0rm,m6jfl,eoug3,qv3oh,qv49t,ulz8j,vuxlt,uar6r,yo38j,hi1k0,1a7vs1,18chlv,sqo4j,k01sx,hi5i8,c74ip,i4na8,jov8i,fbjs3,c76jk,mw2zn,ntt0g,lbzvn,rkrq8,i4wf5,ctwgx,epe00,j2t9c,kbroi,e30wz,d5c9t,hinz4,civz7,l9jc1,irnfl,hipb5,e33og,fnan4,i57j4,hiqxu,pmx41,gl1nm,o2qoy,sg2ox,vkggx,umr6p,l9nj6,17fiox,o2tb6,166kv5,1av529,lw5lw,13dg4h,18zpy9,17qsgz,19az8h,kn8gw,1328m9,14xnvl,12frmp,t2obn,mtxsy,jpl28,kc2jl,ignj5,j34m8,i5gyo,iry5f,misps,bwra9,k0ych,pyh28,rtwv6,l9y00,cujj5,l9yzm,fch0h,nrwio,igvc0,dh3vn,ru10g,e3lnl,abb1l,mstd5,jzomj,gk50q,iqtrf,iflns,hhwa1,edj6x,kxj8r,jomaw,jde0b,dr4q3,e2ep7,j27je,f097t,hi84o,o28o9,e2o2x,i4rxk,h72p5,kmp7s,i4t0q,fy5d7,h7417,fbpd7,gkoh7,o2e5l,e2t2h,k0crt,hiiay,ee548,epdrf,iriw8,drrah,77svc,fc1pm,je548,6lgkr,kyejv,je7vv,lw8a0,dgv3d,ll17s,oe6ui,n599m,ll31m,lwbze,sgc4q,ubrje,ga3hn,zbm3s,14mnxk,x4z1k,16i3u0,1595pm,17r27c,10vvfs,z0gfc,gwp61,1174iw,hj6ll,mu8fc,oegrs,cjg89,abak3,edek1,mhlwz,ci169,hhugh,dfrhv,iqtde,9oy0h,m6gdt,gvfn5,fxqsx,oofw2,jdfcj,gkanl,ctkkx,htdv7,ir435,lk9ps,bkpo1,ir7u9,i4qwj,fbmwh,fy4oi,kmpf7,gknsh,nr6b4,fn0a9,kbkqb,epbxs,cipkh,htrjl,nrb1s,8gokw,c7jcg,fn7jl,gkz8z,fyjsh,iggc3,gl1dd,fym5s,hitdd,ba2r6,epoxc,e39v5,jplpu,p0pkg,baab5,zbm7k,ubu7k,zmvqq,fnpdf,a1fxw,yp7cg,j3chf,132jow,w7chc,k13g3,v9nua,qwcmo,i5pv7,gk1z4,j1ykg,dqxc3,eoo5d,dfr43,axvuo,eorcx,a07nm,ci4n5,a09hc,ci60y,dfw00,10uqwz,131eyr,108add,12eyip,dr98g,vv0zl,x3zcx,um3b5,mt6pt,c75oh,f0dfn,hia4j,e2p1e,c7a68,hibuo,jp11c,d52ps,kbk1s,7u2gy,cinnl,epc8z,8ru0z,ee54z,e2ww0,epg74,gw5xc,eeawx,f0shv,g9qrk,mtqbk,igg3k,ng935,s4tab,hiqyo,166lc3,15k4ub,q9jlt,tp5tt,h7ohu,knbk0,gwjnk,kyohs,kyoqq,pyhmo,jpr5s,bachv,kca82,gk2a1,e26kp,gk421,jdafc,dr1ai,fxqyz,nqpvv,lk2rv,yctl7,ycts9,ulzgp,10uqdl,12exjd,13nvpl,l8vt6,14ae6j,zx32h,v8jbf,kb9ft,gkfk9,e2j7s,ifv4a,kbafd,hi5oo,fbio8,ctn9o,gki4p,fmsll,i4pmy,ifznt,dg8g9,drhc8,kbhhn,gvw5k,gvw95,h75e2,jduvd,e2ts9,gvz7u,aygzu,fn1c8,ig6x4,g9jij,ctykq,ctzm1,gkxqg,epki0,n4zpn,pbogb,pmxhl,hirwo,y2cw9,rtma1,g9u6i,q9fnu,kn5ze,lw4aw,o2sco,zbbyh,124hl5,19ayx5,1093gr,15vdqh,10943v,s4ymh,srfux,qks22,vvtjd,l9swb,igp1n,jpow8,f14w9,kyn9l,ngky0,rtwju,opk5m,j3ayw,ql0co,nrvm2,p0u2y,jptqh,dsbwp,cjdvt,n5gwa,la2bs,m7sqw,g8te9,m6d01,gk3wx,ezxn6,5y3bl,7ibio,tzidt,l8v82,jdg5u,15jbbl,fbdsg,pm8gi,131g29,zlu6p,14ln9t,htdlc,bvw7m,hi637,f0a35,g989f,kxsk1,d4vyp,8rkpd,ep40h,ifz83,joxxu,i4ukw,fy7m8,fmzh0,dgd8w,cinyr,9pjf7,mtivk,irgup,h7c7m,i530x,gw6mp,cu3yr,d5cwi,g9qkw,lkser,g9ryp,tdrgx,e34uo,mik28,u09ap,zbb81,xr4k1,116rwx,11i0k1,12qys3,124ia9,166le9,xr7f7,ngdn4,116tld,sg79v,tp5ld,t2ok3,k0tci,r7a1d,o33f4,i5ljn,ll7v5,nrx8y,v9maa,igx5c,w7d8w,is6dv,cjfm9,i4bdm,kb0bd,i4dp7,hhxga,gvhei,kmc7t,eouag,qjvvf,qjw49,yzb4r,toacb,12exuh,yzc2h,ooije,16sau1,uxb2x,v8jrv,w69qz,ir2hk,mhxp5,josyh,h6xp5,g98yj,d4vvd,hthnd,g9eah,kbhga,e2qzd,edzvf,a0pqx,drlcp,931ga,e2xw8,iga6z,g9no8,fyfa1,je1nd,irl08,fc0gq,eebkp,iges9,lw0yj,q9d21,vkgyh,pmyoo,mtuvs,l9oii,158vh5,kyg64,17qrvd,zbdjt,j31js,10kc49,1328kb,124jiz,umvdl,pbu6x,kc2jd,nggih,k0ul5,fysk9,hu8ih,h7riw,opgm2,bli1l,9q3rt,ophzu,t2uca,is0gp,k0zko,hj4ii,oplsq,k12jd,k12vu,fz1ej,gaaft,k15ax,gljiw,chz8h,eon8h,fb57l,axtnm,ci23k,h6mn5,iflpf,h6o9v,bvokg,hhyjk,axzc0,ht7vl,o1yqp,y1ler,l8vts,gvkki,s449s,o21cw,1583fl,17pzxd,15uktd,gvlpe,1aj5k1,zluqp,zam8x,h6x7n,htelf,l91gg,cih5s,gvujl,gkm01,h7529,jp1r6,ig5gh,drld0,n4pup,ky2jn,ciof6,drov4,hileo,n4x5v,aypcw,jpco2,hty00,py4kj,lw2ea,lw2g1,qkndt,tp1ep,ngale,10k9i9,11i0yr,174au9,10kbtt,gwduo,lkyhu,11tb1d,p0l9d,wtiw3,fc8rk,j35uo,ga1b6,acjs1,ophwg,igrc1,opiao,d5s2p,lwfdu,q9tk0,c857l,n5h0g,e3lwh,llbc2,opowz,abbcb,i4aeg,ht23t,kazc9,fb7u3,7iaga,axwkr,hhy5l,dfwh4,edn6x,nqsq1,g94dn,jdi3s,dra3t,kbbag,k04rt,h704p,fy3aj,kbfhm,ig0kp,c79re,h73l6,fboq0,g9f3d,lkgtl,e2ru1,gvx9l,ctug9,e2tgp,ig5m3,fn148,drmll,i4y7d,g9kyx,fn5pn,c7m7c,c7m7c,d5c4r,m78mh,b9xyj,n4zft,f0ucp,f0ui1,j2xnt,cu78p,fykvd,kbyy1,cuaaw,fc757,l9q5k,nrmso,fc8dm,d5kmj,a17xo,fcaax,anqqx,h7q7d,pbwyw,nrqei,a1asp,e3egb,vkpka,q9odk,tpaco,vkpyi,zy2qw,x4yp4,qkzze,x4zhm,w7a94,93qej,glgh5,y2qwa,glgiz,wiko8,jemzt,opoq2,r7lbc,oeh4a,bvh2p,gv9rk,dfooh,ljyk1,h6o1e,ifmep,ifmi8,fxr3k,ht7ox,hi1kg,cti5t,bkk4w,gke7l,cibhs,bvv3n,hi81f,l92sx,ir6lt,ir6lt,hth4h,g9alv,m6t2p,ep437,g9b03,e2n76,gkkdt,htipd,gklo0,fbq2a,i4v1t,gkofn,cim0g,ird2r,cin01,gvyur,ky1yp,ire7k,ctwhc,htqpc,k0fch,6wgkx,l9dpt,kbp2o,h7bw3,gw3ec,d5ab5,gw4z6,f0pyp,htvap,c7ncg,bwghd,i58kz,gl20h,dryeq,igjaq,eehww,q9m0h,cj6gh,sriuq,mis1c,85vg1,qw41c,cj8kx,qw5o0,pbz5e,pbzow,zmuuo,fnoab,11tkog,1408s2,dsb8z,109eeo,vw3aq,i5nox,qwche,o37n4,ezvy9,fxlqa,hhthd,jd8sg,g8x4w,7icg0,ifon5,w65xd,xqd1d,16s9q9,m6lxc,19lfer,zx37n,12q875,fxxc2,qv8xt,kmiv7,h6xj4,g99kw,ifxog,jow00,ctohv,dreyq,ctpmr,gkkoz,htkch,gvv5t,hidmp,an8ar,ee54z,d5802,epf9c,hikld,jpbsx,nrfk4,ng7r4,tdsap,hu08w,mtt6o,je7eo,n52bm,132683,jpgow,15k3ep,13opdt,14b6v5,kn8sg,116tvl,12fsg1,u0dvl,zbf7n,u0e2p,t2oxt,nro1t,jedoi,blh6r,cj96p,jei2p,qw7gg,rips0,kyqkg,ll7pc,tpe4i,te5vk,pc35s,wik3m,lwiwy,k1403,f1bcz,jen7n,la37k,jzngo,abb9l,msukp,gk53d,c6tvt,iqtsa,ci3bd,ci4ju,bvnk9,i4etk,od7nt,o1zpk,rhls9,od8qw,iqz7s,19wn9l,16h1l5,18yy89,zx3bf,dg1ai,o23ux,pxjux,jotaj,gkh8q,bkphn,f0c23,fbkui,g9dmw,fmy2y,i4v7t,gkpoo,ig51l,drl3d,jp53f,kmv2i,k0fgq,dggwb,c7j60,c7jig,f0p6w,epgqz,fn7pl,fygaw,fnatn,mtrd7,rid8p,nrive,10k9e1,riedk,13dgjt,p0jt4,124iyz,16hutn,k0t8o,gl7ka,kc2x6,kncaw,hiz63,kncp7,dgwi4,kylxk,fnkqx,ngj2g,ga30p,jeiiy,l9y88,vksco,8sguh,oplmw,pymdk,r7ksq,gaaix,jeo3t,ht1zk,gk3yo,9dnww,d4jpu,mhosw,qjvtd,xqcsz,vjpch,i4jgy,165u6r,13z6hd,mhwb6,l9028,ctmqb,ayahe,j2l8y,a0s7m,epck0,g9l74,hts7k,j2qs1,dghqo,bl3o3,fyfyp,fn7mb,k0l74,hty36,eecwh,ric9f,g9tao,s4ufl,181zbn,11t8gj,l9o28,18zplf,1av501,19m79t,166leb,p0jrk,1328k1,wthxt,zmnbl,wiafn,rii4z,t2pch,oe5hv,hu7rk,j39hu,v9jki,n5dn4,lwfo2,fnoup,ga74j,kcaog,m7q4w,pncpc,o366q,e3m4w,gaaoj,kcdsg,d5xe9,dqx95,fb461,h6k0p,dqzbs,b940o,c6uc8,jzt5n,nffx7,d4m54,j24gr,gvh7c,gk8t4,kb4go,dr5aw,19wmsb,131fmj,15jcgr,15849l,h6ul4,10jkwp,yo5sp,pma57,nfobd,jdleg,edswp,ifw7s,joumy,fbj2x,htgd6,drdll,k057c,kbdsr,ifzdm,aydqw,htlqy,dgdco,c7g9l,hiil7,dgggq,dggrc,fn50b,gkxaz,drsnt,ayo61,939az,ige1l,fc0yi,miijg,k0ml7,nrhg9,sg21n,op7tn,r74k9,j2zo8,pbqu0,14b5cp,17fizd,174biz,14xnx5,j31wa,12r0bd,vvteh,hix7c,jedsq,i5fve,m7j4q,epuag,kc4k8,glau3,l9v2y,fnnve,bacih,sgg9k,p0uje,culnd,j3cre,blopl,jendl,kcdlk,c6qap,fxkyo,g8uld,bkaxt,h6m5d,g8wkh,jda02,gk57m,dr1k1,ht6ci,ifobm,g915u,ifpi8,pay8x,11sg4h,x3wgx,15ukdf,18cgwx,131gyr,kb9cw,rsyxt,g97hf,lvhcx,lk8td,ir480,ep1cw,jou5f,gvpnl,j2dk3,fy0bk,hi8bk,edvj7,jdoyq,ir99e,gklsx,oovs0,b9p42,fn23n,bw7vl,irg2r,e2x0j,irhgh,epg4i,irkf5,gw5cw,bl4te,irmaq,i561t,qknab,zbalf,fc468,uxzdv,16t0yr,nrkkg,kbyn4,19m78h,10kcmb,kc28w,l9tya,k0vvk,igp7k,i5gtd,fytcw,glb1c,f155v,jehb5,is0ma,t2vmq,ll76o,n5e02,miysg,dsbtv,la17n,ngp5u,jemld,jemle,nryow,gws4h,fmboo,ht0fe,fxnl7,fb71n,gvhbd,jdgq2,dfyw9,fbesp,lk6qz,drbqh,6w5be,gvrhk,fy33e,92wko,aybu2,joz6y,kmpnt,gvwkp,ig414,g9h60,ig549,mi8a0,fbsmg,higx5,ig814,dgg14,h7all,e2xbe,e2y7d,irinc,ng36w,f0oyx,fyf55,fyfxl,gw6i1,g9pgr,gw6ne,g9q3s,gw9m3,fykx7,dgqax,g9vc8,g9vor,lkxgp,e39k9,hu4a1,h7nag,cj3mx,jebxm,dgusp,igo6h,ayzaj,i5fxl,misyw,f159l,te33e,j39d7,10kk2y,1b10rs,oebzd,gwnor,gwns9,1b12cq,d5u09,17lh2i,1b138o,1apvl4,q9uy2,lwjop,r7lns,edi0g,i4dkj,dfw8g,gvj8w,h6svl,gvkhd,fber5,fmo1e,7tto3,ctn76,ifxpt,ep3sh,ctoj5,dg60h,hi969,jdpm9,g9d81,f0gj7,c7cky,irc34,gvx6b,gkq28,bkzg4,g9jua,j2os1,g9k6p,i4zw1,fyd9v,tgdwx,yrfw3,qc1m9,nu60h,t57e9,rl1yq,niyyb,s7kfk,mlb3l,fne0g,irrhs,9pw4z,anm0j,i5bjn,d5jap,eehrl,p0khc,ayws3,ayx4i,jebzn,hu5f5,h7ofl,jecc2,bwnsh,fyrht,knc6q,ga0qa,j3628,m7jsi,fnkkx,pyf74,x4x0y,zbkz6,w77sg,wtp4i,y2nhs,y2ooi,is25v,e3iep,un3hs,182auo,zboc0,zy5gy,dh377,zbp9s,w7chc,109g1e,9qa9f,jpw4x,e25s0,d4g5e,amkar,gvbi8,a04jn,nfc3m,9doci,bkdkx,j230j,m6gox,fmhj7,f00si,h6oqp,h6oqq,dr3ur,h6qip,l8u0z,i4h1c,nqqv5,pxerl,q8neo,x3vk1,v8ge9,ux7y9,tzidf,11sgld,nfk1s,14ads3,15uklf,zalvl,13cp6p,12ezlt,whhs1,um2kh,qk001,lvfy9,s46yp,todqb,nqvlv,pmb0h,pmbcz,dg2gz,edveo,d4zcz,bw281,kxy81,mtdxd,f0hhf,jp1qa,j2lj5,e2tj4,fy935,l9av5,i4xj4,h78lf,g9k5c,dgfpc,d58cg,mid6p,gkvk3,gw534,k0mgx,j2ww1,tp0e9,pmxmp,x4n0j,gl284,ydlc1,13de9t,hiscg,n529s,kbxmq,z03b5,13zxa9,igjwg,k0rsy,ubmyp,fnide,ds51c,pbxoi,fnl4w,lwc8w,nrshu,j38g1,86077,sgh1c,j3d4w,te7cw,o36bk,n5hvm,oeg5e,i5q9t,ao18j,dqwzs,gvb9l,i4dfs,g8zih,fbbk9,whdqj,ozp3d,lk3nu,g92q0,y1m2z,1auczt,kxnyi,18ch1n,o226i,10usuh,131gnd,toczv,i4l6y,oztah,v8kej,gkguj,g9akq,ctscq,gvwco,c7emh,g9ibs,epcjt,ky3rc,bl0gb,f0nbd,cu0zs,igb9m,hin48,938jt,i55e3,mtq4o,7j4co,n50jv,qkmyx,158tfv,e36fe,t2kp7,xfww9,17qr7v,18d8gb,11t955,lkwy0,19az2h,ngdsa,w716x,wiah5,k0szs,sg8cr,n57wp,mird5,hu897,blhl4,jpnyg,ga5c9,ll70o,tpf7s,opn62,ris5k,ngp54,kysy0,is5e0,ql45m,i5pu3,fmbm9,fxknm,eddzl,ezw9g,abd76,fxnf5,dqzpv,c6u8j,qjs43,ht6he,c6wup,f02kw,mt0y8,kxlqp,mhsls,r6cur,vuxhv,18cgpd,13nx3l,10uswj,s46kx,mt5sh,nqwk1,abr0x,bvy8i,ay9qr,i4r68,f0dw1,g9clv,a0m4w,h72q8,ep6mp,bktcg,iraj5,ig30x,hiec2,h75xu,ee1xs,h7840,drm4y,htqhc,cipjk,hii8j,epdu8,9ecsx,hts5v,mie1c,fyg29,cu3pt,h7gia,fnac3,hipzl,kbuxd,o2pu9,ng8sz,f0u6o,q9e6p,iggnm,r740h,pmxqp,10k9n5,op9qo,1av4pd,k0q6o,nrl76,11t9u9,11ta4x,1av6hd,kyhsg,miope,oe4nl,hu7pt,hu841,eemts,gwjkg,qw51s,f155d,lwd3m,h7tjn,qw6tu,gldoz,u0lea,hudqp,n5ff6,pc442,8hc41,cjfm9,hj8k0,o380g,hszbs,dqwpm,e26jd,h6k7s,ct8nt,nfbbs,dqyu0,a04rd,dqzob,fxo2j,ifkt4,dr0nu,ezza3,h6o49,b96e2,iqw9k,pxel5,sfb6h,tzhwb,yzaxl,fxtw8,m6l20,14wtwb,19a5w9,mt448,xf7vd,v8k2j,odct5,92r6i,oomhn,kbbbt,nqxgb,kmkgr,bkp23,a0jbs,gklp5,jozvc,abxi1,k0al5,43717,i4vmj,fmzfc,hifmi,ee315,cinrs,lkkm1,k0f6i,jp6zd,8gpax,e2zyx,c7ntk,lw121,gkzve,q9ehl,t2k9n,15vbq1,174as9,13opcr,p0jtm,19m7rt,pbsrc,11i26x,10vl7d,wi9uj,ignyx,jpn8a,fyu3d,hu9y1,d5qe3,kc7bv,qw7mg,jeimw,pc10a,o33x4,nrvq2,eq0nt,h7xeh,un4re,9f02h,cjdzt,p0w4a,ngr2w,h6j1d,d4gio,ifi1v,dr0pt,km9nl,gvhgg,ifoma,84uw2,paxk1,vjp5t,ulzxd,14lli9,12q6ap,13nx41,zx2lf,rswps,14lna9,17es81,10uswx,1584m9,w69b5,i4l0i,v8jz7,ir2n6,sqof5,mt68z,n4f1f,i4mg3,fbi5e,f0bc1,cif1c,fmsyq,ep3xd,g9b6q,k07tv,a0mu9,ayd5u,edz6p,fmxwj,fbrs2,ig6sh,i4yw0,hil42,e2zoh,irkyo,ciuoz,i561s,py4wx,kn3s3,op71d,r73j5,p0gip,zxs4h,jpg2o,y2dpd,oe19e,16htwj,14b675,kn82o,14b6sh,tdwgx,zbf1f,vkko3,o2vq8,u0e3n,ngftt,p0mjl,pbv4z,kc2oz,m7i3l,j359d,jee1t,ubr8g,fcdb5,antr5,q9plu,hj2oz,16chcw,14saxu,eet0j,1386aq,gwpup,103u1s,nrz8i,mj1cw,ljuei,bk9nt,ezwdl,ct8mj,dqyg8,bkctl,edii1,l8qy1,j24ix,ifoh7,e2dbc,hi0dn,ht9rc,f04ve,fbgtk,ctlnv,gkgob,lk9ij,e2l4a,kmmjt,h710q,77grv,fbnag,f0fxk,nr36x,fy5yg,f0gbv,l98kp,htmw9,ig4h6,hif1n,kmtnv,jp4bs,gvzoq,dgeco,hihig,d56sq,dgfzc,6a1yi,f0sh7,dgn6z,i57vt,fncq0,fymp5,jpi94,n57u0,ga02x,f12i1,mirjc,kyl2g,i5gmg,l9uay,rttuy,e3e0b,o2zfs,jpnxl,m7kfc,ba9gs,k0xk9,ubrjc,z0cx6,zblt4,10vt2g,109bze,huca1,ydxyg,15vn54,13ozze,124tgo,zmy20,vw4ko,uby7c,e25gx,h6jch,j201f,ctb3l,ezz01,dfuup,i4f90,abj1s,lk2r5,dfx4j,dr7ht,eoxkj,fxw4z,fmo6p,g95f5,htchd,n4eb5,ifu7k,c73g2,jotf7,d4u9d,ir4c1,cieb5,a0i43,cif00,edub5,o28a9,fbl2q,edwfm,fbm9d,edx6b,ig0mr,dg88j,ctrhs,fmxf6,abx0y,h7580,f0hm9,kmrhv,e2she,l99yp,jdv3m,epb1s,l9asx,fn20j,i4ysz,d569e,l9cfk,fbv00,i51rl,cit0w,igbe9,fby7n,l9gs1,fbzch,g9po1,gw7w1,gw8mp,f0v5f,pbpbl,fnckw,h7jsg,fnd4g,anmcx,h7lv7,g9wj5,minw0,irtps,h7n5d,iglgy,i5d0x,j33qq,h7q5t,jpmk0,rtvcg,rimy8,vvyya,bljzl,qw6uo,xg6gi,14mn1u,12fze8,11ials,is2nl,109dki,x50a8,glfzl,109fcg,k148h,mj0ky,vw5ki,u0qr4,mst8h,ezvr5,b94cg,dfugw,gk9z4,eovb6,mt1vk,zak1t,15jb9d,j28ea,gvkle,17eqyr,g93r4,19a6ir,ycvnl,1160w1,17es8x,123r41,x3yyr,o23cz,pxjy9,i4mdf,f0a69,b9gg3,c78cj,fbm0x,drjnk,hiemb,ee1a9,i4vuo,jp43k,htqdc,hii4g,ee8qo,i53k1,c7lfn,hinr4,fc08y,epjk4,pbmwx,j2xkw,t2jr5,z02gz,124ght,11t7yb,e36ps,16t11d,xfwub,lkw8y,tdu2p,1av4n5,1ajw8x,jphkw,hiu0y,14b5qb,15vchv,irsow,opbgg,15k4zl,13296p,xr81t,zmnk1,rtq9t,r79dv,zbfk1,ubmwx,ll0w1,gl9mp,gwi9t,kc4hs,anrr5,epuwz,nrri8,k0xoj,ngkaq,ngl1e,k10qp,nrvsx,dh45c,kytkw,pymbk,e3lxf,e25e1,amkgb,iqr0q,axuff,e2ah5,axxqg,fxrgp,jomix,lk289,yzax5,1582bt,xqdcb,16s9e1,j2894,19a6a3,12q70r,14adxl,13nx1l,19lfd7,19lft5,zlv61,zammh,vv0qz,pb24p,gvnt5,m6p55,cihaj,edwnc,htkll,k08zu,fy7ka,h7ami,ephc8,fbz9l,hiog8,gw7nv,fyi4p,h7hfs,op6x7,pbo21,lktoo,vvosr,z02tl,124gjv,13detn,1av4y1,16htzd,11i1u3,13opxn,zbefd,srf0o,ydp57,rtqfd,vkl8r,eejgo,gwhfs,ro8cq,1381s8,12wu6i,9q6bt,k1348,p0wwa,la2oa,j3f2g,fcl1n,e3n0p,ifhap,parrk,abekx,ifpu8,y1l5f,vuxg3,sqkpf,15jbip,19wnpt,lvdzm,10jk5t,16sb69,13nxub,1161w3,l8yc2,sqnir,o23yr,eozv6,fxyaa,ir383,mhy8j,mt80g,ir68j,hi87l,9e3dd,ep4uq,dg79u,ig1zk,d528h,g9frk,lvqvm,httw3,938y8,k0klu,hty6r,k0m35,htyfk,o2qj7,xr4er,12fpht,14b53n,18zpe9,13zwup,16htcj,17fj2p,166ky9,hu2oi,cuatu,vkk7n,ra21c,ze8nm,su9ao,y5b0w,tgryr,u391v,10yhap,wl6kw,v1040,10naj4,y5ehc,sj5w3,ga575,epymp,rip02,p0t02,fnp01,sronm,u0n0w,igv0z,lwhao,dsbh0,lwhu8,vkwia,eev4i,hj8r4,g8spk,kayvs,jd9ln,c6taz,fb715,g8yqh,gvgih,g92oq,13nw9l,h6t7e,13nwt7,1a7wt5,173jkp,17es63,yze8p,um32z,edr2w,hi4ig,dg53v,gkkm3,e2pjs,abwgo,gkom0,nr6hn,drpei,i51zt,dgjyx,epjo8,eebh5,lkt20,fc2jc,g9sig,t2ja1,umr4p,15k2u1,11i09l,18ogux,16ht7d,hu388,17qsgr,jpj6g,13opzv,116tp5,11i2ah,i5ct8,pybtn,g9z2w,irwwp,j35i3,hiz4p,hizh7,ll315,l9vko,bwrmj,k0xy1,q9qca,is1cq,kc8t5,ngmfu,l9ymy,fnowp,ds9uh,mix7e,knj2w,e3lne,gwqje,j3esa,eq3tl,hszmp,gk203,gk36o,7thgh,gvgpu,92jhd,j24yr,qjvj5,q8n35,pm677,gkajk,11sgo1,14wu8x,jdh5u,18chsx,10jkbl,fmp5s,lk95w,fmraa,9p9k0,92sgy,kbe5c,h728z,c7ajl,g9eg3,a0o0y,lkgbl,dgbdt,ee1nl,jdv34,epazl,g9i3l,lvs2p,gvzdv,ctx9d,hiiao,fbxls,9potd,irl9e,igdnl,fn928,lw06a,i561s,nrhsx,10yazl,vc1b4,18g0wx,sixlu,1axyu9,1axzfl,1axztv,100p9f,x7ktc,14e1lv,qyuw0,z319f,119p5s,qywtd,lnw69,hx31d,xu74y,ga50j,is1wh,hucip,epzs1,161an6,az6oz,zsl5u,ifgfd,gva95,amje2,ifj8r,c6vu3,ifodn,m6je0,f03ai,kb50r,d4td4,fmpuz,f0aeh,hi7qh,ep5d5,h7209,jdqi1,i4sbs,drh0o,bkv1l,m71pl,gw17s,h7aay,je08b,k0ii1,k0j6x,h7f3d,d5cyz,i55pn,cu5bd,je59l,jpeln,i59kb,kby3s,p0ics,i5baj,eej6w,9pz6x,ba5wr,kyjft,i5eui,11z0vc,z5x0o,15pwiw,16yv6w,1b0ylk,13uig8,1b0zjc,bwsmh,195kh6,1b0zqi,wii96,glell,10vtwo,a1gkr,y2qsq,fyze1,93sdl,cjf57,vw5bc,oegdk,ht08h,iqtbk,e2a29,e2cj6,orapc,qxyk3,s6wvk,ly62b,q09f4,w9301,o4x81,tr7ci,qbovn,g9c6r,f0e0j,edxf5,fy4tt,edzox,ee0oh,fbqk0,e2t9t,ire0h,b9pyo,ee3g0,ctxm9,e2w1f,gksxd,gkt0w,f0mb8,gw1tf,dgg6r,ee78w,drr5d,aymb6,h7drl,gw5gz,htvjl,ayomo,d5dkh,a11v5,j304w,cj25u,d5jzn,c7vjl,lw92o,dgvg1,mu0j6,cj73n,rildc,vkos0,pn6pc,fnldf,l9vea,rim9e,hua9d,xrei8,un1bm,is1bn,16tb74,1829gy,uyar6,z0eb4,fyx83,e3ib7,19mhf6,yp774,x50ky,xg9yq,863e9,tph4i,blpyp,mj1te,jzny9,fmd8h,dqyyo,hhts2,h6mm9,jztmp,lk0qp,y1l8j,fbcw4,mt2ww,14wugz,1auczl,15839d,m6mv4,t1vk1,uxb0h,w696p,uxb2b,i4kua,pmao1,fbhfl,hteo2,i4nr7,gvq2o,fbjib,b9gxu,fmupt,ig0n5,j2hqa,fy5a9,dgapt,irc1t,dgayp,ctww1,fn24j,htqtf,htr9c,jp6ir,ctyo2,ayjk0,kmxj6,gw39f,epfgj,ee9a8,85ips,h7feo,gl0ea,t2jlt,fyl36,11t81t,1av54x,1092wx,11i1fl,14xnep,124iwx,13zykh,15k5ab,15k5fl,19xh8h,v9byb,n55xe,vvta9,s4ytf,f101s,srg3l,l9r41,kc1kw,g9zi8,hiytd,jpmrl,nrpvn,mishu,o314w,pn88y,fceyo,l9xhc,i5kqp,pc18g,u0mf4,rtyrk,e3j41,srpj4,u0ocg,i5nsx,ru0qo,kccle,kccxs,llbwg,lwkn6,ezv4a,h6j4b,gk22z,g8u2w,92dqg,joimj,n45zc,j24cr,gvglk,gk8aw,mt0eh,ht7rd,pawy1,j266j,i4gy2,rhle3,vjouj,pxfig,11h83t,14aczt,16h1mx,lk5ag,ooivc,xqevd,l8xxm,um361,kba14,k01oo,gvop5,cie2y,ifwp7,fbjpk,jdpmz,i4s5l,an39m,joznv,gknuy,c7dah,jp30p,ee3rg,fyax5,epcy2,hihze,d56mg,kmvpk,hikeh,dghfv,i52h6,k0iob,cu2fd,jpd8p,f0uvc,xfv61,mik94,v97nt,uxzij,13deff,19ax3d,11hznv,17fifd,18d83t,13dfgr,hu288,174abv,13opmz,xfz2j,124jyh,124k3v,v9caz,rtqix,r79xl,oe555,w72tl,hu6yy,r7brc,epuvd,i5hjc,i5ibt,h7tah,antzf,ga3rf,mivii,ll6yw,jejrd,o3408,pyn62,kyv0p,fb47l,edfkh,eordf,hhxar,oog29,whett,yzbkj,12exw3,18yy4x,17q043,1audld,12q7td,15847l,vjsb5,um3m9,htdw0,gvpcg,h6yoi,gvqtv,h72z6,gkm6s,htkk3,ep7o2,f0glv,dga8j,ayec0,h764z,jdv0y,e2us0,e2v2p,m71ch,ee3ww,ee4gh,fyc9d,d57gw,mtlox,dghub,ky7o0,j2si9,anets,k0jo3,8s1ap,rwbwy,t5aq8,ue8yb,q0xw2,nj21e,s7n0w,w9qfk,y55si,14p5cj,ppr9u,15mv2r,16vtg3,1axwpd,1axwr5,1axx3n,1axyj5,1axyj7,1axys1,1amqq9,qcbrk,1ay05t,p3ff4,vnfm8,kc3bk,i5gb4,h7rm9,dgxzn,ngl3k,ds8r4,fcg9f,n5dw0,qkzww,pnac0,i5lch,cukk1,hj5ub,te6j6,opmkw,j3cwi,j3d03,dh3f5,n5gsw,jeo40,a023f,fxkrc,ifiop,ct93v,g8vdn,ci1zs,92ggr,dr121,e2b15,iqwm0,hhz6j,oogk9,10ji3d,123p21,zlt21,131f15,fbdwa,1aud3t,13coih,ir0re,10jk0r,jor6g,123ra3,tzlcr,11sj17,v8jx5,kmhg8,pxjbt,lk995,fmqzd,f0b16,fbpjt,a0p7c,htn4o,bkx95,l9aag,cinmg,a0sgp,drnyw,ee63d,fycyj,85h97,je5ej,jpevt,tds7t,srbfd,you1n,ridnd,124g7v,i59ug,fymag,158uop,q9h7c,1820ex,kc02g,16kont,tryoo,15mzh5,13rk9n,s7t5m,qyv2y,qyva1,10bzvd,wl5cr,tgtax,ra6xn,nul5l,rwo9l,uekrd,vnjbu,n85jt,10ncyi,o5vbv,fcfx5,jprrs,hj5i1,pnd3u,e3ml5,n5ioq,dfpcz,j22jn,jzswx,abggz,fmjqa,jdesh,r6ctd,td0pt,r6d0j,mht9c,kb5r4,zajxf,15ujtv,15uk4h,165syr,17q04h,1audnn,jzyxu,tod5v,lk7xd,mt6u9,gvq5f,kmko2,ir63k,jdov5,aybz7,lkesh,edyhs,h73tu,7u0tc,cttsz,gkpsy,htops,fbuu9,dgfxf,935k0,gw49v,bl38h,i53c1,85iw1,gkzog,ng7mq,je4ps,o2pi9,htz1d,odyn5,fc336,kbw82,vkg0x,i58v6,zxspv,124h2b,12qy5f,kbyn4,158vab,13oom9,19xfoj,14b6ht,y2g9t,g9xcw,srgbl,w72xt,l9sv5,f12jk,bwq8x,iryu9,q9ode,pbyw2,fyv1d,sgd0g,gwn4x,fcgrn,ql0f4,mu5y8,o34tc,jpusg,q9uqo,e3llt,kax9k,gk2wb,joii1,d4jvs,dfso9,bvmi1,j233c,j24vd,dfw2x,7tnjf,9p3jd,kmfc9,nqsyz,fmoq0,eoze3,j2b3d,mt5m3,edre2,lvh49,f0aej,htfmz,8gd4c,jdp0p,gkn57,hidk9,nr4o9,d52ax,l99t7,a0r55,d54x6,f0kdm,drnqh,kmvu1,8gmy2,ky5d4,ac3fv,ky6w9,fbycp,bwcx5,drtrf,bl6jv,fyi5m,je4dk,igfc8,g9sdm,eedpl,kn52j,i59ih,igj6w,dgqju,hu2az,9pwbv,g9wbv,lkxt5,f0yy0,ds27f,h7qg9,r7c4q,r7dbc,o3088,ubr54,pn71k,gwjxl,epwbt,hj19l,qw5wo,zbl2g,r7f8q,124qeg,gwlih,ydwiy,z0eco,10klbc,igujt,fnq5l,t2xm2,v9lrc,18dlns,fz1ex,tphig,ru33e,iqq29,ct7sh,dqxir,amk6r,gvb77,i4b02,m6fjl,iqveb,ifn3l,gvgvl,i4f3n,e2e0g,8g4aa,abjw2,eovqp,hi1m9,o2242,f06nk,lvf75,jorxt,bvui9,htcz5,fmrxs,lkalu,edunm,hi9tf,drfg1,kxwj5,kxy42,fmx9t,n4n3l,fmyur,irdkj,j2n8x,bw6up,h78c0,ayhmb,irgvo,fbv3n,bwbw1,i52ya,anfg1,htvzk,hinzk,pmvar,hisc1,anl4h,lkwa8,hitir,l9qy9,igmsy,93j03,jee5s,j35ps,kym9e,pbyk0,i5iep,igrg3,xre7m,pyh82,o32sx,epyk3,15vm5s,14bgog,baeep,xg94i,hue41,14bi2a,ye0a8,pndps,zy7zk,p0xkg,f1cs3,g8tvn,dr01u,jdbi9,g8y9t,jzttt,kmb0g,ht6yp,gvi80,vjon5,j27cw,fxu4g,11sgzl,16s9oh,mhuww,16sayp,1161mp,y1oht,uxb41,vv0w1,zamv7,pmatf,hte0y,l908z,h6x8h,f09mp,ep14w,eduma,bvywy,wkg74,s74ub,rvxq9,qbrpd,pe5fm,nir41,fbse8,g9if4,jdwcg,b9r9c,gkvnk,e2zpc,bl3r4,gkyyp,eeb7n,a0znm,hty4h,kyc1v,htzi8,n514w,tp11f,uxzcx,14xlhd,166jsz,158v7l,15vcap,158v9f,lkx6q,wi9xd,w71fl,wiagx,f10ea,jec1t,igp4y,eemkj,ds6f4,lwdky,hj281,kyooz,fywap,n5dds,e3i83,w7a82,kyrr6,kcc75,k13nl,cun7l,ngqrk,j1y6g,gk3k9,fmebv,dr0gc,g8ya3,ifn63,iqvwo,ifosp,edlvu,qv4g8,15jb0r,18yxe3,14lmh5,16sabt,14ae2z,yzdah,f0ayy,edvig,dreiz,htki1,gvv2h,e2qh6,abx3f,b9n9k,bw64q,ireo8,ireyy,fbthm,ciouh,c7hah,9eci3,o2j9n,mtmvd,ky808,f0q15,cu2h5,drsjt,fn8qx,civyj,d5dag,je47c,epk20,l9ljc,qkn49,s4txl,igh54,zmj7t,v983t,y2d1l,10k9jf,zmk21,ngayw,p0hvs,124gqz,1ajwuh,opax4,16t39n,uy3wp,pybux,pn45n,ll362,kne2z,igr0o,q9pqg,hj3yg,is2iy,r7hag,pyjns,l9zpl,pnbwo,kcc7c,knky0,igyfc,dfnv7,g8txv,g8v0x,bvk2c,hhutt,gves1,mhs5t,m6k2a,n49u9,s436b,131f4j,zltht,gkcr4,15ukwj,17erpv,19lfrl,xqf6b,hi3kg,mt6a9,jot3l,hi5cj,j2cgj,fmrkh,fy07n,a0ifk,9368h,g9oy9,fc0k2,mihld,gkzwx,op6j5,htzgy,fc3v4,fc4b4,xr4cz,12folt,w6yc3,14md5f,xr5ap,1326kx,16hsr5,1ajwb5,je91s,mtvf4,13dgcx,mtvtc,19m7o1,15k501,dgseo,12fs43,gwff6,p0lzl,kc28g,sg8nl,k0uxe,mitg0,ll574,fnn0z,sgdw0,ll6he,u0mc0,j3byp,q9t02,mu76a,kcb6a,nrx74,jem6q,lla36,is6kx,78ekx,e3mj5,hj8uo,92grd,ctbkp,8g0bd,abfmj,kxj2w,eoti0,jdehl,pm5p5,i4hp4,12exgb,payqg,18yxg9,gkc62,joql4,13nxw9,yzdsp,vv0pl,yzecb,dr9wa,kb9i2,htd95,kmi8p,lk8k9,fmro8,fy0m0,dg4ey,8538a,ctniw,9e1zt,drjrt,ctuaj,ky196,d56c9,gktgb,g9m54,epg49,fbymz,mifiw,gkxg9,fc09l,g9py2,j2wnv,fyjo8,k0msa,drw0s,qvvff,ngac9,vvp95,src7t,158ucb,15vcrf,1av5uh,v9bx7,sg7bv,qksez,eek4a,kyk2h,bwpzt,az195,ll3vc,s54be,pn8m2,f166x,pc0nu,bwty3,kni3c,sghsq,j3dsq,q9ufu,m7ro8,jemxk,ngq8o,igxju,chye9,gvba9,fmelf,d4ig3,ht2sh,h6mxt,e2a5c,c6vc1,e2asj,i4en5,g8zkx,edkdd,iqx5t,i4g82,fml0k,y1m5d,gvk9u,13z57n,12ezmr,ook4g,108c9t,m6pk2,hi5r7,d4vxe,h6zab,hi9ia,dg8gw,htm03,h7529,lvpk2,fy9pd,b9uaq,gkwf5,a0xia,dgmht,bwg0w,gl081,kn481,d5fkw,g9tb4,srbc3,t2k4h,g9u76,y2db7,17qqw1,13oo4h,s4w68,jpi5c,158voh,kbzds,jpicg,nrlsw,zxva9,gwecg,11i28x,14b76r,t2nz5,hu55s,q9k0x,qktb7,cj676,l9tk1,j35sw,jeg0y,epxr7,ngl0g,ds9ib,j3b4x,jejs1,o350g,t2zc0,mss4o,hhr3d,kawvd,b92y1,gvcyx,8r9k9,ifmej,nffvv,dr489,o1y97,9dsyz,ctf1n,ht82z,dr5rd,ctga2,fbdnt,f05pl,jzyp5,dfzc8,h6tyg,gvmcp,8rgmj,h6vfs,iftux,kxqw8,ifujs,lvhpl,ep1d5,fbiuj,e2l2j,gvt0p,h72ln,j2i21,g9dwo,jozxl,hidyj,fy7l5,htnc9,drmco,drmnd,ciomh,9pjzc,ctxt4,ctzhm,g9m21,ee7hk,5cbvv,drqwa,ee8h5,ee8rt,dgjl5,hin54,fn817,irofe,93c6j,ciynd,fndex,blaqw,ba2ay,g9vhl,s7pwp,p3cq2,xitrf,qnm3v,rlcdl,mab55,lclnt,vc7fv,jsfqh,ueig8,y5dd6,q1815,yrw6h,ra78p,qcht5,18rhuw,150noo,15ydyi,o5vl7,1ay7qi,bwwa1,z0gmg,14biaw,i5ns9,n5gtn,wttyg,v9nmw,vw50o,o38dm,gk14h,g8t0x,amjsh,gk2k3,fxlv5,dqy7k,eopki,lv69f,j21wx,c6uep,d4m5v,edkoi,mhsds,f03g1,l8uls,lk3u9,92m5w,jzxf5,e2fhu,abl2o,fmodt,kmhbl,hte5v,c759v,m6sfm,htlps,e2r8w,htm0h,ep8mp,irckx,htnqo,irdo1,ana40,ciq7n,n4sz5,hijlc,fn4q9,ee701,fbxpt,gw4kx,f0pyp,htv5c,drsts,n4xdd,htw6p,gw7ao,g9qgg,f0ss3,l9k8j,b9yuq,h7isx,l9lyp,f0v77,ayugi,irsvl,hiv75,h7n03,cj44y,nrnxt,gl81d,kyjqo,kc2sw,igpgz,nrrjk,e3f8z,v9hgw,wigds,11i9gw,un1o2,xg6sy,gldkh,ydwoi,k10kx,zy4mo,huelt,ql3ao,srrow,f1ckx,g8sox,gvb5v,chzup,h6kap,g8w3m,fmf9e,ci4ao,hi0g0,15ujwj,18cgar,j28aq,1aud6p,gkcow,18yytf,14wvwj,10ut8h,uxawz,dg0w0,q8ri9,kmj9f,h6xoi,ifykh,92w00,fy48w,hiblt,ir9tv,fy5a9,e2qps,cikg0,jp11e,8596p,an729,b9ozl,drn9e,jdxc1,k0f40,lkmo2,cu137,fbxhd,je1c2,lvyyp,epjr5,je401,g9rgg,mtrk1,lw1xc,umq69,y2cht,eeeo0,116qpt,xfwar,11t8ar,14mddt,18d8u9,e38e8,1820u9,z05hf,11tao3,zbeo1,gl874,anrib,cufb6,irymb,k0x8g,huaki,opips,oeaki,hubb5,l9xfm,riohs,ql0u8,hue2o,p0vk0,i49vu,92f60,kxfuy,kb0az,edidn,ht77u,f032i,qv3rd,f0496,zx0y3,131gcp,kmgne,108c09,uxb61,eozew,lk7uz,j2emh,fmtu3,h70so,9pbux,aya89,d4zgo,i4tmx,fmxqh,ig3t5,htn0p,drkg9,htnpn,e2tu1,cinbc,d54jv,cinuz,mtio8,gkszt,q0qx5,ww0p8,kprm2,ml8az,mwi2x,qc4cq,orxoq,v0pmx,u303s,m7a6h,n50ln,nrih5,kbxfs,13on61,11i05l,17qr9n,15k45l,g9w94,18d9ah,jpidk,15k4ln,14mf2h,x4qq1,zxvux,qw1mx,mtyyz,gl8p4,jpmfe,igoy3,hu83t,oe7uy,t2u6i,miw3s,dh1hn,r7i16,nrwg8,k12rs,q9tqg,ngphk,fnt3d,p0xe2,a1jyh,dqw7l,j1y1f,joggj,gvck1,edg9c,ifjbm,d4jf4,j221f,od3kg,eor4h,qxv82,qbevk,t4jrm,z23o1,1ax5xv,1ax5zl,1ax66p,1ax6dt,1ax6j5,1ax6xf,uous2,1ax74h,uov4i,1ax7v5,18fbo1,si7yq,stgsw,126l5d,vbdqp,wkclt,s711t,wvle9,ir4gj,fmrip,drd01,ay8gh,h6zgz,drf6b,g9cnl,e2s2a,jdvv4,dgehe,d56fn,dgf2p,e30k1,iro5t,n500h,drvtg,i57ps,mts7l,j2xu8,f0vv6,18ofpt,11hzdd,158ufl,jphu8,15k4cz,zbdw3,12frf7,12frkh,j321c,10kclt,fyor6,zxvm9,bwmc2,tdx1v,j33rk,jecb4,oe53l,ubnm9,pbv2p,rtrps,fytsh,ga47l,usngy,hj635,p0vkg,oeej6,ru18w,joezc,fmcuz,e26hl,9ouzf,fmeu3,f00d5,eot21,lk2u3,e2duh,nqrdo,zak49,nqs2g,xqdgb,14wu1n,14wu6z,173i55,yzc9l,nqt3s,h6uqi,td57d,l8zo8,bkot7,h6yxn,ir6l6,jdpaz,j2guw,g9cpl,ig1sq,bktui,jdrx6,fy657,drifs,kmqxm,gkqs9,epc7s,d57dn,ky5zt,g9mcb,httej,fn5qz,c7kt6,h7e8p,fbz4p,epi8o,fn8rc,gl07s,fc21m,kbw0q,sg2op,17fhnf,166k9l,15k3iz,19ayft,124ihl,z05qx,124jbt,zbfmj,u0el5,n574r,miq55,fc9sp,fysuy,h7r6h,cuftk,ll40o,h7sey,fcdjt,a1d5l,igrtm,s553u,bwteh,oee3e,bafh5,mu8pl,o37yw,jznxf,gvbxd,o1xb5,ifnkx,kmc4g,ulzfl,14wusj,12q78j,19lfkz,xqfmr,1161ur,vv141,oztnl,fmrj5,g995t,d4wyo,l936p,fblcw,kmoyq,an3oi,gkpk0,fbtlu,gw2ub,ee7dv,aymn5,f0r6o,cu5r4,igfkw,i582o,vkfj7,ubhur,10k9sx,lw4de,r763m,13zwf7,hu1us,opbds,kn8bm,174bj7,vkkrn,i5eua,kndcx,cj7hd,xahuo,epwbn,epwgz,12wt40,1617mq,195l42,11co0w,pc1pc,fcgmb,dsaqr,p0y5e,fb6sp,bvlux,bvmp5,b95m3,ci5gr,gvhpl,h6qaz,fbbl6,dr548,dr8yw,ctkdl,c73c9,gkg2x,fy0ff,bkpk8,ifzzf,htjah,ciii2,gkm3u,ep7c8,fmy0a,j2kkp,h75t7,e2tbd,i4wdo,cimuh,ctvmw,d56uh,droix,epei0,fydgp,e2yjv,gkv1n,g9n6y,epi23,fn8tn,gl149,je63t,e36sq,j304p,cj1gr,mtwh6,oe3mz,ds19k,hu4fd,g9y7d,fniy0,achpn,kymjs,e3fe1,uy9k8,ds7or,pn8h4,yp4tm,13dp2g,109bqi,z0e0a,z0e5k,igtez,hj48b,10klii,xg8kq,fyyqz,109eaw,xgaqw,8sk89,t304o,uyfhk,wimsq,riu3u,bwz8p,ezvch,h6lir,fxneb,a05f4,dr0xd,axxmb,f027n,fmjqp,ci92p,ifrht,jdhrk,fmng2,fbf5c,eoy9c,fxwj6,dg0mo,ctjzn,fxxwz,dg1rk,cicaa,a0gmr,k02uo,bvx0x,i4oc3,i4pkj,kmmk3,f0d9t,d4y29,fmvhu,i4tdg,drk8h,jduk2,n4pyo,fy9kh,gw0tt,jdxgx,hijg1,irhpt,j2qlu,h7d81,j2tkh,77t6b,eee29,l9mb4,7uf03,irrub,igjht,f0yb4,h7mep,f0ywj,hivzn,jpju8,aywz4,fyqgh,wz8z4,19s0mq,m7lv5,f15kh,w786q,x4y5u,wii0g,ydy5s,la04x,wtt4g,132kds,zmyk0,gwq7l,cjf3l,vw4xc,s5ar4,pnegi,y2tyq,fntyr,joekh,jzo01,dfqv5,a0534,fmev6,iqsea,abgap,ctcow,l8s5d,xqclf,ux7sz,uar0h,13z4jl,13z4u9,j28hs,ooif4,gkce8,13nwn7,14wvib,pxhtu,sqn9f,zamv5,y1oox,ir2kg,m6p8h,k01oh,dg2v6,fbjk3,kml6o,lkc8x,gkklf,8rnpe,hib29,f0ev4,h756o,jdv0i,dgdmr,b9rcz,fbv2c,fycht,b9tq9,fydxc,niy0x,ue64g,mwha9,xtu2p,q0x6o,w9pab,qyoao,i814w,19doqp,169c3l,1a07ep,1abgap,1a8nnl,14mdz5,19m70h,h7m4i,1328ch,minpe,i5cg2,uy39d,kyibk,v9cht,srg8x,blh35,8h4cj,hj075,k0xds,j381s,igs75,mu4ao,o32te,l9ybk,p0tj4,o34g0,rtznm,ngoqq,nrzeo,knmf4,pm1fu,eoqiy,j23gq,g8zwq,v8g23,kb5ai,12q6bt,1582vf,14adhn,15ukax,165swb,18cguj,13nxjd,ift3e,uats9,uaufd,h6w7c,ozu4p,kmiz0,l9097,kmk0b,htj0r,abwln,ee0w9,k0b61,lki4o,kblag,gw07f,gw2vc,k0hvu,d5aa0,jp9xl,h7fgo,l9jnv,g9r2g,kybgp,b9z48,g9rt6,m7a6j,u0955,fncqy,q9fbd,vkguj,12qxqj,17qqyx,18d8wb,10kbij,rihu2,r79vs,hu5vs,m7iko,pbwll,h7rew,eemvd,oe8ga,h7s7c,ll4i2,pyjns,dsb9n,lwjns,jznf4,p2as0,or443,mkhqq,n6yvn,kdv9u,mvryr,kdvpu,kp5jm,vxpg3,uorgw,sfb69,l8vgw,whf4h,131es3,hi1g2,fbej4,kmfyo,jzz2q,josgg,gkfir,lvh75,c7769,h705u,joxzl,f0g0j,bw3yo,b9n4j,fbqhe,fy7o0,drkgg,hifbk,bw638,l9bv7,c7hsj,e2zf5,fn768,gw6z4,epl1s,i57bl,tp0cz,lw2z5,py6kz,uxzdd,ubic1,srbo3,his9c,fyljm,xfw5v,18zp8x,1av4pd,drzpu,hiukw,l9phs,srevm,v9brn,pbtn4,miouq,t2opf,kyiq8,knas3,f12dt,i5h01,m7l3m,pbyz4,cuh8z,v9is0,qkzps,blnmb,acr6b,ezvvf,f00bd,kxjq3,axyxn,iqx7e,b989l,lk2fv,h6r4o,q8n6h,v8gex,13nv89,zlsij,11sgih,jopco,14lly1,165tax,1a7wex,pb0ns,hi4yj,jdkpn,hteft,gvplk,tr9sr,lyc9l,wvnq0,lby8p,qmziw,trd21,niml5,i7lcq,qy8pk,qn0ih,iraoo,fy68o,htli0,g9i3c,epbko,kbm1l,ig7tm,hij4q,h7bkq,cism2,igcka,e31so,gkye1,9ei3d,dglnd,mts63,hiro8,kn55m,bwiag,y2dcr,zxst5,10vizd,13oo2j,166l09,12qz4p,15vcnt,15vcwp,1a8ont,uy28p,13zye3,ign89,kc2zd,jeefu,nghnf,bwpzt,ll4be,rtw60,n5c48,acly1,eep21,mu5nd,k11wb,igvmh,h7xi0,bwy55,llbdm,ngqs8,fntll,llc4a,i497l,ct8f4,bvisj,fb5eo,jzqcg,kxg2o,kxgdc,dr04j,d4kkh,ci5i8,ci5pd,mhrds,ifp42,xqcbl,10ji75,165std,18yxpd,16h1er,12eycj,kb7c2,kb7he,nqtia,15ul29,mt44g,l8xls,l8yqq,oztb7,yo675,nfnz7,abqhu,c76le,e2m5c,gvra9,d4xls,e2o2q,j2h0g,c79ls,lkdy8,j2hlv,j2icj,fbpls,kbie9,8gkkh,je0bm,j2spw,jpb6o,h7ew0,ng7q9,ba04i,kbw4i,qknkx,wi6ht,zmjz5,132675,14xlr7,lkw2q,11i09t,13dfj7,pbrc0,i5cf6,12frtt,iruqq,fnk68,gwllt,kngbm,ngl7m,kyowz,oebhc,cjbj7,pc1y8,h7vxd,pyja8,r7hk0,pc2w2,is3kz,cjcwx,jemjk,lwj34,mu9uo,la3c2,m7t5s,e26nc,ifieh,kaxt5,gve5n,gk5nv,ci621,kb3oo,kxlgp,eovs9,8rdwr,jzxt6,lvdd5,h6tgp,kmfvt,hi2nf,n4cvd,gvnah,htdpk,ir4yw,fy0tl,c76g8,g9aqw,ctox6,drgq1,c7a23,c7aqx,e2s8b,ep9ex,mi78p,b9nu3,i4vzd,h7888,g9je1,fyc16,gw27d,8gpgr,d5aco,igbsb,i53u2,jpbhl,cu5bd,g9sdm,gwagb,irpyi,cu9ih,nrkrt,cj19l,h7lns,l9tuw,i5gkr,wtne0,umzoq,rtvfs,xrf3c,124qy0,bll0p,14mp0o,baep5,hj7c9,az82z,te8x4,d5x2h,fb38x,e25f6,ifho2,edfao,bvjn5,c6sj5,msv8x,lv67l,gk5ir,ctddd,92jzl,dr4du,ay3n4,jdinm,j2ann,h6x4g,kmj5c,fbiyb,g98xc,jdn1s,qbp2p,u2jqo,r9eyb,tg5f5,w9apc,tg6b7,sihm8,p2wj7,ky33l,jp4xc,htr77,ee5df,fbxbn,gw4j5,lkqwh,fnb5c,ba08i,gl1ma,dgpps,i5a2b,i5ar5,igl4i,irttc,epqwg,gl65v,i5epd,m7i2a,knbg1,epuep,pbx82,ba90z,srkc2,te27k,qkxf6,vvzu8,x4y9e,w79bk,11tjg0,l9yus,f18q9,yp7aq,wijlc,17r35e,eess1,un5gy,u0p9s,ubyb6,xrkfk,is6wh,fb4ci,b924g,fb5kx,ezx35,ifjlv,h6mgw,f02df,lvbcx,ht8cg,bvqgy,15jawx,19wn5v,l8wlc,11shqb,19a6v7,15ukw3,12q7lt,1584g1,11sirl,whi9v,m6p4y,lk8ch,ir3sw,i4n5u,kbbb6,h6y4h,fy05f,i4qm9,bw0jl,ayc00,ctsjl,jp0qp,htmtc,jp39c,kbn41,bw8w0,jp6o1,himdd,ppnup,t5aps,vn7r6,zpbpf,qng90,17tikj,qypaa,18fzsx,su5c2,1axxkx,1axxs1,1axxvl,1axy2p,1axy2r,1axy9v,siyde,1ampxd,1amr0h,u3682,184v43,tgpz4,gl6o2,qksar,lwa0z,irx8h,igpdu,fyt4x,n5ao0,miurn,d5r7n,kypfk,dh1vl,sggg2,u0neo,o377k,hj8e9,k15ds,ht215,h6mmg,dftqj,g8zuy,abhvu,jde15,qv421,yo2rt,19lf2h,kb7be,14wvbd,rsxxn,k00js,sqop5,hi5qi,kxrt7,l90ej,c756w,j2efc,gvs7c,k08co,htm89,k0aq1,fn1u2,i4zpn,j2pfv,gw2vf,h7cb0,i52fd,jpavc,i54ay,bl5jc,h7g7e,dgn9k,jpex4,kbxe2,13dfbf,15vbrd,15vc21,124hjf,14b5u1,lkx8q,13op3f,13op6x,158wuh,pn22z,nrnbd,lw83s,v9cy1,qw1jc,j343s,jplhk,pbvbc,m7ibu,e3c7e,h7rt4,o2zuw,lwci0,glbew,j387e,n5ceg,ds8sp,r7gwa,nrwju,eq18p,jpukq,lwix4,fmbtf,dfo7n,gk1n6,jd8b7,ct9sh,fb6fl,dr09f,bvmtv,ctd00,fxs9d,m6jbn,m6jgw,h6qtu,kxmfk,vjp8x,l8vwy,16s9n5,173itt,16h1u9,14lmvl,l8xlc,11sij5,yzdox,zama9,v8jf5,ay5ci,i4m1d,c73v6,edt5d,fy429,ep85s,ep91t,nfx1u,fy8b7,bkxhs,f0jo1,bw68g,f0jrn,ky2dt,g9idu,ee429,dgehd,gw0wg,ee5xt,je0i9,nrc7m,epgk2,ee8k3,gkyc0,e32q8,mtrm9,gl1ci,uxyxd,x4mz7,x4n4h,ydlox,14md01,11t8cx,116rgz,166k7l,igiz4,14xma9,17fixd,mtw0g,zmmc1,10vklt,n553m,j32du,11i2kx,lw7gw,j336a,fcac1,fcaj4,jeeaa,gla4z,j36s1,n59w1,glas1,i5iq8,mivyq,lwg5s,cjcr5,pyl74,n5gk2,j3ekz,c872r,i49g8,m6dga,m6gig,fxpp5,jokd5,hhy8o,jzw7s,tzhp7,td10b,zx0pn,sfbq1,kb5p6,eowgq,12q6zd,lvefu,11sihl,tzlax,htcgq,td4ux,m6od7,f0a1n,kxvix,ctpne,edwwo,kbfx5,hib88,gvuc9,ep6xk,cijfc,jozx7,hicm0,c7c49,b9ml5,cilsp,69vdn,ctxuj,n4vh7,drrx6,j2tcr,htvru,f0s0r,l9jyx,c7obc,n50wr,qkod8,zbbvd,18zot5,m7dco,z03tl,15k3h7,116s7v,h7ml4,116tgb,pbt08,lkyu0,kc23c,ll0m0,oe66y,j35g9,i5ftl,ngh5k,hizq1,nrrh4,pyg60,ll4uw,r7f6g,i5jmj,mivmg,kyp94,p0taw,o342i,sroew,pc2je,j3c48,kys48,ngpne,eeujf,c6pnl,edf8j,bkc69,dfsww,h6p28,fxrs0,jzv6r,sfbmp,t1srl,13z42p,10uqxv,123pk1,eoxia,1audk1,16h203,1audsx,odb8i,123r8j,nflsy,n4dwg,fxxeq,htcps,w69wh,ir335,kmig1,c73tu,k01yb,bknvm,fms4j,g99cx,b9go1,lkdup,gvuxt,g9dwj,fbp42,gknog,bw4gx,epaw2,fbsbk,htpr4,g9jtt,hijxd,gw3j5,jdzxc,b9ug3,dgiao,kbqcj,k0j35,irlgh,eeae9,j2uoz,kbu03,eecf5,irplu,gl1sy,vvopt,odzs3,umqqp,y2cpv,tp19d,zmjq9,fylk2,umr6r,kn600,je7z4,yov4x,lkwkg,10928x,15k3mr,c7srm,12qyzl,12fqox,174b35,m7eu8,14xnj5,14mf35,10kc0z,oe31e,xfz4x,opd9f,o2wtf,knbdv,kc42p,i5gpt,x4xuo,mivfk,miwpu,mu5r4,o33z4,t2wo2,anxsx,nrx9c,hj8td,fxkfd,fb3jd,fmc6g,edep4,edf54,hhtij,edhm3,hhvmy,iqujt,dr298,9draj,h6pbe,gvgtk,h6pgp,abiqz,jdenf,f0357,gvj54,fxu3u,dfzu1,ciap7,jorl4,fbgx6,hi50r,drajt,bvvl6,jdlpn,c76w9,htgob,bkpwp,edvc9,dg67f,fbmw9,mteax,k09m2,jp1k9,kbizv,epa08,fbrhm,nfyp5,f0kdl,kmvft,9pkru,dro15,e2wo8,lkm20,h7ai1,9poh4,gw5m2,fyg88,pbl7t,a0zhl,eebca,n4yzs,dgomi,fymp4,i5asr,gwep5,cubxl,h7p4a,kc2wa,i5gh5,8h4a3,gwjfv,pbylk,z0c6g,vvyui,zbl2g,fnmy3,x4y20,12fzc8,y2nsa,zmuso,fcfqh,zbmug,z0eco,zbpd4,tpfqg,wil9m,78dux,r7ld4,fmblf,kxeuo,amn1v,fxp0x,b94xc,fmgmp,eorao,jdd0x,a08z5,fxre9,amq9f,kxl2r,fbcoh,iqypc,amu9f,gkcvn,e2gxd,jdinl,ir3g2,92rn7,cienl,kmnw3,pb8mp,b9l4j,gkncj,ciks0,l9835,e2rld,d52r6,gvxpt,fy8ds,ctvht,9327l,cip9v,gw16c,lvu0h,p07qp,gkt9t,c7htd,9350x,jdz3l,c7inl,fbwa9,n4v76,sfwqa,odu29,igc1c,mtofl,g9qia,kbtyr,o2oq9,je54h,epl4h,eeddd,hir77,fyl2p,irqia,fym5v,je8fl,9pw6o,bwl9t,lkynm,jpjxv,kc2ur,mu0s3,gwjjl,mu1ww,l9x9t,ga5dd,bwtwx,uybg2,fnovl,xg8c0,132ir6,10vvci,wtsaa,v9lpu,m7qep,z0gs2,jpui9,xrjow,ezw3k,ctayo,ctd8j,jzu0y,hhy9s,eouo0,fmkle,mhsn7,x3v5t,1089mp,iqzb4,14acsj,13nwjn,i4j2a,g9474,1583up,nqtz4,o22rk,fmoe8,10jksj,123rwh,ozt34,kmi0w,kb9z5,fxyki,dg2tc,lk91f,j2i9u,i4tfk,gknk1,edzsx,jp3r5,8rt4x,e2uv7,htq68,jp6gw,jp7nm,ky684,8s01t,fyha9,cu4aq,ayq4i,op6f5,j2y9s,zxs75,x4nwh,13zvwh,12qy2p,16t16r,mimo0,13dgcj,n54cg,10kcap,10vl8j,16hv29,w71z5,n57wi,cuev6,hua9s,dh001,cuj0j,l9xvm,hj4lf,igveo,e3jwj,risn6,pc534,9dm6g,bkatl,edfyg,h6lqi,hhumg,jdcug,ux7wr,12exop,10uqyx,oohvs,n4bns,16sa2x,15jc97,kmfyi,odamg,19wo97,16h2bt,qjznt,xqg7d,h6vk8,nfmh5,w69xl,um3d5,k011k,m6pqh,m6pzd,fy03t,kbeob,gvtca,j2ibs,92xzf,cikay,jp1jd,g9g7d,e2t8r,g9hqj,g9irs,gw097,ig7nt,fyc21,gw2a1,a0x6x,irl8p,bwf2h,g9qrw,pmwy3,ricg9,hir60,z02kp,116qyx,116r9l,166k3t,irrey,1092dn,l9oso,12fqq3,16t349,10vl55,o2wll,u0f0r,qw1mx,irx3c,az0y3,rtutk,ngjuw,blkw9,is1hn,igua3,te5je,q9sui,dscqz,n5h56,fxksw,mhkuo,g8vkj,joihd,ezzgx,fxpjk,fb9jk,gk7rl,9p040,hhyc1,jzuxc,e2d74,o1yq9,fmkpc,dr5u8,yzb0x,lvcb6,1aj4b5,1583pt,13z5xv,123qqb,15849d,kb7v4,pb1qp,h6x5c,fy00i,bkoy8,drd3m,h6zkh,gkj4h,77fbl,6l1e9,8ghn4,ep8pc,ctuhc,odmmp,c7fgz,9plar,g9ksz,fbw5t,f0nm8,gkudu,hikyb,lvwlv,kbryo,fygi9,igeq8,gkzgw,kyclu,ubh8z,srbm9,vvphv,10vikx,14b4up,174a1d,py8b4,py8pe,174aq9,174as3,1av5ld,yoxg1,kc0k4,umus1,umuxd,jec9e,u0etv,opdxt,g9zyo,d5mz4,kyllf,ga2aa,dgxhs,epw0h,irzf6,jppzl,hub0x,f16c0,blkep,e3h1v,m7n9s,az42b,ds9zl,l9zpv,k11xt,q9suq,knjbm,opn6a,h7ykx,o36z7,eeu6r,pc5cg,j3ez5,oppcg,gaatu,ql4sy,gvajc,hhsd7,ifijf,ci10b,i4brs,69bbs,bvl5k,hhuxn,h6nq1,fxplm,jokux,dfvq2,gvhwb,vuxi1,14acm1,115z89,1089qz,jzxju,17eqjd,15ujyx,131fa3,131fkp,18npcp,kb7bu,xqfkp,x3z8b,o247t,fmrq0,lvjkp,fy3dl,9e72w,ciknv,hiee3,ig4bc,fn0yh,gvzyy,jdxy1,i4zx7,e2xw9,fbwt5,k0gyi,b9u55,kmzkq,e30yh,ky9zt,kyc61,ric49,y2c9n,u0a3f,zmk9l,m7cyi,gwc2g,14xm6x,10vj4p,15vbvd,17fiqh,13ooex,1av5cp,10vl5n,xfzmh,n56xl,oe5eh,oe5qx,hu6zd,o2y6y,bwpqy,irxug,kne8o,kyndk,huaca,ds7bt,qkxy0,k1060,k10bd,igvh5,hj6jd,dscm1,igyu1,ct737,ht1eq,pm10g,fb7z6,gk6ow,m6j35,c6ye8,e2e8y,r6d5v,m6kv4,vuxpf,xf4gx,uar6p,ozq1s,13comb,123qqr,lvelc,10ustf,oojxe,um3a9,bvw69,fxzxf,edti9,bkpls,ctobn,gvs6b,h73a8,ep71d,dg97k,jdrmq,h74yp,gko80,higv6,lkl29,jp61s,h7c4h,epg81,fbyox,ayokg,eec69,kn31c,sg2u9,x4nc3,10vild,11t97l,166l5t,jpiw0,174bq9,ubmzn,d5lk2,jedgg,fnko0,kc4yp,8sd9f,j37aa,jeg4h,gwkde,huan4,ll6n7,l9ylc,opl42,kc9pe,jekf8,pc2si,d5wo1,bahgh,d4giz,amkru,fb5pn,jd9wp,kxi5k,abg89,jztka,h6ovf,j25t7,c6ynd,c6z8r,j27c9,e2h4b,kmh7t,g95m2,jdkyy,fbiej,drbxl,fmrop,hth0p,drep6,hi9ew,ir7u3,c794b,ciht6,drg6g,ep6jt,jdrah,j2iqx,g9e7d,bkui1,bw4dm,ircfd,h76ay,d53l5,bkx9k,ciq7d,gktm2,c7iqx,i5161,f0p2h,ky7vu,gkx49,m771k,9ehez,htx4b,hty0a,q0y21,r9wmg,s7n57,w9u22,lcj54,uefcc,qyugb,p3fe3,qcf8r,jefe1,i5hm1,18j1uy,12ljvu,fywmh,19s3ai,1408rs,11tkyw,zy63s,j3dgp,9q9yh,q9v1k,o37qi,e3mgb,b901d,eomcx,gvc6p,fxofk,ezz5e,gk5yo,ci3e8,gk6i8,kb1wz,i4fea,g92cz,l8wkz,o21ip,bkm41,f094h,9p84y,9p9yo,ay9yo,htiwg,i4sq9,c7bxt,k0dps,ctxgx,h79yr,htr3l,nr9pt,g9ktv,e2ylt,e2ynn,bwb3l,htub7,i535c,7uauo,gky41,htwdt,ayokx,hioq9,eeddc,f0wxf,nrkc1,irt0w,fyoog,fyq43,gwg4y,ll0j5,miq9c,knb76,jplm8,o2yi8,bwqb7,i5h81,hj0fn,oe8hc,ga2sx,opinm,v9ib4,v9iuo,kypo4,fyx6b,fcgfl,jpuk1,fcj5f,gwqi9,knl4h,mu9f6,srsj4,eq44x,bvgxt,ifgg3,ezwch,iqrpc,eos5c,h6q2p,vuxhd,123p6p,m6lhc,jzxqa,18yxfl,18npab,14wutf,10ury9,17ergh,15ukw1,16h1z7,16h20x,14ln7l,12ezyb,r6gld,gkgch,fmsw1,f0dky,j2hdv,f0fnl,bw3gj,irbwi,k0bsw,d55j5,ee3r4,j2ow0,e2zcw,bl4hv,cu37k,f0shw,vvpa9,tp1mp,mil4w,op934,1326f7,l9ngi,19m77n,124i9t,lw6bk,ydou9,kn9c0,xr8sj,fnhog,lw9kx,jedz6,j35j6,p0pa8,hj0ow,mu3r4,opjcx,h7web,h7wg1,93qf5,ngnsw,pc3i8,igw3n,opmyq,cumf5,n5htu,j3f28,igy2o,ezuq2,ht2x7,m6eoa,eopu2,iqtu1,bkea1,eot1l,f01s8,dfvnt,ht7d5,ci688,n48sp,fxscp,g916x,n49xl,jdft6,1582a3,15jb2h,1aud1l,1aud6x,13cojt,lk614,10usnf,11sifd,11sio9,mhw22,fxwug,wsq89,k003w,n4dmw,pmaff,kmix5,jdkzv,6kx55,ep494,7twp4,i4rew,hiabv,fbnux,cts3t,bw349,f0i4r,fbrd4,fbrpl,i4wne,bkxjd,g9ia3,e2uq1,gkrnt,gksui,c7hxk,g9l6z,i52h5,c7knc,ky7yh,epifd,mtow8,hinwo,d5dqg,eecnc,ribwp,ciy2y,pmwzt,m7b60,hir0o,uxzk9,124gcr,irqvc,z03bf,pbqmg,19m6mh,1820wb,hiwy2,qkte3,ga11l,k0vrc,fytvt,knfwp,8sfex,uya88,gwm8b,qkzt6,sro5k,h7wcp,w7avc,glfyh,ql1my,ql2vc,oef9k,ru1ag,qwceg,lwk3u,i5pzf,bvi1e,kaz82,hhw40,edj4j,gvfyp,j2574,kb4i9,q8n2r,sfb81,11h7kj,y1lxv,wso0h,19ledv,1aj4cz,15836b,18npap,15ukib,19wo5t,1584er,fmnwy,w6901,ep1qo,gvqvl,n4jkg,h71g0,g9dch,9pe8j,bkuc1,h76fk,b9pjk,a0rtd,je0gj,l9geo,odz0z,ba07m,tds5t,v97kj,zmk29,13ondd,18d7rl,18zp1v,k0pow,pmzyo,fyntg,158w2b,1av5ub,14xnpt,166m8h,lkzgw,knaz6,f11ua,ds3wx,lwakx,ds4r7,f14gi,opjio,ds9eb,mu5aq,ll85s,o34lu,p0vps,la2ts,j1z8b,eonvf,a03tl,ezxjt,kaza0,g8xw8,iquft,iqvtl,fmj14,nfiaj,td0uz,11h7vd,115ziz,kxpi0,15jdjt,d4swq,nfn6g,g990c,n4iqi,edwbc,hi9w9,drkex,g9guz,an97d,l9gii,e32mw,htxg9,fc1y3,jpdnc,mtrdl,lw257,ricm1,hu0d6,w6xy1,cu8k8,kn6my,16t195,124heh,16htaz,15k3tl,zxu8r,166l97,1820m1,fnffc,kbzru,qksgq,o2wm1,rilp4,p0pi0,10ewm2,wzc62,16nq3c,12lnh4,q9t5k,fyzyz,ll9wa,hj87s,i5q1l,dqw81,i4c68,edie8,eorxc,ci57l,f01wi,jzuzk,sfaox,rsu8x,sfbs1,w66eb,12exi9,19le5f,14ad41,10us0z,ozrfk,17q0ip,ozs9s,qjzs1,jdjdu,mt5gj,kmhuo,hi4f6,ifuzl,edspu,mhzdw,h6zvn,lvkde,dg5r6,kbe3k,ctr6p,g9dpd,kmqg2,l989v,dgd7l,j2ork,drobk,kboyr,epfoj,fbx5t,dghyb,aymjk,g9nts,e31b6,htvz6,kbu75,fc1k0,kbv6p,qvv1d,ighcw,13dew1,14xly9,12qyox,f0ycg,1821r5,zxw0z,zbf35,xfztt,wtixt,kc2ci,d5mox,dgvvm,knciq,irxcz,knfa8,tpb1e,n5ciq,hj3kw,t2w0w,s56w0,q9s9u,jelgg,n5go2,bwxk1,kytnm,la2ch,hhr1n,amj55,fb3je,h6iug,ljund,c6qzs,g8ugb,ezwvf,eoq3v,axxrf,e2bft,gvhrf,ci697,oohk9,e2f3f,n4b8o,fmnu2,htdyh,gkg15,ifvjd,jou09,i4nho,htfft,cie97,i4qnd,gvuej,gvug9,gvvjd,i4uzt,f0hm1,h75gp,m6y95,drkyx,d54bs,e2ucp,fyag8,l9cdn,i4zaj,ee4ve,htre1,i50vd,fyend,jp9yg,drsrt,f0t60,i56w9,hiq94,g9ueh,f0x7t,j30vc,k0qy2,e38tm,iruuh,f10h5,h7omg,ds2qx,gwh7v,jeei3,o3088,te1m2,xg4rs,t2tyi,srlm2,9q4kp,te36y,qw6y0,eepux,i5kyx,vw0x4,z0eju,z0eqw,10kmjs,109esq,xgaeg,hj76x,sgicq,mhkq9,eopv4,8r81e,h6nea,fbawg,oznw0,gk9m8,l8ur5,dfx81,fxuuq,e2gvk,dfzw2,b9c8j,d4sa8,fmp2p,lvgc3,drchd,h6ysx,lviy8,fmsfl,bvyk1,gkiwj,lkbn5,jdnxt,jdnzk,hthf5,cig6r,dg67l,j2gvm,drg35,g9e0j,gknn7,hidv4,e2skx,htn75,dgd4g,kmuk3,gkru9,htr01,f0mup,m73qp,fycvn,i519t,d5a7m,gkwdv,g9oq9,op4a9,je3g1,f0ss3,druy8,e35gw,eee5t,drygh,anlbl,fyn8w,g9vxt,d5jar,dgsvk,gwfsh,h7ooh,fyr1t,fyrxt,lwa9e,h7qi9,hu8dv,m7k8i,9euwh,s54ds,h7tip,vvzaq,glcq9,e3ghd,y2nzk,v9jow,hucms,13dq9e,13ozg2,zbohc,12g20g,124tv4,fyzld,zmy5u,pncxe,t2zxu,hugfn,s5b00,un7g2,pynsg,e24xs,hszwh,gk1s1,amnpf,jojk0,bvoao,gk9hc,13nvpf,10ur0h,uarup,181803,mhuma,12q729,1aud8j,ifry8,13cou9,ooku8,f08jk,ir35t,ep0hu,abp8g,bknuo,lk9fl,d4vcy,i4ozm,g9av7,drfgh,7u0si,dgb5v,epbb7,mi91d,fbt1d,fbt6p,htpmp,l9c02,f0l6r,ciphc,fycch,ig8sh,fn4ea,jpabm,g9oqp,gw6bl,c7mpt,gw75t,htx4w,m78zl,pbo77,yotdv,ba0w0,v983l,116qpt,12fp35,13dfk1,166kxv,1av5kz,z05tt,wi9oj,wtio1,z06kh,pyb7n,u0egx,lkzwg,pn3cx,igngi,knbi8,j34u9,kncjl,lwav4,l9tts,h7r0g,h7s1t,cj803,nrrr6,rineo,glcqp,glcxt,o33i8,nrv28,wtrcw,srp36,hj7r7,kyu4i,kyugy,knm4g,mhl1m,eonwp,h6kqw,e2821,gvdor,lk11k,pm5sb,paxfv,vjoy3,115z7t,kmeq0,11h8az,13nxe1,joqx4,10ut57,htc7c,oztop,fmpzc,fbhfv,d4uvc,kbbd6,d4vwp,i4pmx,kbebu,fbmyx,hiatn,fbn0q,9peob,ig2j0,j2lqi,h78ll,dgf60,irh1l,gw1s9,epe2w,gw4ne,j2sy0,kbs0b,cu5fs,igfij,pmwsr,g9snc,hirpk,132615,16vu15,1axxaj,1axxl5,1axxzd,1axy89,vnbyg,1axyrt,1axz2h,18g3k9,19p1vt,14p96x,n7z7u,150iob,14pa6j,upp3c,sj1oo,h7r7s,igqyx,fcdmx,qw5u0,miua2,jpq88,mu3uy,mivuy,n5djc,kyps9,mix3d,hj70p,lwivc,e25ub,gk72o,g8zip,f026p,7id74,qv3gz,jon84,h6rdc,11sgr5,16s9zl,joq1c,15ul3l,ir1cg,vjrwz,w693l,11sj2p,wsqj5,lvg5s,n4gi8,abrma,gkl77,h72oj,d4zrl,gknf7,e2r9s,ep8cy,ep8gh,dgaaa,mi6j5,jdt74,gvxsg,dgc0h,fbrm9,an8up,hihsh,dro5u,f0mmp,hijkh,irifk,kbpjk,kmy36,irlsh,fc0wh,odxw1,hirgw,zmjwz,kyej6,10vj4h,14xm6p,13272p,14mf0x,1328k1,igl5e,ydpg3,w71u9,tp5jn,wiahd,n57pv,gwhn7,93lg1,lwcup,irzyo,m7maa,h7uj5,blkyb,r7j9s,ubxle,kcck2,eq3kh,hj8ib,h807n,b900q,ct82j,ct8d6,ifiah,ctajc,fxont,ht5nd,nqq1l,a0a8o,i4h5k,c6yu2,ycu1n,16h0yh,o2196,17pzix,jopui,123qc9,1audnf,zlucb,12q863,14lnkp,14lntl,o2509,gvq6x,k040p,ifxsr,cto60,g9b4o,gkjoa,j2g2g,i4ro8,j2hnc,69t95,fbqe0,gvxwb,kmtcp,bw6e3,ctw48,f0krd,fbtqw,irgwq,ee5so,fbxeg,kmz2x,ephei,je1nc,k0ivv,jpb4o,igdeg,fn8rc,f0rq3,anh7e,ayq6y,l9kih,o2pwb,dgno8,youft,19m6ft,18zpgb,18zpy1,hu32w,116t5n,i5evs,gwh09,fnjq1,kc42h,gwi6x,dgwrd,pn66w,igq8p,n5aoq,blixn,glbob,hj1az,fyuvv,o315m,q9q1k,tpc7u,pc0nu,fnnx7,un3mg,rtys8,oedsq,ga9i4,knmmw,jd6n5,dfqea,iqt7l,a061u,ci31d,f01y8,jomxt,fbbky,j268w,r6ctf,i4hwi,j27ky,xf4tf,1auckh,12q6g3,i4j4w,12q735,kxo68,mt3kw,odacg,12ezab,whhgh,14wwir,13cpwj,kxr34,gvpsw,gkhlt,gkhnl,g9cio,hiazk,8ghcw,g9go3,bkwkj,an7ds,a0qlc,k0ckh,931lt,7ixi9,mig82,eeajk,drun8,gw89u,eecf6,gw941,hiqn7,gwa76,je6qo,kyee8,lw4gy,12qxy9,18zp41,opa5c,15k3kz,mtv6o,o2u02,18d9lv,11i1r7,wi9nn,xr8gx,qks80,srgf5,u0eqr,mtye9,epush,m7lk0,lwe74,p0sio,i5l5t,pyleo,pyluo,mj10g,e3mld,nrzhe,k15b4,e250p,hszop,dfoq3,hhru3,ifijt,jogyw,ht46h,q05ih,uzyne,pdppl,xt4iz,10b1m3,r96y2,xhxux,o4u7c,p2k4p,si7jc,qmsdn,o4wq1,h6wve,fmr6x,j2dey,fy0iz,ir6nd,abs2z,ctqax,fbn57,jdqlm,kbgrv,d50ix,dg9d5,jp0vf,ig2y2,9e888,fy8o8,fbs88,fn2y1,gku09,k0jft,fn86h,g9pex,py36x,hu1gp,hu2jv,e392g,igkve,lw9pk,mu08a,fysh7,lwbqg,y2l2g,m7kmg,i5hpn,p0pt4,q9oiw,gwkkr,11i9ns,w78h6,ds8h5,1171go,vkrqi,11ia5k,12r8h6,y2oh4,15vm22,15ke3u,h7vsb,xg960,zbp0o,10knc8,eq1rd,dsdt5,gk1mb,hhtbk,jd8oh,hhtgx,bvk4x,b931t,gvctu,j2300,iqv5f,mhqep,b98ts,hi034,lk5v4,ifub5,josoi,bknow,ep180,hi774,ifzqr,ig01d,d4z01,drh0x,abvle,jdstt,an5yq,ig3ld,fbrjk,f0jcg,fy9f6,lvskx,f0kmp,epcds,lkkc3,h78qa,c7gmp,gw2b7,ig94i,k0g35,ephir,epiup,77uno,fnab6,htylv,ng8mr,htzjn,i59m9,fc5pt,kc0mp,i5dbk,eprjl,mtyk3,jplgx,m7igg,i5fzk,f13ld,t2tbm,ga3ht,wigfm,fnnar,y2nw2,wihma,124rw0,cukdt,vkucy,o35dd,zbp6a,12rb74,bwwhf,zmyr4,tpgog,dsdip,oppiq,76wua,jznlv,i48lf,bvj0i,e28lc,i4cap,fmfya,ifkw4,7ia81,bkede,hhwsi,j2401,q8mo3,kxlfm,ozosj,to8zl,tzio1,yo3i9,pazeq,12q7lt,18chkx,16sb0h,13ny9v,13cptt,c72m8,q8rsz,todtt,ifuv5,u2ltt,u2m0y,tg5fm,u2myo,ogede,pe475,vmvk3,p2wao,m9sjl,xicoy,sttts,s7d8g,ephc1,gkwsj,igdmp,i55aa,h7g8z,qkmpt,odz0j,x4mip,r74g1,ighkw,x4ner,vkgxv,xr4qr,t2kn5,x4nup,hisow,116rsx,ngc74,11t9ab,18ohtv,1av5mr,17fjsz,158war,y2gch,j329u,hiw8y,srgld,kyj43,irwxt,f12tf,c7zb5,pn7ls,opj0g,miw5e,qkzeo,nrurk,ll75s,ds9oh,s57eo,glg5d,la14x,dsds0,gliyp,gvatm,kaxft,fxm2x,fmdxk,dfr2g,ci32i,e2aa0,gvfgr,lv91m,kmb2j,ht7ex,zlsqx,18ch8p,1160sp,108bkb,um26h,qv9op,i4nuy,ep2dk,lvjd5,fy1fv,hi9e3,k05xn,d4z49,b9kwa,ep9mx,cimrs,fn2q1,bw9ah,ig8so,mtl3c,f0nux,kbp3f,dglca,hioga,ac87e,igebu,dgn62,py5ft,mtszv,umqrt,you2x,eefgo,12fpfv,1092vd,11i1op,srfwp,l9rrc,cj5vu,i5gqx,opjd4,mu4i0,ubvgo,ql11m,mu72g,ga7yj,pnemg,j3fey,t30ug,eddub,dqyq8,a04k3,l8oyb,ht3m8,kb1w1,gk829,kxk2c,jddw2,n49ld,n49u9,pxez5,kxmoi,17pz81,17pzv5,n4ccw,19lfgz,13copd,10usnn,v8j83,nflzm,h6v4i,todap,v8k5t,kxqvn,abqaa,htfir,edvdd,i4q8h,i4rf5,edyj5,htm1e,7u100,ep98z,ctxoz,htrbm,htrrm,fyevl,j2sb7,htus0,bwd8z,ee9ua,gw74i,kyatu,pmx75,py5sh,nga1c,tp0wj,kydu8,dgp02,j2ys2,o2rtd,124gep,1axxqp,vnb80,1abgsx,1axxxt,wl102,1axyc1,1axydt,1axyqb,1axz9t,1axzgx,1axzrl,vc51u,10yfbn,v0x5c,17tnip,12imtt,s7uc3,s7uvk,kq6oj,tguz4,kq7tf,36781,o33ww,epzv5,lwh8w,oefo2,fcl3l,dqz6h,c6u3c,n497d,gkaho,qjw49,10ji6x,wsnrt,14llll,16h121,14adgb,17pzmj,1aj5qz,jdimw,r6hax,y1pej,rsz2x,lk8pk,gvpg9,d4v4r,fmro9,ctmu1,ctqjc,c7a57,5c2s9,858ey,nfv4r,gkna2,edzo9,bw3rt,kbivt,fy7h5,9e8uw,8gjtk,fbtei,fbu3d,i5060,him56,dgl5n,fn95k,jpdjt,wi4bf,odyor,nriaj,ydkyj,kydso,13dduj,qknru,f0vq0,10917f,youop,ydm6z,k0py2,13zx5l,14b657,19az89,py9ne,t2na2,jeahm,18zr2z,13dhi1,116tsr,xr8pl,zxwnt,qksih,q9k2h,fyqje,miqsb,dgw7v,bwpw9,qw4m1,pn7yw,igrvf,eeqjd,cjc2j,vqi1k,ru21k,i5pnc,j1yxt,d4hb7,gk89v,fxrc0,i4gmb,m6jz4,14ll9f,10uqsj,1089r5,1a7w9t,108bvn,vv0o1,mt5pd,nqvxd,b9h5v,htgm8,ir6ea,kmqn5,hie5d,ayggy,931gg,ee3qa,d5676,e2x2b,ac6xv,b9y5f,h7gma,e340x,mijs0,v974x,y2cpt,zxs0z,x4nc1,you8x,h7jz6,13274z,14mdwj,hu2aq,kn7hc,zmlwh,124ish,13zycj,umvhd,tp6ox,ga19d,f14v7,9q4v5,n5d0i,qkzdu,igug1,oedcx,fchpd,jptlt,eeskh,opmzk,ru0gy,fcjoh,kyuci,knm1v,h80o1,eomax,axsh5,i49pl,e27ft,ci10o,eoovd,amnl6,g8xnt,edk6h,i4eqx,84tpl,amru3,edns9,ir0rt,b9c4o,eoyp5,n4dt7,fxxd4,eozcb,g98x5,ir5uz,f0cvd,n4j3e,k06js,h72eh,gvve2,dri08,gkn6z,h757v,htn3d,kblm1,an8rv,ee3xl,mia95,bw8a2,hiieh,9ecmj,i50mh,ephbc,c7l49,kn2g9,je4dk,epmax,c7q0b,eeeej,j2zxl,igjmz,bwl62,lky3s,j323u,cubmz,l9re1,epsmk,ll0q0,epstk,irx9l,k0vhk,dgwkp,nrr6w,ds63v,gwkmh,glcfd,wtppk,12r8h4,10kktm,11tjl6,i5m21,1409be,fciqx,eq1uz,jpv3d,un63s,eq2sr,eeund,is6p7,nrzxk,fxkq9,84pv4,e29kh,i4cxd,j23xt,6vvht,edlrk,kb6b6,j28mo,gvmk3,92q43,fmpm8,qk1f5,jdl0z,j2cmq,ifwxd,kmlf7,kbe5v,kbelt,gvtrl,h72wj,k07w1,dri29,ep7xs,htlgx,bw38w,p022b,k09kh,aby28,jdub5,f0iuo,gvy9d,gvz1v,gkr5e,fybqp,8rvsg,h7als,epfn4,d59bm,irkj6,fbz74,fbzub,j2ucy,f0rg3,j2uk0,k0khd,cu41c,l9iya,drult,gkzn5,h7gvm,j2wc1,gl0c0,miir5,fnbhs,l9n8x,igk4x,eeho1,ign8x,ga0a8,m7inn,7ulro,ga0s1,igp0x,nghrn,bwq41,qw4a8,e3eb7,gwkoh,u0jsg,jppyp,109bhu,hubw1,tpcs0,ydwxc,l9yy9,zmw6o,132i7k,tpe0g,13ozow,zboog,ydz3k,11icxc,eet4h,10vwdu,y2rqo,12g3ea,te8he,bah81,zy8j4,pnesw,h6j0i,h6l6o,jd98g,c6t37,ci280,b94hs,l8pxc,j23i9,amps2,jomrl,kmcsj,f03wg,vuxkz,i4hxc,165sht,173idd,y1n0j,12eywx,n4ccg,q8qo0,htc02,1161q9,12f05d,jorlu,s46f5,qv8jn,e2kao,fbiio,f0av4,hi7cy,h724i,d4z5t,i4ssi,k08n6,f0h35,nfvr5,i4vi8,fn37m,c7hq9,ciqyo,dggqo,epeyq,d58ch,gw30h,gkuiq,fn77k,igdtv,bl62q,ac8xt,lw16p,kycqq,116qgx,10918h,je7wg,jpha8,nrlds,13zxz5,kn8w0,hix8g,hu62q,mtz9e,hiytf,m7j7k,fnlhf,ds70j,jeh1f,hucch,kyptv,8shz5,dh4ub,eeutd,p0xz4,hj936,e26q2,h6l1l,ifjd5,h6lu0,dr0ui,fb9e0,b96h7,o1yrt,j264o,fbcga,tzi4p,i4hu0,18cg7d,nqsso,13co3t,pm894,xf77t,yo5jf,zlvez,kb8zu,jdk5l,kbadn,j2dl5,ir5ah,ep2ff,8rkeg,gkifd,fy28b,drguj,gvukq,bktu3,ctt1k,h75ft,cimh5,kmslm,htnuz,jp3m2,lkjij,ayix5,gw215,e2x55,g9l6y,fycuh,oru4p,p35zd,qyl8r,nj0p4,z2tqh,x7f49,ppq4p,rl5l4,ze496,17tj49,kyf4a,fymo8,166kqz,z05l5,xfz9l,xr8eh,gwf2g,tdx1l,rihvt,oe5mz,p0mrt,irw5k,l9sju,i5fm1,gwhu3,ga156,pbxl4,fcceh,j37bc,lwdc8,c84jt,fyz2h,m7q2y,opnyg,kcclk,fclai,dfsr4,g8zf5,dfv2r,dr429,oog43,whf0x,i4ihe,165slt,n4btc,htaxe,n4c9e,18yyc1,1583wx,x3yab,x3zf7,rsyc3,l90y9,h6zbk,h6zps,fy21d,drekx,dri35,c7bkg,ciky8,j2lqp,epb4g,gkr6a,ctz82,fbvyo,gkuds,k0gi9,fn6hd,gw6fm,dgky9,h7fv4,eebrl,fna37,e33f7,hty4w,j2wsx,gl0i8,htzio,lw32p,hu0gg,qko0g,116qtv,14mdxt,17qrv5,kbz68,1av5w1,jeads,12frkj,zmmoj,124jrn,zbez5,ayxaq,j34k1,dgus2,hu6z7,ll1ld,h7qs1,igqs0,lwd00,8sgr5,dh1ck,ngn2o,dsahd,glgnl,p0xqo,k155c,76wwq,bvhso,dfp5n,edfo8,iqtzt,abfyx,h6ot5,f01i0,gk95l,g91ei,13z4bd,sfc7v,12q68r,14ad3t,zakpl,12q72x,10us7t,15jcd5,kxouw,13z61n,12ezff,yzdjt,14aeu3,t1vdn,sqnyz,gvnbu,j2bix,oolcp,kmil5,jdkm1,h6xi3,g99ln,ctntm,gvrfd,qvdso,8gehl,jdrix,8gh5l,fmy6y,fbsuw,i4yag,8ru8p,d56hl,bl1cp,f0niw,m766y,je1p7,ephzu,gkxll,epivt,g9plm,f0spl,p0frt,qkmvt,u09i1,r74uz,12fqjf,1a8obd,17fjff,12fqvt,124ie1,158wbd,14xogp,tp4wr,oe40o,p0m8r,jecyh,h7q8p,gwhzv,k0vtk,gwimz,kc4m2,ga7q1,14h40q,16nrve,fnqzd,hj7a1,eq2qg,igyhm,chy5d,76wwx,dfobm,ezvaa,edeqr,kaxk2,fb529,ht3j5,d4kkg,dr2lc,fb9up,fbaar,j25b5,kb3mo,o1zhd,yzb4x,o204g,123om9,yo2u9,tziox,lk44g,11sgrl,mt2zk,13codf,16san5,odauc,uau03,x3z4x,eozhe,j2bvk,fy19d,h709t,cii1u,fy4yp,dg8te,jp25f,ig6si,anb6r,fn5i8,jpbfk,jpbhd,g9psy,e328x,9ejc0,kybvl,tdqw1,k0nj7,tdrxf,i5aao,kyfz4,11t9i9,174ash,opasi,14meqr,18da3n,jeb34,yoyar,q9jq9,tdxi9,cj5er,irwo3,h7qao,hu89s,n5aw0,jppr5,j397n,igt7l,p0u02,k11ep,q9sf4,s580w,dsb35,m7psx,pyko2,knjxe,mizs0,m7rkz,ql3hc,knm8y,d4fah,gvai1,jzobs,e26eg,ozhm0,fb4tl,d4hk9,fb5yj,fb6nd,bkcdk,ctcdk,kxjcb,edk6h,l8t49,axzmz,kxld5,8g3qg,j2755,fbcq0,ht9uz,kmezv,kb6ll,fmmnc,ooinf,j29ij,fxwa2,e2ilm,kmiax,fbh4a,mt6sq,gvpez,ctmcq,ir57t,hi7xl,g9azt,f0d2g,hi9m1,kbfc9,i4s15,f0ep4,g9dd6,g9eei,fy7ft,k0ai2,h77c9,dgd7s,f0kyw,kmwkr,jp6zt,cir1l,jdzzc,eea94,fc04p,j2v1n,jpcvf,n5089,9ekq0,fyluw,aytex,fnesq,dgr8p,gwdd5,e39d4,i5dyg,fnhpl,7jbqh,fca5l,j34x4,fysa1,kndez,wto14,wih9m,124rc8,15kdii,12g06i,acnhl,zy4ru,c83qh,x5088,12g2cq,f1ajt,pndk8,uyfqg,tpi5k,pc6lk,oeh4a,fb3eb,i49gx,g8ui8,e26up,gk4vm,fmgfm,km9gx,edm7n,ht8dt,8rcz5,i4ipc,h6ttf,fbek3,l8ylt,dg2b6,fbhm9,ep16a,odelt,hi7e9,bvy2a,fy19v,ep3ar,hthir,gvsmp,kxw1d,gvtps,fy4hd,g9dio,fy5rl,m6ygg,ig4s4,j2m7m,epay8,h78fn,odoz5,ctxbk,cty41,j2s35,drr75,drsdu,c7mnl,i550w,gkygh,fyhio,g9q5t,9ekc3,epm2a,ayru9,aysj4,e36up,lw4qb,hitmb,igjea,g9woi,hiv03,irtf6,9epf7,fypf5,cj4kw,9q06p,oe7ow,pyfhs,x4x2o,yp3w0,dgzg3,v9ir4,c82cx,11tjsg,gley9,14xxo0,8hapf,xgaeq,pndkh,m7row,i5pdd,o37qo,srs8g,mj1m8,pynow,vw67k,chzb6,i4d1d,ci3ur,ci45d,fxq68,fmimb,dfvk3,r6bwh,bvpxc,zajib,123pa9,165sxv,i4jgi,l8wzk,kmg1s,131gap,ifsg0,10jkar,12ezpf,1584n5,x3ykh,jdiyo,mhxhd,i4mgz,ciekg,e2nb6,j2hkx,e2phe,dg8zk,9pg8y,i4ydc,c7gg3,fn3b6,9ecow,lvvk3,fbw8z,gw3pc,f0q4g,ky8n4,himv4,fygn5,igdc2,irn28,igeo1,hiphf,ump4x,dgn9c,eplj4,m7atd,wi5hd,py681,p0goz,zmjnl,z02v5,yov0h,zbczl,oe2bk,12qzgh,g9x4w,ngede,lw8g3,n57gg,s50ox,pn4hs,mirnk,hu88x,mu1mr,lwc3k,m7lfm,q9p8i,pn85e,k0yps,qkyf6,eepc3,qw7ia,l9y80,glept,u0n40,ql1fm,ga874,ga94x,blpxf,kxcug,dfp1k,fxlft,ht1u1,8fybu,axvws,nqone,l8t57,pm5cb,dfwco,oofyh,eouve,s42h7,to9op,j27k8,xf4p5,ht9s8,12q6fd,pxgaw,18cgw9,19a6q1,m6mtk,1584g9,zama1,kmhxl,ir4w9,gvpqi,fy11l,e2mkq,fy2yy,ig021,lvmkr,ee0sr,92znu,j2nbe,ctxe0,irhe3,epers,i516x,gw3d4,je07d,fyhc8,htxu1,j2waw,tp0nf,t2jpn,yotxl,irqbs,you2x,vvpe3,zmkp5,11t8w9,18zpft,15vc23,166ky3,19xfpn,k0r62,15vdaj,12r0gb,158wuh,pyb7v,lw85m,q9juz,yoyiz,nggax,lwb62,fcc95,een0p,q9qyw,ubuvc,riq4o,jekg8,eesuj,opmvc,c86ix,is615,fz156,q9v7u,k14g9,acruz,ifgsw,e2avk,l8rma,jddaq,dfwb6,rhlub,12exch,13z47n,ifqs0,y1m6r,o20y8,13nw9d,1aucup,15jbv5,131gb5,11h9xv,zlus3,l8xxs,eozma,gvnrk,cic5u,hi6qb,nfswi,ig236,jp45s,d57wx,f0npv,kmxw3,j2spc,fn79v,htvww,k0jtd,gw781,uxykx,tp0i9,hu02c,zmjf5,zxscz,14xmj5,11t9e9,v99zk,16htsh,18ohqp,zxuxf,13zy6r,py9sg,12frwx,rtpjk,ublxt,124jrn,vvsyb,xfzv5,k0suo,jebtc,ga0r7,l9tn4,epv0z,kc5jn,dgxqp,pygnk,is0lt,l9x3k,dh0nl,dh2j5,ga8r5,is5g2,fz15f,9qb0z,k15e9,k15hv,axrff,h6il6,iqpju,jzot6,d4k49,hhvx5,iqxy3,sqk0p,15jcpl,hi2xk,e2ihk,m6p21,e2kex,c757d,dg3mh,ir55k,ctn8b,ep3mh,dree2,jox3t,cik2h,f0h5n,ee0uw,gvzve,fn26w,ctxcr,xifix,sina0,nu388,jgrq0,n7n8a,tge6w,lnh09,p33vd,siqah,dgkm3,gw7h4,drv2w,je5p4,eed7d,t2j2z,w6xuh,m7dcq,k0plm,1av4wp,o2tco,17fja1,19m789,z05cr,12r09n,11taqj,kn95m,ubm3d,14xopl,s4yfv,g9xwa,eptlk,jpnfc,glamx,qw4t4,i5i8p,pyh0a,mu49n,cjbq1,o34pk,c84gp,lla6w,dsd0b,huheg";
+  const out = [];
+  let cur = 0, has = false;
+  for (let i = 0; i < packed.length; i++) {
+    const ch = packed.charCodeAt(i);
+    if (ch === 44) { if (has) out.push(cur); cur = 0; has = false; continue; }
+    const d = ch <= 57 ? ch - 48 : ch - 87;   // 0-9 then a-z (base36)
+    cur = cur * 36 + d; has = true;
+  }
+  if (has) out.push(cur);
+  return out.map(function(v){
+    return [ v & 7, (v >> 3) & 7, (v >> 6) & 2047, (v >> 17) & 1, (v >> 18) & 1,
+             (((v >> 19) & 255) + 50) / 100 ];
+  });
+})();
+
+/* ============ PRODUCT MODEL ============ */
+// Fare ratio of each tier against the route's base fare, and how much of the
+// surge each tier actually absorbs. Two-wheeler supply is far less constrained
+// than cabs, so it moves about a quarter as much - which is why it ends up
+// tagged "Least affected" during a spike.
+const TIERS = [
+  { name: 'Two-wheeler',   ratio: 0.642, sens: 0.25, seats: 0, eta: 3, desc: 'Pillion ride, cheapest way across town' },
+  { name: 'Three-wheeler', ratio: 1.322, sens: 0.55, seats: 0, eta: 2, desc: 'Metered auto, no haggling' },
+  { name: 'Standard',      ratio: 1.000, sens: 1.00, seats: 4, eta: 5, desc: 'Compact car, up to 4' },
+  { name: 'Sedan',         ratio: 1.834, sens: 1.00, seats: 4, eta: 6, desc: 'More legroom and boot space' },
+  { name: 'Six-seater',    ratio: 2.037, sens: 1.00, seats: 6, eta: 6, desc: 'Room for the whole group' },
+];
+const rupee = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const tierMult = (surge, sens) => 1 + (surge - 1) * sens;
+
+const state = {
+  routeIdx: 0, dow: 1, minutes: 555, rain: 0, event: 0,
+  screen: 'home', alertArmed: false, alertBaseline: null, alertFired: false,
+  chosenTier: 2, tip: 0,
+};
+
+const F = () => forecast(ROWS, state.routeIdx, state.minutes, state.dow, state.rain, state.event);
+const route = () => META.routes[state.routeIdx];
+
+/* ---------- chart ---------- */
+function chart(points, nowMin) {
+  if (points.length < 2) return '';
+  const W = 340, H = 96, padL = 26, padR = 10, padT = 12, padB = 18;
+  const xs = points.map(p => p.minutes);
+  const ys = points.map(p => p.multiplier);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  let y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const span = Math.max(0.25, y1 - y0);
+  y0 = Math.max(0.5, y0 - span * 0.18); y1 = Math.min(2.0, y1 + span * 0.18);
+  const px = m => padL + (W - padL - padR) * (x1 === x0 ? 0.5 : (m - x0) / (x1 - x0));
+  const py = v => padT + (H - padT - padB) * (1 - (v - y0) / (y1 - y0 || 1));
+
+  const line = points.map((p, i) => (i ? 'L' : 'M') + px(p.minutes).toFixed(1) + ' ' + py(p.multiplier).toFixed(1)).join(' ');
+  const area = line + ' L' + px(x1).toFixed(1) + ' ' + (H - padB) + ' L' + px(x0).toFixed(1) + ' ' + (H - padB) + ' Z';
+
+  let grid = '', vlabels = '';
+  [y0, (y0 + y1) / 2, y1].forEach(v => {
+    const y = py(v).toFixed(1);
+    grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#2c2c2e" stroke-width="1"/>`;
+    vlabels += `<text class="axis-v" x="${padL - 5}" y="${(+y + 3).toFixed(1)}" text-anchor="end">${v.toFixed(2)}×</text>`;
+  });
+
+  let xlabels = '';
+  const every = Math.max(1, Math.round(points.length / 4));
+  points.forEach((p, i) => {
+    if (i % every && i !== points.length - 1) return;
+    xlabels += `<text class="axis" x="${px(p.minutes).toFixed(1)}" y="${H - 5}" text-anchor="middle">${fmtClock(p.minutes)}</text>`;
+  });
+
+  const cur = points.reduce((a, b) => Math.abs(b.minutes - nowMin) < Math.abs(a.minutes - nowMin) ? b : a);
+  const cx = px(cur.minutes).toFixed(1), cy = py(cur.multiplier).toFixed(1);
+
+  return `<div class="chartwrap"><svg class="chart" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Forecast multiplier from ${fmtClock(x0)} to ${fmtClock(x1)}, ranging ${y0.toFixed(2)} to ${y1.toFixed(2)} times base fare">
+    ${grid}
+    <path d="${area}" fill="rgba(200,242,76,.10)" stroke="none"/>
+    <path d="${line}" fill="none" stroke="#c8f24c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="4" fill="#c8f24c" stroke="#141414" stroke-width="2"/>
+    ${vlabels}${xlabels}
+  </svg></div>`;
+}
+
+/* ---------- home ---------- */
+function savedPlaces() {
+  const r = route();
+  return `<div class="sect-label">Saved places</div>
+    <button class="place" type="button" data-goto="plan">
+      <span class="place-badge">W</span>
+      <span class="place-txt"><span class="place-t">Work</span><span class="place-s">${r.destination} · 32 min</span></span>
+    </button>
+    <button class="place" type="button" data-goto="plan">
+      <span class="place-badge">H</span>
+      <span class="place-txt"><span class="place-t">Home</span><span class="place-s">${r.origin}</span></span>
+    </button>`;
+}
+
+function renderHome() {
+  const r = route(), f = F();
+  let card = '';
+
+  if (f.status === 'silent') {
+    // S0 — the engine has nothing it can stand behind, so it says nothing
+    // about the future. This is the "forecast is earned" rule, rendered.
+    card = `<div class="fcard">
+      <div class="fc-kicker">No forecast</div>
+      <p class="fc-sub" style="font-size:14px;color:var(--text)">No fare pattern for ${fmtTime(state.minutes)} on this route yet — we'll flag surges once we're sure.</p>
+      <div class="basis">engine → silent · ${f.nObservations} comparable trips · floor is ${8}</div>
+    </div>`;
+  } else {
+    const chips = f.reasons.map(x => `<span class="chip">${x}</span>`).join('');
+    const planned = r.plannedMinutes;
+    const lb = (planned != null && state.minutes < planned)
+      ? leaveByPlanned(ROWS, state.routeIdx, state.minutes, planned, state.dow, r.baseFare, state.rain, state.event)
+      : null;
+
+    // arming an alert then watching it clear is the S3 story
+    if (state.alertArmed && f.multiplier < RISK_MEDIUM) state.alertFired = true;
+
+    if (state.alertFired) {
+      const saved = state.alertBaseline ? Math.round(r.baseFare * (state.alertBaseline - f.multiplier)) : 0;
+      card = `<div class="fcard is-clear">
+        <div class="fc-kicker" style="color:var(--lime)">Your alert fired</div>
+        <h2 class="fc-head"><span class="mult mult-clear">${f.multiplier.toFixed(2)}×</span> — ${rupee(r.baseFare * f.multiplier)} to ${r.destination}, back to normal</h2>
+        ${saved > 0 ? `<div class="advice">Waiting saved you about <strong>${rupee(saved)}</strong> against the ${state.alertBaseline.toFixed(2)}× you were looking at.</div>` : ''}
+        ${chart(trajectory(ROWS, state.routeIdx, state.minutes - 60, state.dow, 120, 15, state.rain, state.event), state.minutes)}
+        <div class="actions"><button class="btn primary" data-act="book">Book now · ${rupee(r.baseFare * f.multiplier)}</button></div>
+        <div class="basis">${f.basis} · confidence ${(f.confidence * 100).toFixed(0)}%</div>
+      </div>`;
+    } else if (f.risk === 'high' || f.risk === 'medium') {
+      const ease = easesIn(ROWS, state.routeIdx, state.minutes, state.dow, 180, state.rain, state.event);
+      const alts = TIERS.filter(t => t.sens < 1).map(t => {
+        const m = tierMult(f.multiplier, t.sens);
+        const mmClass = m >= 1.5 ? 'mm-high' : m >= 1.15 ? 'mm-med' : 'mm-low';
+        return `<div class="alt"><span class="alt-n">${t.name}</span><span class="alt-m"><span class="modemult ${mmClass}" style="margin-top:0">${m.toFixed(2)}×</span> · ${t.eta} min away</span><span class="alt-p">${rupee(r.baseFare * t.ratio * m)}</span></div>`;
+      }).join('');
+      card = `<div class="fcard is-${f.risk}">
+        <div class="fc-kicker" style="color:var(--${f.risk === 'high' ? 'ember' : 'amber'})">Surging now</div>
+        <h2 class="fc-head"><span class="mult mult-${f.risk}">${f.multiplier.toFixed(2)}×</span> — ${rupee(r.baseFare * f.multiplier)} to ${r.destination} right now</h2>
+        ${chips ? `<div class="chips">${chips}</div>` : ''}
+        ${chart(trajectory(ROWS, state.routeIdx, state.minutes, state.dow, 150, 15, state.rain, state.event), state.minutes)}
+        ${ease != null ? `<p class="fc-sub">Easing off in about <strong style="color:var(--text)">${ease} min</strong>.</p>`
+                       : `<p class="fc-sub">No let-up inside the next three hours.</p>`}
+        <div class="actions">
+          <button class="btn ${state.alertArmed ? 'armed' : ''}" data-act="alert">${state.alertArmed ? 'Alert armed ✓' : 'Alert me at 1.0×'}</button>
+          <button class="btn primary" data-act="choose">Book anyway</button>
+        </div>
+        <div class="sect-label" style="margin-bottom:2px">Cheaper right now</div>
+        <div class="alts">${alts}</div>
+        <div class="basis">${f.basis} · band ${f.bandLow.toFixed(2)}–${f.bandHigh.toFixed(2)}× · confidence ${(f.confidence * 100).toFixed(0)}%</div>
+      </div>`;
+    } else if (lb) {
+      card = `<div class="fcard is-medium">
+        <div class="fc-kicker">Your usual ${fmtTime(lb.plannedMinutes)} commute</div>
+        <h2 class="fc-head">Fares to ${r.destination} will likely hit <span class="mult mult-medium">${lb.plannedMultiplier.toFixed(2)}×</span> by the time you leave</h2>
+        ${chips ? `<div class="chips">${chips}</div>` : ''}
+        ${chart(trajectory(ROWS, state.routeIdx, state.minutes, state.dow, lb.plannedMinutes - state.minutes + 30, 15, state.rain, state.event), state.minutes)}
+        <div class="advice">${lb.minutes <= state.minutes ? 'Leave now' : 'Leave by <strong>' + fmtTime(lb.minutes) + '</strong>'} and you'd pay about <strong>${rupee(lb.fareThen)}</strong> <span class="was">${rupee(lb.farePlanned)}</span></div>
+        <div class="actions">
+          <button class="btn" data-act="reserve">Reserve ${fmtTime(lb.minutes)}</button>
+          <button class="btn ${state.alertArmed ? 'armed' : ''}" data-act="alert">${state.alertArmed ? 'Alert armed ✓' : 'Alert me at 1.0×'}</button>
+        </div>
+        <div class="basis">${f.basis} · confidence ${(f.confidence * 100).toFixed(0)}%</div>
+      </div>`;
+    } else {
+      // Known, and fine. Distinct from silence: silence means we don't know.
+      card = `<div class="fcard">
+        <div class="fc-kicker" style="color:var(--lime)">Fares are normal</div>
+        <p class="fc-sub" style="font-size:14px;color:var(--text)">${f.multiplier.toFixed(2)}× — about ${rupee(r.baseFare * f.multiplier)} to ${r.destination}. Nothing worth waiting for.</p>
+        <div class="basis">${f.basis} · confidence ${(f.confidence * 100).toFixed(0)}%</div>
+      </div>`;
+    }
+  }
+
+  return `<div class="searchrow">
+      <button class="pill" type="button" data-goto="plan"><span class="ph">Where to?</span></button>
+      <button class="pill ghost" type="button" data-goto="plan">Later</button>
+    </div>${card}${savedPlaces()}`;
+}
+
+/* ---------- plan ---------- */
+function renderPlan() {
+  const rows = META.routes.map((r, i) => `
+    <button class="place" type="button" data-route="${i}">
+      <span class="place-dist">${r.distance}</span>
+      <span class="place-txt"><span class="place-t">${r.destination}</span><span class="place-s">${r.origin}</span></span>
+    </button>`).join('');
+  return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0 4px">
+      <button class="pill ghost" type="button" data-goto="home" aria-label="Back">←</button>
+      <strong style="font-size:19px">Plan your ride</strong>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--radius);padding:4px 14px;margin:10px 0">
+      <div style="padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:14.5px;font-weight:600">${route().origin}</div>
+      <div style="padding:12px 0;font-size:14.5px;color:var(--muted)">Where to?</div>
+    </div>
+    <div class="sect-label">★ Saved places</div>${rows}`;
+}
+
+/* ---------- choose ---------- */
+function renderChoose() {
+  const r = route(), f = F();
+  const surge = f.status === 'ok' ? f.multiplier : 1.0;
+  const surging = f.status === 'ok' && (f.risk === 'medium' || f.risk === 'high');
+  const least = surging ? TIERS.reduce((a, b) => (a.sens <= b.sens ? a : b)) : null;
+
+  let banner = '';
+  if (surging) {
+    const ease = easesIn(ROWS, state.routeIdx, state.minutes, state.dow, 180, state.rain, state.event);
+    const why = f.reasons.length ? f.reasons.join(' · ').toLowerCase() : 'heavy demand';
+    banner = `<div class="surgebar">
+      <div class="surgebar-top"><span class="surgebar-m">${surge.toFixed(2)}×</span><span class="surgebar-t">Fares are high right now</span></div>
+      <div class="surgebar-s">${why[0].toUpperCase() + why.slice(1)}${ease != null ? ' · drops by ' + fmtTime(state.minutes + ease) : ''}</div>
+      <div class="actions">
+        <button class="btn ${state.alertArmed ? 'armed' : ''}" data-act="alert">${state.alertArmed ? 'Alert armed ✓' : 'Alert me at 1.0×'}</button>
+        ${ease != null ? `<button class="btn" data-act="reserve">Reserve ${fmtTime(state.minutes + ease)}</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  const list = TIERS.map((t, i) => {
+    const m = tierMult(surge, t.sens);
+    const now = r.baseFare * t.ratio * m;
+    const base = r.baseFare * t.ratio;
+    const mmClass = m >= 1.5 ? 'mm-high' : m >= 1.15 ? 'mm-med' : 'mm-low';
+    return `<button class="tier" type="button" data-tier="${i}" aria-pressed="${state.chosenTier === i}">
+      <span class="tier-art"></span>
+      <span class="tier-mid">
+        <span class="tier-n">${t.name}${t.seats ? ` <span class="seat">◍${t.seats}</span>` : ''}${least === t ? '<span class="leasttag">Least affected</span>' : ''}</span>
+        <span class="tier-e">${fmtTime(state.minutes + t.eta)} · ${t.eta} min</span>
+        <span class="tier-d">${t.desc}</span>
+      </span>
+      <span class="tier-right">
+        <span class="tier-p">${rupee(now)}</span>
+        ${m > 1.02 ? `<br><span class="tier-was">${rupee(base)}</span>` : ''}
+        ${surging ? `<br><span class="modemult ${mmClass}">${m.toFixed(2)}×</span>` : ''}
+      </span>
+    </button>`;
+  }).join('');
+
+  const chosen = TIERS[state.chosenTier];
+  const chosenPrice = r.baseFare * chosen.ratio * tierMult(surge, chosen.sens);
+
+  return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0 4px">
+      <button class="pill ghost" type="button" data-goto="home" aria-label="Back">←</button>
+      <strong style="font-size:19px">Choose a ride</strong>
+    </div>
+    ${banner}${list}
+    <div class="paybar"><span class="paybar-ic">◍ ▤</span><span class="paybar-t">Personal<br><span class="paybar-s">Cash</span></span><span style="color:var(--muted)">›</span></div>
+    <button class="cta" data-act="request">Choose ${chosen.name} · ${rupee(chosenPrice)}</button>`;
+}
+
+/* ---------- requested / matched ---------- */
+function renderRequested() {
+  const r = route(), f = F();
+  const surge = f.status === 'ok' ? f.multiplier : 1.0;
+  const t = TIERS[state.chosenTier];
+  const price = r.baseFare * t.ratio * tierMult(surge, t.sens) + state.tip;
+  const tips = [45, 55, 65].map(v =>
+    `<button class="tipbtn" type="button" data-tip="${v}" aria-pressed="${state.tip === v}">+₹${v}</button>`).join('');
+  return `<div class="big-status">Ride requested</div>
+    <p class="fc-sub">Finding drivers nearby</p>
+    <div class="progress-rail"><i></i></div>
+    <div style="background:var(--surface);border-radius:var(--radius);padding:13px;margin-top:8px">
+      <div style="font-size:13.5px;font-weight:600">${t.name} details</div>
+      <div class="fc-sub" style="margin-top:5px">Meet at your pickup spot on 11th Cross Rd</div>
+      <div class="fc-sub" style="margin-top:7px">Cash · <span style="color:var(--ember)">${surge.toFixed(2)}× surge</span></div>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--radius);padding:13px;margin-top:10px">
+      <div style="font-size:13.5px;font-weight:700">Add extra to get a faster ride</div>
+      <div class="tipladder">${tips}</div>
+      <div class="fc-sub" style="margin-top:9px">Current price: <strong style="color:var(--text)">${rupee(price)}</strong></div>
+      <div class="basis" style="margin-top:6px">100% of the extra amount goes to your driver.</div>
+    </div>
+    <button class="cta" data-act="match">Driver matched →</button>`;
+}
+
+function renderMatched() {
+  const r = route(), f = F();
+  const surge = f.status === 'ok' ? f.multiplier : 1.0;
+  const t = TIERS[state.chosenTier];
+  const price = r.baseFare * t.ratio * tierMult(surge, t.sens) + state.tip;
+  return `<div class="eta-pill">Arriving in 4 min</div>
+    <div class="driver">
+      <span class="driver-av">RK</span>
+      <span class="tier-mid"><span class="tier-n">Ramesh K.</span><span class="tier-e">★ 4.92 · Swift Dzire</span></span>
+      <span class="tier-right"><span class="tier-p">${rupee(price)}</span><br><span class="tier-was" style="text-decoration:none">${surge.toFixed(2)}×</span></span>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--radius);padding:13px">
+      <div class="fc-sub">Vehicle</div><div style="font-weight:700;font-size:15px;margin-top:3px">KA 05 MJ 8821</div>
+      <div class="fc-sub" style="margin-top:11px">Share this PIN</div>
+      <div class="pin"><i>4</i><i>7</i><i>0</i><i>2</i></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:11px">
+      <button class="btn" type="button">Call</button><button class="btn" type="button">Message</button><button class="btn" type="button">Share</button>
+    </div>
+    <p class="fc-sub" style="margin-top:12px">Pickup at Gate 2, 11th Cross</p>
+    <button class="cta" data-act="reset" style="background:var(--surface-2);color:var(--text)">End demo · back to home</button>`;
+}
+
+/* ---------- panel ---------- */
+function renderPanel() {
+  const f = F(), r = route();
+  const cls = f.status === 'silent' ? 'v-silent' : 'v-' + f.risk;
+  const cells = f.status === 'silent'
+    ? [['status', 'SILENT', cls], ['matched n', f.nObservations, ''], ['floor', '8 trips', ''], ['scope', f.scope, '']]
+    : [['multiplier', f.multiplier.toFixed(2) + '×', cls],
+       ['band p25–p75', f.bandLow.toFixed(2) + '–' + f.bandHigh.toFixed(2), ''],
+       ['risk', f.risk, cls],
+       ['confidence', (f.confidence * 100).toFixed(0) + '%', ''],
+       ['matched n', f.nObservations.toLocaleString('en-IN'), ''],
+       ['scope', f.scope, f.scope === 'population' ? 'v-medium' : '']];
+  document.getElementById('readout').innerHTML = cells.map(
+    c => `<div class="ro"><div class="ro-k">${c[0]}</div><div class="ro-v ${c[2]}">${c[1]}</div></div>`).join('');
+
+  const tick = ok => ok ? '<span class="ok">hit </span>' : '<span class="no">thin</span>';
+  const t1 = matchRows(ROWS, state.routeIdx, state.dow, state.minutes, state.rain, state.event, 45, true).length;
+  const t2 = matchRows(ROWS, state.routeIdx, state.dow, state.minutes, state.rain, state.event, 45, false).length;
+  const t3 = matchRows(ROWS, state.routeIdx, state.dow, state.minutes, state.rain, state.event, 90, false).length;
+  const t4 = matchPopulation(ROWS, state.dow, state.minutes, 45).length;
+  document.getElementById('trace').innerHTML =
+`<b>query</b>  route=${r.id} ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][state.dow]} ${fmtTime(state.minutes)} rain=${state.rain} event=${state.event}
+<b>tier 1</b> route + conditions, ±45m   n=${String(t1).padStart(4)}  ${tick(t1 >= 8)}
+<b>tier 2</b> route, ±45m                n=${String(t2).padStart(4)}  ${tick(t2 >= 8)}
+<b>tier 3</b> route, ±90m                n=${String(t3).padStart(4)}  ${tick(t3 >= 8)}
+<b>tier 4</b> city-wide, ±45m            n=${String(t4).padStart(4)}  ${tick(t4 >= 8)}
+<b>result</b> ${f.status === 'silent' ? 'silent — nothing to stand behind' : f.basis}`;
+}
+
+function renderEval() {
+  const e = EVAL, pct = x => (100 * x).toFixed(1) + '%';
+  document.getElementById('evalbox').innerHTML = `
+    <div class="evalrow"><span>Naive rush-hour baseline F1</span><span>${pct(e.baseline.f1)}</span></div>
+    <div class="evalrow"><span>This engine, F1</span><span class="win">${pct(e.forced.f1)}</span></div>
+    <div class="evalrow"><span>Precision · recall</span><span>${pct(e.forced.precision)} · ${pct(e.forced.recall)}</span></div>
+    <div class="evalrow"><span>Forecast coverage</span><span>${pct(e.coverage)}</span></div>
+    <div class="evalrow"><span>Held-out trips scored</span><span>${e.n_test.toLocaleString('en-IN')}</span></div>`;
+  document.getElementById('evalnote').innerHTML =
+    `Temporal split — trained on trips before ${e.cutoff}, scored on everything after. Silence counts as “no surge predicted”, so the engine can’t flatter itself by staying quiet on hard cases. <strong>Caveat that matters:</strong> this dataset is simulated from time-of-day rules, so a time-of-day model beats a time-of-day baseline partly by construction. The margin shows the pipeline works end to end — it is not yet evidence the approach beats a heuristic on real fares.`;
+}
+
+/* ---------- shell ---------- */
+const NAV = [['home', 'Home'], ['plan', 'Services'], ['activity', 'Activity'], ['account', 'Account']];
+function renderNav() {
+  document.getElementById('navbar').innerHTML = NAV.map(([k, label]) =>
+    `<button type="button" data-goto="${k === 'activity' || k === 'account' ? 'home' : k}"
+       ${state.screen === k ? 'aria-current="page"' : ''}>
+       <svg class="navicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/></svg>
+       ${label}</button>`).join('');
+}
+
+function render() {
+  const s = state.screen;
+  document.getElementById('sb-clock').textContent = fmtClock(state.minutes);
+  document.getElementById('screen').innerHTML =
+    s === 'plan' ? renderPlan() :
+    s === 'choose' ? renderChoose() :
+    s === 'requested' ? renderRequested() :
+    s === 'matched' ? renderMatched() : renderHome();
+  renderNav(); renderPanel(); renderEval();
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-goto],[data-act],[data-tier],[data-route],[data-tip],[data-jump]');
+  if (!el) return;
+  if (el.dataset.goto) state.screen = el.dataset.goto;
+  if (el.dataset.tier != null) state.chosenTier = +el.dataset.tier;
+  if (el.dataset.route != null) { state.routeIdx = +el.dataset.route; document.getElementById('route').value = state.routeIdx; state.screen = 'choose'; }
+  if (el.dataset.tip != null) state.tip = state.tip === +el.dataset.tip ? 0 : +el.dataset.tip;
+  if (el.dataset.jump != null) { state.minutes = +el.dataset.jump; syncTime(); }
+  const a = el.dataset.act;
+  if (a === 'alert') {
+    state.alertArmed = !state.alertArmed;
+    const f = F();
+    state.alertBaseline = state.alertArmed && f.status === 'ok' ? f.multiplier : null;
+    if (!state.alertArmed) state.alertFired = false;
+  }
+  if (a === 'choose' || a === 'reserve') state.screen = 'choose';
+  if (a === 'book') { state.screen = 'choose'; state.alertFired = false; state.alertArmed = false; }
+  if (a === 'request') state.screen = 'requested';
+  if (a === 'match') state.screen = 'matched';
+  if (a === 'reset') { state.screen = 'home'; state.tip = 0; state.alertArmed = false; state.alertFired = false; }
+  render();
+});
+
+function syncTime() {
+  document.getElementById('time').value = state.minutes;
+  document.getElementById('timeval').textContent = fmtTime(state.minutes);
+}
+document.getElementById('time').addEventListener('input', e => {
+  state.minutes = +e.target.value;
+  document.getElementById('timeval').textContent = fmtTime(state.minutes);
+  render();
+});
+document.getElementById('route').addEventListener('change', e => { state.routeIdx = +e.target.value; render(); });
+document.getElementById('dow').addEventListener('change', e => { state.dow = +e.target.value; render(); });
+document.getElementById('rain').addEventListener('change', e => { state.rain = e.target.checked ? 1 : 0; render(); });
+document.getElementById('event').addEventListener('change', e => { state.event = e.target.checked ? 1 : 0; render(); });
+
+document.getElementById('route').innerHTML = META.routes.map((r, i) =>
+  `<option value="${i}">${r.destination}</option>`).join('');
+document.getElementById('route').value = 0;
+syncTime();
+render();
+</script>
+</body>
+</html>

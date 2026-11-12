@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Surge Alert feedback</title>
+<style>
+:root{
+  --bg:#f7f7f5; --card:#ffffff; --text:#1a1a18; --text-2:#6b6b66;
+  --border:#e4e3dd; --accent:#1a1a18; --accent-text:#ffffff;
+  --good:#2f7a4a; --warn:#b5540b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141412; --card:#1d1d1a; --text:#f3f3ef; --text-2:#9a9a92;
+    --border:#333330; --accent:#f3f3ef; --accent-text:#141412;
+    --good:#6fcf97; --warn:#f2b34c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141412; --card:#1d1d1a; --text:#f3f3ef; --text-2:#9a9a92;
+  --border:#333330; --accent:#f3f3ef; --accent-text:#141412;
+  --good:#6fcf97; --warn:#f2b34c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:28px 16px 56px;display:flex;flex-direction:column;gap:20px}
+h1{font-size:21px;margin:0 0 4px}
+.dek{color:var(--text-2);font-size:14.5px;line-height:1.55;margin:0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.btn-link{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-text);
+  text-decoration:none;font-weight:600;font-size:14.5px;padding:12px 16px;border-radius:10px;margin-top:6px}
+.q{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.q label.ql{font-size:14px;font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-size:13.5px;cursor:pointer;
+  background:none;color:var(--text);font-family:inherit}
+.opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+textarea,input[type=text]{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;color:var(--text);font-family:inherit;font-size:14px}
+textarea{min-height:72px;resize:vertical}
+.submit{width:100%;border:0;border-radius:10px;padding:13px;background:var(--accent);color:var(--accent-text);
+  font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
+.submit:disabled{opacity:.5;cursor:default}
+.err{color:var(--warn);font-size:13px;display:none}
+.done{display:none;text-align:center;padding:24px 0;gap:10px;flex-direction:column}
+.count{font-size:13px;color:var(--text-2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Surge Alert — 2 minute feedback</h1>
+    <p class="dek">I built a prototype that forecasts Uber surge pricing per ride type and nudges you before you book. Try it, then answer 4 quick questions below.</p>
+  </div>
+
+  <div class="card">
+    <p class="dek" style="margin-bottom:10px">Step 1 — open the prototype and click through a surge scenario (Home → set a destination → ride selection).</p>
+    <a class="btn-link" href="https://claude.ai/code/artifact/4a284cb7-5fd7-450b-849d-1a025cda1ddf" target="_blank" rel="noopener">Open the Surge Alert prototype →</a>
+  </div>
+
+  <form id="form" class="card">
+    <p class="dek" style="margin-bottom:14px">Step 2 — answer these about what you just saw.</p>
+
+    <div class="q">
+      <label class="ql">Would you trust this forecast enough to act on it (wait, or pick a cheaper ride)?</label>
+      <div class="opts" data-group="trust">
+        <button type="button" class="opt">Yes, definitely</button>
+        <button type="button" class="opt">Probably</button>
+        <button type="button" class="opt">Not really</button>
+        <button type="button" class="opt">No</button>
+      </div>
+    </div>
+
+    <div class="q">
+      <label class="ql">Seeing each ride type's own price multiplier (not just one "cheapest" tag) — did that change which ride you'd pick?</label>
+      <div class="opts" data-group="modechip">
+        <button type="button" class="opt">Yes</button>
+        <button type="button" class="opt">No, wouldn't matter</button>
+        <button type="button" class="opt">Not sure</button>
+      </div>
+    </div>
+
+    <div class="q">
+      <label class="ql">If this forecast was wrong once, would you still trust it the next time?</label>
+      <div class="opts" data-group="trustafterwrong">
+        <button type="button" class="opt">Yes</button>
+        <button type="button" class="opt">Depends how wrong</button>
+        <button type="button" class="opt">No, I'd stop trusting it</button>
+      </div>
+    </div>
+
+    <div class="q">
+      <label class="ql">Your name (optional)</label>
+      <input type="text" id="name" placeholder="So I know who said what">
+    </div>
+
+    <div class="q">
+      <label class="ql">Anything else — confusing, annoying, missing?</label>
+      <textarea id="open"></textarea>
+    </div>
+
+    <p class="err" id="err">Please answer all 3 questions above first.</p>
+    <button type="submit" class="submit" id="submit">Send feedback</button>
+  </form>
+
+  <div class="card done" id="done">
+    <p style="font-weight:700;font-size:16px;margin:0">Thanks — got it.</p>
+    <p class="dek" style="margin:0">Appreciate you taking the 2 minutes.</p>
+  </div>
+
+  <p class="count" id="count"></p>
+</div>
+
+<script>
+const state = { trust:null, modechip:null, trustafterwrong:null };
+document.querySelectorAll('.opts').forEach(group => {
+  const key = group.dataset.group;
+  group.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('.opt').forEach(b => b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+      state[key] = btn.textContent;
+      document.getElementById('err').style.display = 'none';
+    });
+  });
+});
+
+let db = null;
+(async () => {
+  db = await claude.use('db');
+  refreshCount();
+})();
+
+async function refreshCount(){
+  if(!db) return;
+  try{
+    const rows = await db.collection('responses').get();
+    document.getElementById('count').textContent = rows.length
+      ? rows.length + ' friend' + (rows.length === 1 ? '' : 's') + ' have responded so far'
+      : '';
+  }catch(e){}
+}
+
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!state.trust || !state.modechip || !state.trustafterwrong){
+    document.getElementById('err').style.display = 'block';
+    return;
+  }
+  const submitBtn = document.getElementById('submit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending…';
+
+  const row = {
+    ts: new Date().toISOString(),
+    name: document.getElementById('name').value.trim() || 'Anonymous',
+    trust: state.trust,
+    modechip: state.modechip,
+    trustafterwrong: state.trustafterwrong,
+    open: document.getElementById('open').value.trim(),
+  };
+
+  try{
+    if(db){
+      const id = 'r' + Date.now() + Math.random().toString(36).slice(2,7);
+      await db.collection('responses').doc(id).set(row);
+    }
+    document.getElementById('form').style.display = 'none';
+    document.getElementById('done').style.display = 'flex';
+    refreshCount();
+  }catch(err){
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send feedback';
+    document.getElementById('err').textContent = 'Could not save — try again in a moment.';
+    document.getElementById('err').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
