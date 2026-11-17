@@ -765,7 +765,7 @@ function pickupRecs() {
     else c1 = { ...p, drop, mult: candMult, fare: candFare, saving };
     out.candidates.push({ id: p.id, avail, c1 });
     out.trace.push(`${c1 ? '✓' : '✗'} ${p.name} · ${p.walkMin} min · ${c1 ? `zone surge drop ${drop.toFixed(2)} (${hereSurge.toFixed(2)}× to ${candSurge.toFixed(2)}×)` : why}`);
-    if (c1 && (!out.case1 || c1.drop > out.case1.drop || (c1.drop === out.case1.drop && c1.walkMin < out.case1.walkMin))) out.case1 = c1;
+    if (c1 && (!out.case1 || c1.walkMin < out.case1.walkMin || (c1.walkMin === out.case1.walkMin && c1.drop > out.case1.drop))) out.case1 = c1;
   });
   return out;
 }

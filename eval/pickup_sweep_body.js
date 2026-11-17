@@ -53,8 +53,11 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
       if (c1.saving < 15 - 1e-9) bad('saving under 15 rupees', { ...ctx, saving: c1.saving });
       const expFare = route().baseFare * t.ratio * tierMult(Math.max(1, 1 + (base - 1) * c1.zoneFactor), t.sens);
       if (Math.abs(expFare - c1.fare) > 1e-6) bad('shown fare does not use the floored surge', ctx);
-      const better = PICKUPS[ri].filter(p => !p.own && p.id !== sel.id && p.walkMin >= 2 && p.walkMin <= 8 && supplyScore(p, t) >= 0.5 && hereS - Math.max(1, 1 + (base - 1) * p.zoneFactor) > drop + 1e-9);
-      if (better.length) bad('a bigger-drop qualifying point exists', ctx);
+      const qual = p => !p.own && p.id !== sel.id && p.walkMin >= 2 && p.walkMin <= 8 && supplyScore(p, t) >= 0.5
+        && hereS - Math.max(1, 1 + (base - 1) * p.zoneFactor) >= 0.3 - 1e-9
+        && route().baseFare * t.ratio * (tierMult(hereS, t.sens) - tierMult(Math.max(1, 1 + (base - 1) * p.zoneFactor), t.sens)) >= 15 - 1e-9;
+      const nearer = PICKUPS[ri].filter(p => qual(p) && (p.walkMin < c1.walkMin || (p.walkMin === c1.walkMin && (hereS - Math.max(1, 1 + (base - 1) * p.zoneFactor)) > drop + 1e-9)));
+      if (nearer.length) bad('a nearer qualifying point exists', ctx);
       S.fires++;
       [[S.byTier, t.name], [S.byRoute, 'R' + ri], [S.byBand, band(m)], [S.byRain, 'rain=' + rain], [S.byEvent, 'event=' + event]].forEach(([o, k]) => bump(o, k, 'fires'));
       if (surging) S.surgeActive.fires++;

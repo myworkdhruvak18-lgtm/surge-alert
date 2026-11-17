@@ -8,7 +8,7 @@ Every combination of: 5 routes × 2 day types (weekday, weekend; the engine only
 
 ## Result
 
-**0 violations.** No scenario produced a recommendation that broke a rule: never outside the 2 to 8 minute walk window (the 1 and 9 minute points were never recommended), never under a 0.30 zone-surge drop (1.0× floor), never saving under ₹15, never priced without the floored surge, never to an unavailable point, never to the selected or own point, never one that costs more, never when a bigger-drop qualifying point existed, and never when the route forecast is silent. Re-quotes were checked too: a re-quote passes only if it still clears the same bar, and never prices below the 1.0× floor.
+**0 violations.** No scenario produced a recommendation that broke a rule: never outside the 2 to 8 minute walk window (the 1 and 9 minute points were never recommended), never under a 0.30 zone-surge drop (1.0× floor), never saving under ₹15, never priced without the floored surge, never to an unavailable point, never to the selected or own point, never one that costs more, never when a nearer qualifying point existed, and never when the route forecast is silent. Re-quotes were checked too: a re-quote passes only if it still clears the same bar, and never prices below the 1.0× floor.
 
 ## What the numbers show
 
@@ -24,7 +24,7 @@ Overall the card fires in 2,901 of the 23,395 scenarios where the selected point
 
 ## Findings worth knowing
 
-1. **The ₹15 floor only ever blocks two-wheelers.** It stopped 617 two-wheeler scenarios that passed every other rule, and none for any other ride type. Two-wheeler firings are 358, with savings of ₹15 to ₹30. A bike's price moves only 0.25 of the underlying surge, so for bikes the ₹15 floor, not the 0.30 drop, is the rule that actually decides.
+1. **The ₹15 floor only ever blocks two-wheelers.** It stopped 617 two-wheeler scenarios that passed every other rule, and none for any other ride type. Two-wheeler firings are 358, with savings of ₹15 to ₹23. A bike's price moves only 0.25 of the underlying surge, so for bikes the ₹15 floor, not the 0.30 drop, is the rule that actually decides.
 2. **Autos qualify like cars (858 of 16,128)** because the 0.30 rule applies to the underlying zone surge, though they save fewer rupees per drop.
 3. **Six-seater is mostly gated by the availability model, not by price.** 46,844 of 55,296 Six-seater candidate checks were unavailable. That comes from a hand-set 0.65 ride-type supply factor, not from data.
 4. **Overnight is mostly unavailable.** 52,312 of 74,880 candidate checks overnight (70%) fell under the 0.5 availability line, especially with rain or an event. Hand-set time-of-day factors again.
@@ -36,21 +36,21 @@ Every scenario where the card fires was re-quoted at its arrival time (the walk 
 
 | Other riders | Held | Of | Share |
 |---|---|---|---|
-| None | 2,800 | 2,901 | 97% |
-| Some | 876 | 2,901 | 30% |
+| None | 2,785 | 2,901 | 96% |
+| Some | 306 | 2,901 | 11% |
 | Many | 0 | 2,901 | 0% |
 
 By ride type (None / Some / Many):
 
 | Ride type | None | Some | Many |
 |---|---|---|---|
-| Two-wheeler | 345 / 358 | 70 / 358 | 0 / 358 |
-| Three-wheeler | 828 / 858 | 297 / 858 | 0 / 858 |
-| Standard | 944 / 975 | 374 / 975 | 0 / 975 |
-| Sedan | 674 / 700 | 135 / 700 | 0 / 700 |
+| Two-wheeler | 339 / 358 | 19 / 358 | 0 / 358 |
+| Three-wheeler | 825 / 858 | 82 / 858 | 0 / 858 |
+| Standard | 941 / 975 | 136 / 975 | 0 / 975 |
+| Sedan | 671 / 700 | 69 / 700 | 0 / 700 |
 | Six-seater | 9 / 10 | 0 / 10 | 0 / 10 |
 
-How to read it: the 101 failures with no piling-on are forecast drift during the walk. Most recommendations clear the 0.30× bar by only a little, so even modest piling-on breaks them, and "Many" breaks every one (eroding 70% of a gap would need an original drop of about 1.0× to still clear 0.30×). The 35% and 70% erosion factors are hand-set, so this is a warning about how fragile the promise is, not a measurement of how many riders really converge.
+How to read it: the 116 failures with no piling-on are forecast drift during the walk. Most recommendations clear the 0.30× bar by only a little, so even modest piling-on breaks them, and "Many" breaks every one (eroding 70% of a gap would need an original drop of about 1.0× to still clear 0.30×). The 35% and 70% erosion factors are hand-set, so this is a warning about how fragile the promise is, not a measurement of how many riders really converge. Showing the nearest qualifying point rather than the biggest drop lowers the "Some" share from 30% to 11%, because nearer points clear the bar by less.
 
 ## What this does and doesn't prove
 
