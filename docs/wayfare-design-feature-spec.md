@@ -48,6 +48,19 @@ This lane is the Surge Alert feature.
 
 ---
 
+## Added 2026-11-17 — pickup-point cards and commute alerts (prototype only)
+
+These exist in `app.html` and are **not yet drawn on the Wayfare canvas**; the canvas boards above are unchanged. Treat this section as the spec for the next canvas pass.
+
+**8. Pickup recommendations sit on the ride-selection sheet (`B1s`), between the surge banner and the tier list, and are evaluated for the selected ride type.** Silence is a designed state: a ride type with nothing worth recommending shows no card, not an empty one.
+- **Cheaper pickup nearby** (lime-accent card): "Walk ~N min to `<point>`", then `<here multiplier>` struck through → `<there multiplier>`, "about ₹X less (₹a → ₹b)", primary action "Navigate to pickup point". Footer discloses that zone prices are simulated.
+- **Easier pickup** (neutral card): "A driver may take longer to reach `<origin>`", a one-line reason ("It's on an interior lane"), the main-road point with walk time and faster-pickup minutes, and a price clause only when a real difference exists. Action "Use `<point>` instead".
+- **Pickup moved** (lime card, replaces both once taken): point name, walk time, new price for the selected ride type, and "Back to `<origin>`". The sheet subtitle ("Pickup · `<point>`"), banner multiplier, every tier price, and tier ETAs all follow the chosen point.
+
+**9. Commute notifications are lock-screen style cards**: app name and delivery time on one line, bold title, grey body, a mono-caps kind label (Advance alert / Last call / All clear · P1) and a "Show phone at `<time>`" action that sets the phone's clock to that moment. Copy shifts tense when quiet hours push delivery past the onset ("began climbing", "may already be building").
+
+---
+
 ## Corrections to earlier versions of this doc
 
 | Earlier claim | Actual |
