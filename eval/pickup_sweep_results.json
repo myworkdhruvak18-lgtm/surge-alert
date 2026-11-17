@@ -20,6 +20,93 @@
     "Two-wheeler": 508
   },
   "blockedTotal": 508,
+  "requote": {
+    "0": {
+      "total": 2586,
+      "held": 2513
+    },
+    "1": {
+      "total": 2586,
+      "held": 797
+    },
+    "2": {
+      "total": 2586,
+      "held": 0
+    }
+  },
+  "requoteByTier": {
+    "Standard": [
+      {
+        "total": 854,
+        "held": 832
+      },
+      {
+        "total": 854,
+        "held": 336
+      },
+      {
+        "total": 854,
+        "held": 0
+      }
+    ],
+    "Two-wheeler": [
+      {
+        "total": 346,
+        "held": 336
+      },
+      {
+        "total": 346,
+        "held": 57
+      },
+      {
+        "total": 346,
+        "held": 0
+      }
+    ],
+    "Three-wheeler": [
+      {
+        "total": 755,
+        "held": 733
+      },
+      {
+        "total": 755,
+        "held": 271
+      },
+      {
+        "total": 755,
+        "held": 0
+      }
+    ],
+    "Sedan": [
+      {
+        "total": 621,
+        "held": 603
+      },
+      {
+        "total": 621,
+        "held": 133
+      },
+      {
+        "total": 621,
+        "held": 0
+      }
+    ],
+    "Six-seater": [
+      {
+        "total": 10,
+        "held": 9
+      },
+      {
+        "total": 10,
+        "held": 0
+      },
+      {
+        "total": 10,
+        "held": 0
+      }
+    ]
+  },
+  "requoteSilent": 0,
   "byTier": {
     "Two-wheeler": {
       "scenarios": 13824,

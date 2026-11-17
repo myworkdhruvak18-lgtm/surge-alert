@@ -347,6 +347,10 @@ h1{
           <label class="tgl" for="rain"><input type="checkbox" id="rain"> Raining</label>
           <label class="tgl" for="event"><input type="checkbox" id="event"> Event nearby</label>
         </div>
+        <div class="ctl" style="margin-top:12px">
+          <label for="converge">Other riders walking to the same point</label>
+          <select id="converge"><option value="0">None</option><option value="1">Some</option><option value="2">Many</option></select>
+        </div>
         <div class="jump">
           <button type="button" data-jump="107">1:47am — no data</button>
           <button type="button" data-jump="492">8:12am — before</button>
@@ -653,7 +657,7 @@ const tierMult = (surge, sens) => 1 + (surge - 1) * sens;
 const state = {
   routeIdx: 0, dow: 1, minutes: 555, rain: 0, event: 0,
   screen: 'home', alertArmed: false, alertBaseline: null, alertFired: false,
-  chosenTier: 2, tip: 0, pickupId: null, pushTier: 2,
+  chosenTier: 2, tip: 0, pickupId: null, pushTier: 2, walk: null, requoted: null, convergence: 0,
 };
 
 const F = () => forecast(ROWS, state.routeIdx, state.minutes, state.dow, state.rain, state.event);
@@ -665,6 +669,7 @@ const SURGE_DROP_MIN = 0.3;
 const SURGE_DROP_FLOOR = 1.0;
 const AVAILABLE_MIN = 0.5;
 const MIN_SAVING_RS = 15;
+const CONVERGENCE_EROSION = [0, 0.35, 0.7];
 const ADVANCE_LEAD_MIN = 120;
 const LAST_CALL_LEAD_MIN = 20;
 const QUIET_UNTIL_MIN = 360;
@@ -709,10 +714,11 @@ const pickupPts = () => PICKUPS[state.routeIdx];
 const selectedPickup = () => pickupPts().find(p => p.id === state.pickupId) || pickupPts()[0];
 const currentPickup = selectedPickup;
 const surgeAtPickup = (base, zoneFactor) => 1 + (base - 1) * zoneFactor;
+const zoneSurgeOf = (p, base) => surgeAtPickup(base, p.zoneFactor) + (state.requoted && state.requoted.toId === p.id ? state.requoted.extra : 0);
 
 function pickupSurge() {
   const f = F();
-  return surgeAtPickup(f.status === 'ok' ? f.multiplier : 1.0, selectedPickup().zoneFactor);
+  return zoneSurgeOf(selectedPickup(), f.status === 'ok' ? f.multiplier : 1.0);
 }
 
 function timeSupply(minutes, weekend) {
@@ -733,17 +739,17 @@ function pickupRecs() {
   const f = F(), r = route(), t = TIERS[state.chosenTier], sel = selectedPickup();
   const out = { case1: null, trace: [], hereMult: null, hereFare: null, candidates: [] };
   if (f.status !== 'ok') { out.trace.push('route forecast is silent, so no pickup recommendation'); return out; }
-  const multAt = p => tierMult(surgeAtPickup(f.multiplier, p.zoneFactor), t.sens);
+  const multAt = p => tierMult(zoneSurgeOf(p, f.multiplier), t.sens);
   const fareOf = p => r.baseFare * t.ratio * multAt(p);
   const hereMult = multAt(sel), hereFare = fareOf(sel);
-  const hereSurge = surgeAtPickup(f.multiplier, sel.zoneFactor);
+  const hereSurge = zoneSurgeOf(sel, f.multiplier);
   out.hereMult = hereMult; out.hereFare = hereFare;
   out.trace.push(`${t.name} · at ${sel.name} ${hereMult.toFixed(2)}× ${rupee(hereFare)} (zone surge ${hereSurge.toFixed(2)}×)`);
 
   pickupPts().forEach(p => {
     if (p.own || p.id === sel.id) return;
     const sup = supplyScore(p, t), avail = sup >= AVAILABLE_MIN;
-    const candSurge = Math.max(SURGE_DROP_FLOOR, surgeAtPickup(f.multiplier, p.zoneFactor));
+    const candSurge = Math.max(SURGE_DROP_FLOOR, zoneSurgeOf(p, f.multiplier));
     const drop = hereSurge - candSurge;
     const candMult = tierMult(candSurge, t.sens), candFare = r.baseFare * t.ratio * candMult, saving = hereFare - candFare;
     let c1 = null, why = '';
@@ -761,6 +767,46 @@ function pickupRecs() {
 
 const pickupTraceText = () => '\n<b>pickup</b> ' + pickupRecs().trace.join('\n       ');
 
+function requoteResult(w) {
+  const r = route(), t = TIERS[w.tier], f = F();
+  if (f.status !== 'ok') return { ok: false, silent: true };
+  const pts = pickupPts(), to = pts.find(p => p.id === w.toId), from = pts.find(p => p.id === w.fromId);
+  const fromSurge = surgeAtPickup(f.multiplier, from.zoneFactor);
+  const zoneSurge = Math.max(SURGE_DROP_FLOOR, surgeAtPickup(f.multiplier, to.zoneFactor));
+  const extra = CONVERGENCE_EROSION[state.convergence] * Math.max(0, fromSurge - zoneSurge);
+  const toSurge = zoneSurge + extra;
+  const fare = r.baseFare * t.ratio * tierMult(toSurge, t.sens);
+  const fromFare = r.baseFare * t.ratio * tierMult(fromSurge, t.sens);
+  const drop = fromSurge - toSurge, saving = fromFare - fare;
+  return { ok: drop >= SURGE_DROP_MIN && saving >= MIN_SAVING_RS, silent: false, fare, fromFare, saving, drop, toSurge, extra, mult: tierMult(toSurge, t.sens) };
+}
+
+function renderWalkCard() {
+  const w = state.walk, pts = pickupPts(), to = pts.find(p => p.id === w.toId), from = pts.find(p => p.id === w.fromId), res = w.result;
+  const wrap = (cls, kicker, kcol, head, body, actions, basis) => `<div class="fcard ${cls}" style="margin:10px 0 2px">
+      <div class="fc-kicker" style="color:var(--${kcol})">${kicker}</div>
+      <h2 class="fc-head" style="font-size:15px">${head}</h2>
+      ${body}
+      <div class="actions">${actions}</div>
+      <div class="basis">${basis}</div>
+    </div>`;
+  if (!res) return wrap('is-clear', `Walking to ${to.name}`, 'lime', `~${w.walkMin} min · quoted ${rupee(w.quotedFare)}`,
+    '<p class="fc-sub">Prices can move while you walk, so we re-quote when you arrive.</p>',
+    `<button class="btn primary" data-act="arrive">I've arrived · re-quote</button><button class="btn" data-act="walkback">Stay at ${from.name}</button>`,
+    `Simulated walk: the phone clock moves ahead ${w.walkMin} min`);
+  if (res.silent) return wrap('', "Couldn't re-quote", 'ember', `No confident price at ${to.name} right now`,
+    '<p class="fc-sub">We can only quote a price we can stand behind.</p>',
+    `<button class="btn" data-act="walkback">Back to ${from.name}</button>`, 'Route forecast is silent at the arrival time');
+  const delta = res.fare - w.quotedFare, changed = Math.abs(delta) >= 1;
+  if (res.ok) return wrap('is-clear', changed ? 'Price updated on arrival' : 'Price confirmed on arrival', 'lime', `${rupee(res.fare)} (${res.mult.toFixed(2)}×)${changed ? `, was ${rupee(w.quotedFare)}` : ', unchanged'}`,
+    `<p class="fc-sub">Still ${rupee(res.saving)} less than ${from.name} now (${rupee(res.fromFare)}).</p>`,
+    '<button class="btn primary" data-act="walkdone">Continue</button>', 'Re-quoted at the arrival time · simulated');
+  return wrap('is-high', 'Price changed on arrival', 'ember', `${to.name} is now ${rupee(res.fare)} (${res.mult.toFixed(2)}×)`,
+    `<p class="fc-sub">${res.saving >= 0 ? `Only ${rupee(res.saving)} less` : `${rupee(-res.saving)} more`} than ${from.name} (${rupee(res.fromFare)}). That no longer clears the ${rupee(MIN_SAVING_RS)} and ${SURGE_DROP_MIN.toFixed(2)}× surge-drop bar.</p>`,
+    `<button class="btn" data-act="walkdone">Book here anyway</button><button class="btn primary" data-act="walkback">Back to ${from.name}</button>`,
+    'Re-quoted at the arrival time · simulated');
+}
+
 function renderPickupPicker() {
   const pts = pickupPts();
   if (pts.length < 2) return '';
@@ -777,13 +823,14 @@ function renderPickupPicker() {
 }
 
 function renderPickupCards() {
+  if (state.walk) return renderWalkCard();
   const t = TIERS[state.chosenTier], sel = selectedPickup(), rec = pickupRecs(), c = rec.case1;
   if (!c) return '';
   return `<div class="fcard is-clear" style="margin:10px 0 2px">
       <div class="fc-kicker" style="color:var(--lime)">Cheaper pickup nearby</div>
       <h2 class="fc-head" style="font-size:15px">Walk ~${c.walkMin} min to ${c.name}</h2>
       <div class="advice"><span class="was">${rec.hereMult.toFixed(2)}×</span> at ${sel.name} → <strong>${c.mult.toFixed(2)}×</strong> there · about <strong>${rupee(c.saving)}</strong> less (${rupee(rec.hereFare)} → ${rupee(c.fare)})</div>
-      <div class="actions"><button class="btn primary" data-pickup="${c.id}">Navigate to pickup point</button></div>
+      <div class="actions"><button class="btn primary" data-pickup="${c.id}" data-walk="1">Navigate to pickup point</button></div>
       <div class="basis">Simulated zone prices · zone surge down ${c.drop.toFixed(2)}× · walk cap ${WALK_CAP_MIN} min · ${t.name}</div>
     </div>`;
 }
@@ -1177,7 +1224,14 @@ function render() {
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-goto],[data-act],[data-tier],[data-route],[data-tip],[data-jump],[data-pickup],[data-pushjump]');
   if (!el) return;
-  if (el.dataset.pickup != null) state.pickupId = el.dataset.pickup === 'reset' ? null : el.dataset.pickup;
+  if (el.dataset.pickup != null) {
+    if (el.dataset.walk) {
+      const c = pickupRecs().case1;
+      state.walk = c ? { fromId: selectedPickup().id, toId: c.id, tier: state.chosenTier, quotedFare: c.fare, walkMin: c.walkMin, result: null } : null;
+    } else state.walk = null;
+    state.requoted = null;
+    state.pickupId = el.dataset.pickup === 'reset' ? null : el.dataset.pickup;
+  }
   if (el.dataset.pushjump != null) {
     state.minutes = Math.min(1425, Math.round((((+el.dataset.pushjump % 1440) + 1440) % 1440) / 15) * 15);
     state.screen = 'home';
@@ -1185,7 +1239,7 @@ document.addEventListener('click', e => {
   }
   if (el.dataset.goto) state.screen = el.dataset.goto;
   if (el.dataset.tier != null) state.chosenTier = +el.dataset.tier;
-  if (el.dataset.route != null) { state.routeIdx = +el.dataset.route; state.pickupId = null; document.getElementById('route').value = state.routeIdx; state.screen = 'choose'; }
+  if (el.dataset.route != null) { state.routeIdx = +el.dataset.route; state.pickupId = null; state.walk = null; state.requoted = null; document.getElementById('route').value = state.routeIdx; state.screen = 'choose'; }
   if (el.dataset.tip != null) state.tip = state.tip === +el.dataset.tip ? 0 : +el.dataset.tip;
   if (el.dataset.jump != null) { state.minutes = +el.dataset.jump; syncTime(); }
   const a = el.dataset.act;
@@ -1198,8 +1252,20 @@ document.addEventListener('click', e => {
   if (a === 'choose' || a === 'reserve') state.screen = 'choose';
   if (a === 'book') { state.screen = 'choose'; state.alertFired = false; state.alertArmed = false; }
   if (a === 'request') state.screen = 'requested';
+  if (a === 'arrive' && state.walk && !state.walk.result) {
+    state.minutes = Math.min(1425, state.minutes + state.walk.walkMin);
+    syncTime();
+    state.walk.result = requoteResult(state.walk);
+    if (!state.walk.result.silent) state.requoted = { toId: state.walk.toId, extra: state.walk.result.extra };
+  }
+  if (a === 'walkdone') state.walk = null;
+  if (a === 'walkback' && state.walk) {
+    state.pickupId = state.walk.fromId === 'h' ? null : state.walk.fromId;
+    state.requoted = null;
+    state.walk = null;
+  }
   if (a === 'match') state.screen = 'matched';
-  if (a === 'reset') { state.screen = 'home'; state.tip = 0; state.alertArmed = false; state.alertFired = false; state.pickupId = null; }
+  if (a === 'reset') { state.screen = 'home'; state.tip = 0; state.alertArmed = false; state.alertFired = false; state.pickupId = null; state.walk = null; state.requoted = null; }
   render();
 });
 
@@ -1212,7 +1278,7 @@ document.getElementById('time').addEventListener('input', e => {
   document.getElementById('timeval').textContent = fmtTime(state.minutes);
   render();
 });
-document.getElementById('route').addEventListener('change', e => { state.routeIdx = +e.target.value; state.pickupId = null; render(); });
+document.getElementById('route').addEventListener('change', e => { state.routeIdx = +e.target.value; state.pickupId = null; state.walk = null; state.requoted = null; render(); });
 document.getElementById('dow').addEventListener('change', e => { state.dow = +e.target.value; render(); });
 document.getElementById('rain').addEventListener('change', e => { state.rain = e.target.checked ? 1 : 0; render(); });
 document.getElementById('event').addEventListener('change', e => { state.event = e.target.checked ? 1 : 0; render(); });
@@ -1223,6 +1289,7 @@ document.getElementById('route').value = 0;
 document.getElementById('pushmode').innerHTML = TIERS.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
 document.getElementById('pushmode').value = state.pushTier;
 document.getElementById('pushmode').addEventListener('change', e => { state.pushTier = +e.target.value; render(); });
+document.getElementById('converge').addEventListener('change', e => { state.convergence = +e.target.value; render(); });
 syncTime();
 render();
 </script>

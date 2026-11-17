@@ -5,6 +5,7 @@ const S = {
   candidateEvals: 0, candidatesUnavailable: 0,
   bikeRupeeSavings: { fires: 0, under20: 0, min: null, max: null },
   blockedByRupeeFloor: {}, blockedTotal: 0,
+  requote: {}, requoteByTier: {}, requoteSilent: 0,
   byTier: {}, byRoute: {}, byBand: {}, byRain: {}, byEvent: {}, unavailByBand: {}, unavailByTier: {},
 };
 const bump = (o, k, f) => { o[k] = o[k] || { scenarios: 0, fires: 0 }; o[k][f]++; };
@@ -57,6 +58,22 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
       S.fires++;
       [[S.byTier, t.name], [S.byRoute, 'R' + ri], [S.byBand, band(m)], [S.byRain, 'rain=' + rain], [S.byEvent, 'event=' + event]].forEach(([o, k]) => bump(o, k, 'fires'));
       if (surging) S.surgeActive.fires++;
+      for (let cv = 0; cv < 3; cv++) {
+        state.convergence = cv;
+        const keepMin = state.minutes;
+        state.minutes = Math.min(1425, m + c1.walkMin);
+        const q = requoteResult({ fromId: sel.id, toId: c1.id, tier: ti, walkMin: c1.walkMin });
+        state.minutes = keepMin;
+        const rq = (S.requote[cv] = S.requote[cv] || { total: 0, held: 0 });
+        const rt = (S.requoteByTier[t.name] = S.requoteByTier[t.name] || [{ total: 0, held: 0 }, { total: 0, held: 0 }, { total: 0, held: 0 }]);
+        rq.total++; rt[cv].total++;
+        if (q.silent) { S.requoteSilent++; continue; }
+        if (q.ok) { rq.held++; rt[cv].held++; }
+        if (q.ok && (q.saving < 15 - 1e-9 || q.drop < 0.3 - 1e-9)) bad('re-quote passes but breaks the rules', { ...ctx, cv });
+        if (!q.ok && q.saving >= 15 && q.drop >= 0.3) bad('re-quote fails though the rules hold', { ...ctx, cv });
+        if (q.toSurge < 1 - 1e-9) bad('re-quoted surge under the 1.0 floor', { ...ctx, cv });
+      }
+      state.convergence = 0;
       if (ti === 0) {
         const b = S.bikeRupeeSavings;
         b.fires++; if (c1.saving < 20) b.under20++;
