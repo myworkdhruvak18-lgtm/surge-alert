@@ -120,43 +120,57 @@ For a rider with a learned route pattern, the same engine runs on a schedule ins
 
 Where available, a forecast is annotated with a short reason: "Heavy rain", "Event nearby", "Weekday morning peak", "Saturday night demand". v1 reason tags are derived from the same time-of-day/rain/event fields the forecast engine already matches on — not a separate signal, and not wired to a live weather/events API in v1 (static per the seed dataset). Reason tags are shared across modes on the same route/time (a rainy evening affects all modes' demand context), but the multiplier and confidence each mode shows remains independently computed.
 
-### 10. Pickup-Point Recommendations (added v5)
+### 10. Pickup-Point Recommendations (added v5, rules revised 2026-11-17)
 
-Two distinct sub-features, with different triggers, different confidence bases, and different honesty requirements. They are not the same feature wearing two names — 10a needs real surge-geography data this project doesn't have yet; 10b doesn't.
+**Flow.** The rider sets a pickup and the app lists nearby pickup points (metro exits, junctions; any number, as real apps do). The rider selects one, defaulting to their own spot. The app then evaluates two independent cases against the selected point, for the selected ride type, and always shows both prices side by side. A recommendation with only the cheaper price and no anchor is a blocking bug, same class as Section 5's bare "wait" message.
 
-#### 10a. Fare-driven zone-shift
+#### 10a. Case 1: surge-driven (a cheaper zone, possibly farther than usual)
 
-**Eligibility:** requires per-cell (not just per-route) surge data — the current fare at the rider's exact pickup cell *and* at each adjacent cell within a ~400m walk, both independently confident per Section 1's matching rules. **This data does not exist in the v1 seed set** (route-level matching only, no sub-route geographic resolution). Shipping this sub-feature for real, not as a demo placeholder, is gated on either (a) acquiring or simulating per-cell data at the H3-hex granularity the brainstorm notes already researched, or (b) a cruder proxy (e.g. treating named sub-zones of a route as pseudo-cells) — an open question, not a decision, see Open Questions.
+A point qualifies when all of these hold:
+- **Walk is within a 5 minute hard cap** from the rider's own spot.
+- **Its surge for the selected ride type is at least 0.30× lower** than at the selected point, measured against a 1.0× floor (a zone can never count as cheaper than 1.0×).
+- **The point is available** (see Availability below).
 
-**Display rule, once eligible:** "Walk ~`<N>` min to `<zone name>` — `<cheaper multiplier>` vs `<current multiplier>` here, about `<₹saved>` less." Always shows both numbers side by side — a recommendation with only the cheaper price and no current-price anchor is a blocking bug, same class of issue as Section 5's bare "wait" message.
+When several qualify, show the one with the biggest drop, nearest on a tie. The required drop does not rise with walk time: how much someone will walk is what the cap is for, and the saving rule depends only on surge. Nothing shows when the route forecast is silent.
 
-**Walk-distance ceiling:** capped at the practical distance research suggests riders will actually walk for a fare difference — **~2-3 minutes / 1-2 blocks**, per Uber's own Express POOL conjoint research and Via's observed real-world average pickup walk (~550 ft). This is a **transferred estimate**, not India- or surge-specific data (no such study exists for Indian ride-hailing) — stated honestly in-product nowhere (riders don't need the citation), but the number itself should be treated as a starting assumption to validate, not a measured fact, in any internal review. A 2025 study found a "zero-walk" cliff — riders strongly prefer *no* walking over even a short one — which argues for a high bar on the minimum saving (materiality threshold, same 15% floor as Section 2A's "leave by" comparison) before this ever surfaces at all.
+*Why 5 minutes.* The only figure with an established standard behind it: a 400 m / 5 min catchment for low-frequency stops (NZTA guidance), a 500 m median bus walk in Melbourne, and Indian city pedestrian speeds of about 64-71 m/min, which put 5 minutes at roughly 320-355 m. Ride-hailing products advertise only "a couple of blocks" and no ride-hailing source gives an upper limit, so this is transferred from transit planning and micromobility, not measured for ride-hailing. The 2025 "zero-walk" study suggests even 5 minutes is optimistic. No evidence supports letting the cap rise as the saving grows; one micromobility study found tolerance varies widely (about 7 minutes for one rider group, 1 for another) but gives no curve.
 
-**Capture action:** "Navigate to pickup point" — same principle as Section 5, a recommendation with no way to act on it is useless. Does not replace the existing mode-shift or wait actions; it's a third, independent lever in the same hierarchy.
+*Why 0.30.* It is one full risk band (the engine's bands are 1.25× and 1.55×), and at surge levels of 1.3× to 2.0× it equals at least 15% of the fare, matching the 15% materiality floor used for "leave by". Because of the 1.0× floor, nothing surfaces below roughly 1.3× surge. Hand-set and configurable, not derived from data.
 
-#### 10b. Access-driven main-road shift
+#### 10b. Case 2: access-driven (a main-road point)
 
-**Eligibility:** does not require surge-geography data at all — this is a static, pre-defined mapping (interior lane / low-access pickup point → nearest main-road pickup point), the same pattern Uber already ships in Jaipur's old city for driver-reachability reasons. v1 can ship this with a hand-curated list of known low-access points per route/city (consistent with how Section 9's reason tags are already static per the seed dataset) rather than needing a live geocoding signal.
+Shows **with or without surge** when the selected spot is on a lane or interior street, for a main-road point that is:
+- **At most 3 minutes away**, available, and
+- **At least ₹10 cheaper in total** than the selected spot (the walk discount plus any surge difference), and
+- for a ride type that benefits from road access (two-wheelers do not; see below).
 
-**Why it belongs in this PRD and not just in dispatch/ops:** the real-world version of this (Uber's Jaipur pattern) is framed purely as "your driver can't reach you here" — this project's extension is to **also show the fare difference**, if any, between the interior pickup point and the main-road one. This is an honest "extension," not a copy: no sourced evidence found that any India ride-hailing app frames this as a price-comparison feature today (see Background). The fare difference may be zero or negligible in many cases (this is fundamentally an access fix, not a surge fix) — the copy must not imply a saving where none exists.
+The benefit shown is faster pickup and a driver who doesn't have to come into the lane. The price drop is a **walk discount**, an incentive with a real precedent in Uber's Express POOL ("walk a little, save a lot"). **Assumption, not a decision:** the discount is platform-funded and driver payout stays on the full fare, so MVAG 2025's 80% driver share is untouched; see Open Questions. The access pattern itself has a real precedent in Uber's Jaipur old-city pickup points, but there it is an access fix, never a fare feature.
 
-**Display rule:** "Pickup from `<current point>` may take longer for a driver to reach · `<main-road point>` is `<N>` min away" + price line only if a real, confidently-matched difference exists: "and about `<₹X>` cheaper" — omitted entirely, not zeroed, when there's no fare difference to show (same silence principle as Section 4).
+#### Both cases together
 
-**Capture action:** "Use `<main-road point>` instead" — a one-tap pickup-location change, not a separate flow.
+During surge both can show at once. If the same point qualifies for both, one merged "Cheaper and easier pickup" card is shown instead of two.
 
-#### Per ride type (built in the prototype)
+#### Availability (simulated)
 
-Both sub-features are evaluated for the ride type the rider currently has selected, so they behave differently across tiers. "Scooty" and "Bike Saver" are not separate tiers in the model; they collapse into Two-wheeler.
+A point is available when its score is at least 0.5, where score = point supply × time-of-day × rain (×0.8) × event (×0.8) × ride-type supply. Time-of-day runs from 0.6 overnight to 1.0 midday, lower in weekday peaks. Ride-type supply runs from 1.0 for cars and bikes down to 0.65 for six-seaters. Unavailable points are greyed out in the list, cannot be selected, and are never recommended. Every one of these numbers is hand-set; there is no driver-supply data.
 
-| Ride type | 10a zone-shift | 10b main-road shift | Why |
+#### Per ride type (built; counts from `eval/pickup_sweep_report.md`, 69,120 scenarios, 13,824 per ride type)
+
+| Ride type | Case 1 fires | Case 2 fires | Why |
 |---|---|---|---|
-| Two-wheeler (Bike, Scooty, Bike Saver) | Off in practice | Off | Surge is dampened to 0.25× of the route excess, so walking saves under the 15% floor; bikes can generally enter narrow lanes, so the access benefit is set to 0 |
-| Three-wheeler | Off in practice (about 11% saving at a 1.53× route) | On, half strength | Surge dampened to 0.55×; autos reach interior lanes better than cars but not as freely as bikes |
-| Standard, Sedan, Six-seater | On | On, full strength | Full surge exposure and full access penalty |
+| Two-wheeler (Bike, Scooty, Bike Saver) | 0 | 0 | Price moves only 0.25 of the surge, so a 0.30 drop is unreachable; no lane-access benefit. Decided: stays off in v1 |
+| Three-wheeler | 106 | 1,032 | Price moves 0.55 of the surge, so case 1 is rare; case 2 is half-strength and misses ₹10 without surge |
+| Standard | 854 | 1,233 | Full exposure |
+| Sedan | 621 | 1,001 | Full exposure, lower availability |
+| Six-seater | 10 | 535 | Mostly gated by the hand-set 0.65 supply factor, not by price |
 
-Honest limits on this table: the surge dampening comes from the existing hand-set tier sensitivity constants, and the access strengths (0 / 0.5 / 1) are reasoned inference with no source, not measured. The behavior follows directly from those numbers; it is not a finding about real riders.
+Case 2 can only fire on routes whose own spot is on a lane, so its counts are diluted across all routes. "Scooty" and "Bike Saver" are not separate tiers; they collapse into Two-wheeler.
 
+#### Data gap, still open
 
+Zone factors, walk discounts and availability factors are all hand-set. There is no per-cell surge data and no driver-supply data, so this ships as a clearly labeled simulation, not a validated feature.
+
+## Non-Goals (v1)
 
 - Ola and Rapido support — Uber-only; all verified research (pricing mechanics, Ride Pass, driver revenue-share, seed data) is Uber-specific.
 - Cross-platform price comparison or app-switch recommendations.
@@ -187,7 +201,10 @@ Honest limits on this table: the surge dampening comes from the existing hand-se
 - Who provides real user feedback within the 2–4 week window?
 - **New:** which modes ship in v1's per-mode model — all modes present in the ride-selection sheet (Bike, Auto, Go, Go AC, Premier, XL, etc.), or a smaller initial set (e.g. Auto + Go + Premier, the three with likely the most seed-data volume), with the rest added once real fare history exists?
 - **New (v5):** how does 10a actually get per-cell data — simulate H3-hex-level synthetic data (consistent with how the route-level seed set was built), or ship with a cruder named-sub-zone proxy first and treat true per-cell resolution as a later pass? This blocks 10a from being more than a demo placeholder until decided.
-- **New (v5):** is the ~2-3 minute walk ceiling (transferred from Uber Express POOL / Via data, not India-specific) the right default, or should it be a configurable per-city parameter from day one, given no real Indian-rider walk-tolerance data exists to validate it against?
+- **Decided 2026-11-17:** the walk cap for 10a is 5 minutes, backed by transit-planning norms and Indian pedestrian speeds (transferred evidence, not ride-hailing data). It stays a configurable parameter so a per-city value can replace it once real rider data exists.
+- **New (v5):** the 0.30 surge-drop rule is measured on the selected ride type's displayed multiplier, which starves autos (106 of 13,824 sweep scenarios). Should it instead apply to the underlying zone surge so autos are treated like cars?
+- **New (v5):** who funds the 10b walk discount? The build assumes the platform does and that driver payout stays on the full fare. If it came out of the fare, it would cut the driver's 80% share under MVAG 2025, the exact harm this product's action hierarchy exists to avoid.
+- **New (v5):** when several 10a points qualify, the build shows only the biggest drop (nearest on a tie). Real apps list many points; is one recommendation enough, or should the cheapest and the nearest both show?
 - **Decided 2026-11-17:** two-wheeler riders are the most price-sensitive segment and the one Rapido is built around, yet both pickup features are effectively off for them under the current constants. Decision: keep them off for v1 and revisit only with real bike-taxi rider input (for example a fixed-fee pickup point rather than a surge-driven one), not by tuning more constants.
 - **New (v5):** who curates the "low-access pickup point" list for 10b, and does it launch with the same small set of seed routes/cities as the rest of v1, or need its own separate scoping?
 

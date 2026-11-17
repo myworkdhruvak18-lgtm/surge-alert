@@ -18,6 +18,20 @@ Question raised: should the app recommend shifting to a nearby cheaper pickup po
 
 **Decision:** use ~2-3 minutes / 1-2 blocks as the v1 default walk ceiling for Section 10a, explicitly labeled in the PRD as a transferred, non-India, non-fare-specific estimate — not a measured fact — consistent with how this project already treats the UCLA Anderson driver-earnings citation (real study, honestly caveated as not India-specific). Full product implications in `prd.md` Section 10.
 
+## ⭐ RESEARCH FINDING (2026-11-17, second pass) — how far riders will walk
+
+Question raised: what is the maximum walk the surge-driven pickup shift should ever suggest, backed by public data.
+
+**No ride-hailing source gives an upper limit.** Products state only soft limits: Lyft Shared Saver, "a few blocks, max" (https://www.lyft.com/blog/posts/introducing-shared-saver); Uber Express POOL, "a couple of blocks" from 2018 launch coverage, with no current help page found (https://wjla.com/news/nation-world/to-get-a-ride-uber-says-take-a-walk). Gojek and Grab pickup points exist for accuracy and speed, state no walk limit, and say nothing about cheaper fares (https://blog.gojek.io/how-we-do-delightful-customer-pickups). Nothing found for Ola, Bolt, DiDi, Uber Pickup Spots or Wait and Save. No product anywhere ships a fare-motivated pickup shift.
+
+**No study gives minutes walked per rupee saved for ride-hailing.** The closest: an e-moped sharing study in the Netherlands put about a €0.02 fare cut on each extra walking minute (abstract-level, not ride-hailing; https://repository.tudelft.nl/record/uuid:394e8966-3de9-48d8-96ec-26aa0c75ae83), and a shared-micromobility study for train-station trips found a free service was worth about 7 minutes of walking to one rider group and about 1 minute to transit users (https://arxiv.org/pdf/2505.03297). Tolerance varies widely; no curve links saving to distance.
+
+**Planning norms are the only firm ceiling.** New Zealand guidance: up to 400 m or 5 min for low-frequency stops, up to 800 m or 10 min for high-frequency stops (https://nzta.govt.nz/walking-cycling-and-public-transport/public-transport/public-transport-design-guidance/getting-to-and-from-public-transport/walking/). Melbourne: median bus walk 500 m, a quarter of riders walk more than 800 m (https://melbourneurbanist.com/2011/11/02/how-far-should-we-walk-to-the-station/). Five Indian cities: 71.22 m/min on sidewalks, 63.60 m/min in precincts (abstract only; https://ascelibrary.com/doi/10.1061/%28ASCE%29TE.1943-5436.0000251), so 5 minutes is roughly 320-355 m and 3 minutes roughly 190-215 m.
+
+**Decision:** hard cap of 5 minutes for the surge-driven shift (PRD 10a), labeled as transferred from transit planning, not measured for ride-hailing. The cap does not rise with the size of the saving: no evidence supports that, and the user's rule is that the saving depends only on the surge at the zone. The surge-drop threshold (0.30×, 1.0× floor) is a hand-set design choice, reasoned from the engine's own 0.30-wide risk bands and the 15% materiality floor, not a sourced number.
+
+**Walk discount for the access-driven case (PRD 10b):** chosen over modeling skipped gully time. Precedent is Uber Express POOL's walk-for-discount. Real ride-hailing does not bill the rider for the driver's approach, so without a discount a no-surge price drop has no natural source. Flagged assumption: the platform funds it.
+
 ## ✅ CONVERGED DIRECTION (final, as of this session)
 **Surge-pricing hike prediction & timing-nudge feature for Uber (India).** *(Narrowed from "Uber/Ola/Rapido" to Uber-only — see scope decision below.)*
 

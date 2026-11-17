@@ -1,0 +1,183 @@
+{
+  "scenarios": 69120,
+  "silentForecast": 0,
+  "violationCount": 0,
+  "violations": [],
+  "caseCounts": {
+    "case1": 1591,
+    "case2": 3801,
+    "both": 967,
+    "merged": 29,
+    "neither": 64695
+  },
+  "surgeActive": {
+    "scenarios": 14420,
+    "case1": 1591
+  },
+  "laneScenarios": {
+    "scenarios": 6144,
+    "case2": 3801,
+    "case2NoSurge": 178,
+    "noSurgeScenarios": 857
+  },
+  "candidateEvals": 165120,
+  "candidatesUnavailable": 61208,
+  "byTier": {
+    "Two-wheeler": {
+      "scenarios": 13824,
+      "case1": 0,
+      "case2": 0
+    },
+    "Three-wheeler": {
+      "scenarios": 13824,
+      "case1": 106,
+      "case2": 1032
+    },
+    "Standard": {
+      "scenarios": 13824,
+      "case1": 854,
+      "case2": 1233
+    },
+    "Sedan": {
+      "scenarios": 13824,
+      "case1": 621,
+      "case2": 1001
+    },
+    "Six-seater": {
+      "scenarios": 13824,
+      "case1": 10,
+      "case2": 535
+    }
+  },
+  "byRoute": {
+    "R0": {
+      "scenarios": 23040,
+      "case1": 347,
+      "case2": 0
+    },
+    "R1": {
+      "scenarios": 15360,
+      "case1": 660,
+      "case2": 1971
+    },
+    "R2": {
+      "scenarios": 11520,
+      "case1": 277,
+      "case2": 0
+    },
+    "R3": {
+      "scenarios": 11520,
+      "case1": 307,
+      "case2": 1830
+    },
+    "R4": {
+      "scenarios": 7680,
+      "case1": 0,
+      "case2": 0
+    }
+  },
+  "byBand": {
+    "overnight": {
+      "scenarios": 18720,
+      "case1": 23,
+      "case2": 218
+    },
+    "early morning": {
+      "scenarios": 5760,
+      "case1": 73,
+      "case2": 358
+    },
+    "morning peak": {
+      "scenarios": 8640,
+      "case1": 371,
+      "case2": 612
+    },
+    "midday": {
+      "scenarios": 18720,
+      "case1": 336,
+      "case2": 1488
+    },
+    "evening peak": {
+      "scenarios": 10080,
+      "case1": 421,
+      "case2": 632
+    },
+    "late evening": {
+      "scenarios": 7200,
+      "case1": 367,
+      "case2": 493
+    }
+  },
+  "byRain": {
+    "rain=0": {
+      "scenarios": 34560,
+      "case1": 644,
+      "case2": 2124
+    },
+    "rain=1": {
+      "scenarios": 34560,
+      "case1": 947,
+      "case2": 1677
+    }
+  },
+  "byEvent": {
+    "event=0": {
+      "scenarios": 34560,
+      "case1": 555,
+      "case2": 2109
+    },
+    "event=1": {
+      "scenarios": 34560,
+      "case1": 1036,
+      "case2": 1692
+    }
+  },
+  "unavailByBand": {
+    "overnight": {
+      "evals": 44720,
+      "unavailable": 31200
+    },
+    "early morning": {
+      "evals": 13760,
+      "unavailable": 4432
+    },
+    "morning peak": {
+      "evals": 20640,
+      "unavailable": 6084
+    },
+    "midday": {
+      "evals": 44720,
+      "unavailable": 7176
+    },
+    "evening peak": {
+      "evals": 24080,
+      "unavailable": 7896
+    },
+    "late evening": {
+      "evals": 17200,
+      "unavailable": 4420
+    }
+  },
+  "unavailByTier": {
+    "Two-wheeler": {
+      "evals": 33024,
+      "unavailable": 6006
+    },
+    "Three-wheeler": {
+      "evals": 33024,
+      "unavailable": 8044
+    },
+    "Standard": {
+      "evals": 33024,
+      "unavailable": 6006
+    },
+    "Sedan": {
+      "evals": 33024,
+      "unavailable": 13510
+    },
+    "Six-seater": {
+      "evals": 33024,
+      "unavailable": 27642
+    }
+  }
+}
