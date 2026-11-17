@@ -86,4 +86,45 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
     }
   }
 }
+S.controls = {};
+const ctl = (name, ok) => { S.controls[name] = !!ok; if (!ok) bad('control check failed: ' + name, {}); };
+{
+  resetModel();
+  state.routeIdx = 0; state.dow = 1; state.rain = 1; state.event = 0; state.minutes = 555; state.pickupId = null; state.chosenTier = 2; state.convergence = 0;
+  const base = pickupRecs().case1;
+  ctl('default rule picks the nearest qualifying point', base && base.id === 'a');
+  SELECT_RULE = 'biggest'; const big = pickupRecs().case1; SELECT_RULE = 'nearest';
+  ctl('biggest-drop rule picks the larger drop', big && base && big.drop > base.drop && big.id !== base.id);
+  WALK_MIN_MIN = 1; const k = pickupRecs(); WALK_MIN_MIN = 2;
+  ctl('min walk 1 lets the 1 minute point qualify', k.candidates.find(c => c.id === 'k').c1 != null);
+  WALK_CAP_MIN = 9; const e5 = pickupRecs(); WALK_CAP_MIN = 8;
+  ctl('max walk 9 lets the 9 minute point qualify', e5.candidates.find(c => c.id === 'm5').c1 != null);
+  SURGE_DROP_MIN = 0.6; const hi = pickupRecs().case1; SURGE_DROP_MIN = 0.3;
+  ctl('zone-surge drop 0.60 removes the card', hi === null);
+  MIN_SAVING_RS = 500; const rs = pickupRecs().case1; MIN_SAVING_RS = 15;
+  ctl('minimum saving 500 removes the card', rs === null);
+  state.availOverride['0:a'] = 'off'; const off = pickupRecs().case1; delete state.availOverride['0:a'];
+  ctl('forcing the nearest point off moves to the next one', off && off.id === 'm1');
+  state.availOverride['0:m5'] = 'on'; WALK_CAP_MIN = 9; const on = pickupRecs().candidates.find(c => c.id === 'm5'); WALK_CAP_MIN = 8; delete state.availOverride['0:m5'];
+  ctl('forcing a point on keeps it available', on && on.avail === true);
+  state.supplyMult = 0.1; const none = pickupRecs(); state.supplyMult = 1;
+  ctl('driver supply 0.1 removes the card and explains why', none.case1 === null && /unavailable/.test(whyNoCard(none)));
+  state.event = 0; state.rain = 0; state.minutes = 840; const calm = pickupRecs();
+  ctl('a calm midday explains itself through the floor', calm.case1 === null && /only/.test(whyNoCard(calm)));
+  state.rain = 1; state.minutes = 555;
+  const np = commuteAlerts().status; state.commuteOverride = 555; const ov = commuteAlerts().status; state.commuteOverride = null;
+  ctl('custom departure enables alerts on a route with no learned commute', np === 'nopattern' && ov !== 'nopattern');
+  state.routeIdx = 1; state.rain = 0; const items = alertItems(commuteAlerts());
+  ctl('alert items are produced for the learned commute', items.length >= 2);
+  const lastTime = items[items.length - 1].time;
+  state.minutes = items[0].time; ADVANCE_LEAD_MIN = 60; const shifted = alertItems(commuteAlerts())[0].time; ADVANCE_LEAD_MIN = 120;
+  ctl('advance lead dial moves the advance alert later', shifted > items[0].time);
+  QUIET_UNTIL_MIN = 600; const q = alertItems(commuteAlerts()).every(i => i.time >= 600); QUIET_UNTIL_MIN = 360;
+  ctl('quiet-until dial holds every alert until then', q);
+  state.routeIdx = 0; state.rain = 1; state.minutes = 555;
+  PICKUPS[0].find(p => p.id === 'a').walkMin = 4;
+  ctl('editing a point changes its walk time', pickupRecs().candidates.length > 0 && PICKUPS[0].find(p => p.id === 'a').walkMin === 4);
+  resetModel();
+  ctl('reset restores the defaults', WALK_CAP_MIN === 8 && WALK_MIN_MIN === 2 && SURGE_DROP_MIN === 0.3 && MIN_SAVING_RS === 15 && SELECT_RULE === 'nearest' && PICKUPS[0].find(p => p.id === 'a').walkMin === 2);
+}
 globalThis.__SWEEP = S;

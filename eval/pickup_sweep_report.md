@@ -52,6 +52,31 @@ By ride type (None / Some / Many):
 
 How to read it: the 116 failures with no piling-on are forecast drift during the walk. Most recommendations clear the 0.30× bar by only a little, so even modest piling-on breaks them, and "Many" breaks every one (eroding 70% of a gap would need an original drop of about 1.0× to still clear 0.30×). The 35% and 70% erosion factors are hand-set, so this is a warning about how fragile the promise is, not a measurement of how many riders really converge. Showing the nearest qualifying point rather than the biggest drop lowers the "Some" share from 30% to 11%, because nearer points clear the bar by less.
 
+## Controls check
+
+The prototype's manual controls are checked inside the same run, so a dial that silently stopped working would show up as a violation. 16 of 16 pass:
+
+| Result | Check |
+|---|---|
+| Pass | default rule picks the nearest qualifying point |
+| Pass | biggest-drop rule picks the larger drop |
+| Pass | min walk 1 lets the 1 minute point qualify |
+| Pass | max walk 9 lets the 9 minute point qualify |
+| Pass | zone-surge drop 0.60 removes the card |
+| Pass | minimum saving 500 removes the card |
+| Pass | forcing the nearest point off moves to the next one |
+| Pass | forcing a point on keeps it available |
+| Pass | driver supply 0.1 removes the card and explains why |
+| Pass | a calm midday explains itself through the floor |
+| Pass | custom departure enables alerts on a route with no learned commute |
+| Pass | alert items are produced for the learned commute |
+| Pass | advance lead dial moves the advance alert later |
+| Pass | quiet-until dial holds every alert until then |
+| Pass | editing a point changes its walk time |
+| Pass | reset restores the defaults |
+
+The sweep itself always runs on the PRD defaults. Changing a dial in the prototype puts you in untested territory, which is why the panel has a reset button.
+
 ## What this does and doesn't prove
 
 It proves the rules are implemented consistently across the whole input space and that no combination produces a contradictory card. It does not prove any of the inputs are realistic. Zone factors and availability and time-of-day factors are all hand-set; there is no per-cell surge data and no driver-supply data. The sweep tests the logic, not the world.

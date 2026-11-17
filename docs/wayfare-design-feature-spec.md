@@ -52,13 +52,13 @@ This lane is the Surge Alert feature.
 
 These exist in `app.html` and are **not yet drawn on the Wayfare canvas**; the canvas boards above are unchanged. Treat this section as the spec for the next canvas pass.
 
-**8. Pickup points and the surge-driven recommendation sit on the ride-selection sheet (`B1s`), between the surge banner and the tier list, and are evaluated for the selected ride type.** Silence is a designed state: when nothing qualifies, no card shows, not an empty one.
+**8. Pickup points and the surge-driven recommendation sit on the ride-selection sheet (`B1s`), between the surge banner and the tier list, and are evaluated for the selected ride type.** Silence is a designed state: when nothing qualifies, no card shows, and a dashed one-line note says why (for example the zone surge at the spot is too low, or how many points were unavailable, too close, too far, or saved too little).
 - **Pickup points near you** (list card): one row per point with its walk time, the rider's own spot marked "here", the selected row in lime. Points with no drivers nearby are greyed out with "No drivers nearby right now" and cannot be selected. The sheet subtitle ("Pickup · `<point>`"), banner multiplier, and every tier price follow the selected point.
 - **Cheaper pickup nearby** (lime-accent card): "Walk ~N min to `<point>`", then `<here multiplier>` struck through → `<there multiplier>`, "about ₹X less (₹a → ₹b)", primary action "Navigate to pickup point". Footer discloses that zone prices are simulated and states the zone-surge drop and the walk cap.
 - **Walking and re-quote** (replaces the recommendation card once the rider taps navigate): "Walking to `<point>`", the walk time and quoted price, a line that prices can move, and actions "I've arrived · re-quote" and "Stay at `<origin>`". On arrival one of three cards follows: price confirmed or updated (lime, old and new price shown, "Continue"), price changed (ember, "Book here anyway" and "Back to `<origin>`"), or "Couldn't re-quote" when the forecast is silent.
 - An access-driven "Easier pickup" card was specced here earlier and removed on 2026-11-17 along with the feature.
 
-**9. Commute notifications are lock-screen style cards**: app name and delivery time on one line, bold title, grey body, a mono-caps kind label (Advance alert / Last call / All clear · P1) and a "Show phone at `<time>`" action that sets the phone's clock to that moment. Copy shifts tense when quiet hours push delivery past the onset ("began climbing", "may already be building").
+**9. Commute notifications are lock-screen style cards**: app name and delivery time on one line, bold title, grey body, a mono-caps kind label (Advance alert / Last call / All clear · P1) and a "Show phone at `<time>`" action that sets the phone's clock to that moment. Copy shifts tense when quiet hours push delivery past the onset ("began climbing", "may already be building"). The same card also pops up on the phone as a banner under the status bar once the clock passes its time (shown for 60 minutes, dismissible, tapping it goes home).
 
 ---
 

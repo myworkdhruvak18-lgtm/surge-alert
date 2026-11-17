@@ -244,5 +244,23 @@
       "evals": 55296,
       "unavailable": 46844
     }
+  },
+  "controls": {
+    "default rule picks the nearest qualifying point": true,
+    "biggest-drop rule picks the larger drop": true,
+    "min walk 1 lets the 1 minute point qualify": true,
+    "max walk 9 lets the 9 minute point qualify": true,
+    "zone-surge drop 0.60 removes the card": true,
+    "minimum saving 500 removes the card": true,
+    "forcing the nearest point off moves to the next one": true,
+    "forcing a point on keeps it available": true,
+    "driver supply 0.1 removes the card and explains why": true,
+    "a calm midday explains itself through the floor": true,
+    "custom departure enables alerts on a route with no learned commute": true,
+    "alert items are produced for the learned commute": true,
+    "advance lead dial moves the advance alert later": true,
+    "quiet-until dial holds every alert until then": true,
+    "editing a point changes its walk time": true,
+    "reset restores the defaults": true
   }
 }
