@@ -112,6 +112,9 @@ For a rider with a learned route pattern, the same engine runs on a schedule ins
 - Advance alert fires hours ahead of a predicted high-risk window.
 - A second, more urgent "last call" alert fires 15–30 min before onset, for riders who missed the first.
 - An "all clear" notification fires once the window passes (P1).
+- **Quiet hours (added during build):** nothing is delivered before 6:00am. Found while building the simulator: on a rainy morning the engine scheduled an advance alert for 3:45am. Anything that would fall earlier is delivered at 6:00am; if that collapses the advance alert and last call into the same moment, only the last call ships ("surge may already be building"), and "leave by" advice is dropped if the rider couldn't act on it by then.
+- **Per ride type:** the trigger is that ride type's own multiplier crossing 1.25×, not the route-level one. A Two-wheeler commuter's dampened sensitivity means alerts rarely fire (none on a dry Embassy Tech Village morning, only a borderline 1.25× in rain). Silence is the correct output there, not a gap.
+- **Working simulator:** the "Push alerts · commute simulator" panel in `app.html` generates all three notifications from the same engine for any route with a learned commute; a route with no pattern stays silent, matching "for a rider with a learned route pattern" above.
 
 ### 9. Reason Tags ("Events")
 
@@ -140,6 +143,18 @@ Two distinct sub-features, with different triggers, different confidence bases, 
 **Display rule:** "Pickup from `<current point>` may take longer for a driver to reach · `<main-road point>` is `<N>` min away" + price line only if a real, confidently-matched difference exists: "and about `<₹X>` cheaper" — omitted entirely, not zeroed, when there's no fare difference to show (same silence principle as Section 4).
 
 **Capture action:** "Use `<main-road point>` instead" — a one-tap pickup-location change, not a separate flow.
+
+#### Per ride type (built in the prototype)
+
+Both sub-features are evaluated for the ride type the rider currently has selected, so they behave differently across tiers. "Scooty" and "Bike Saver" are not separate tiers in the model; they collapse into Two-wheeler.
+
+| Ride type | 10a zone-shift | 10b main-road shift | Why |
+|---|---|---|---|
+| Two-wheeler (Bike, Scooty, Bike Saver) | Off in practice | Off | Surge is dampened to 0.25× of the route excess, so walking saves under the 15% floor; bikes can generally enter narrow lanes, so the access benefit is set to 0 |
+| Three-wheeler | Off in practice (about 11% saving at a 1.53× route) | On, half strength | Surge dampened to 0.55×; autos reach interior lanes better than cars but not as freely as bikes |
+| Standard, Sedan, Six-seater | On | On, full strength | Full surge exposure and full access penalty |
+
+Honest limits on this table: the surge dampening comes from the existing hand-set tier sensitivity constants, and the access strengths (0 / 0.5 / 1) are reasoned inference with no source, not measured. The behavior follows directly from those numbers; it is not a finding about real riders.
 
 
 
@@ -173,6 +188,7 @@ Two distinct sub-features, with different triggers, different confidence bases, 
 - **New:** which modes ship in v1's per-mode model — all modes present in the ride-selection sheet (Bike, Auto, Go, Go AC, Premier, XL, etc.), or a smaller initial set (e.g. Auto + Go + Premier, the three with likely the most seed-data volume), with the rest added once real fare history exists?
 - **New (v5):** how does 10a actually get per-cell data — simulate H3-hex-level synthetic data (consistent with how the route-level seed set was built), or ship with a cruder named-sub-zone proxy first and treat true per-cell resolution as a later pass? This blocks 10a from being more than a demo placeholder until decided.
 - **New (v5):** is the ~2-3 minute walk ceiling (transferred from Uber Express POOL / Via data, not India-specific) the right default, or should it be a configurable per-city parameter from day one, given no real Indian-rider walk-tolerance data exists to validate it against?
+- **New (v5):** two-wheeler riders are the most price-sensitive segment and the one Rapido is built around, yet both pickup features are effectively off for them under the current constants. Is that the right product call, or should bikes get different logic (for example a fixed-fee pickup point rather than a surge-driven one)? Needs real bike-taxi rider input, not more constants.
 - **New (v5):** who curates the "low-access pickup point" list for 10b, and does it launch with the same small set of seed routes/cities as the rest of v1, or need its own separate scoping?
 
 ---

@@ -277,6 +277,13 @@ h1{
 .win{color:var(--lime)}
 .note{font-size:12.5px;color:var(--muted);line-height:1.6;margin:12px 0 0}
 .note a{color:var(--lime)}
+.notif{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px}
+.notif-head{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace}
+.notif-title{font-size:14.5px;font-weight:700;margin-top:6px}
+.notif-body{font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px}
+.notif-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+.notif-kind{font-size:11px;color:var(--lime-dim);font-family:"JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}
+.notif-foot .btn{flex:none;min-width:0;padding:7px 12px;font-size:12px}
 </style>
 </head>
 <body>
@@ -345,6 +352,15 @@ h1{
         <h2>Engine output</h2>
         <div class="readout" id="readout"></div>
         <div class="trace" id="trace"></div>
+      </section>
+
+      <section class="card">
+        <h2>Push alerts · commute simulator</h2>
+        <div class="ctl" style="margin-bottom:12px">
+          <label for="pushmode">Usual ride type</label>
+          <select id="pushmode"></select>
+        </div>
+        <div id="pushout"></div>
       </section>
 
       <section class="card">
@@ -429,7 +445,15 @@ function matchPopulation(rows, dow, minutes, halfWindow) {
   return out;
 }
 
+const _fcCache = new Map();
 function forecast(rows, routeIdx, minutes, dow, rain, event) {
+  const k = routeIdx + '|' + minutes + '|' + dow + '|' + (rain || 0) + '|' + (event || 0);
+  let v = _fcCache.get(k);
+  if (!v) { v = forecastRaw(rows, routeIdx, minutes, dow, rain, event); _fcCache.set(k, v); }
+  return v;
+}
+
+function forecastRaw(rows, routeIdx, minutes, dow, rain, event) {
   rain = rain || 0;
   event = event || 0;
   let widened = false;
@@ -609,11 +633,11 @@ const ROWS = (function(){
 // than cabs, so it moves about a quarter as much - which is why it ends up
 // tagged "Least affected" during a spike.
 const TIERS = [
-  { name: 'Two-wheeler',   ratio: 0.642, sens: 0.25, seats: 0, eta: 3, desc: 'Pillion ride, cheapest way across town' },
-  { name: 'Three-wheeler', ratio: 1.322, sens: 0.55, seats: 0, eta: 2, desc: 'Metered auto, no haggling' },
-  { name: 'Standard',      ratio: 1.000, sens: 1.00, seats: 4, eta: 5, desc: 'Compact car, up to 4' },
-  { name: 'Sedan',         ratio: 1.834, sens: 1.00, seats: 4, eta: 6, desc: 'More legroom and boot space' },
-  { name: 'Six-seater',    ratio: 2.037, sens: 1.00, seats: 6, eta: 6, desc: 'Room for the whole group' },
+  { name: 'Two-wheeler',   ratio: 0.642, sens: 0.25, access: 0, seats: 0, eta: 3, desc: 'Pillion ride, cheapest way across town' },
+  { name: 'Three-wheeler', ratio: 1.322, sens: 0.55, access: 0.5, seats: 0, eta: 2, desc: 'Metered auto, no haggling' },
+  { name: 'Standard',      ratio: 1.000, sens: 1.00, access: 1, seats: 4, eta: 5, desc: 'Compact car, up to 4' },
+  { name: 'Sedan',         ratio: 1.834, sens: 1.00, access: 1, seats: 4, eta: 6, desc: 'More legroom and boot space' },
+  { name: 'Six-seater',    ratio: 2.037, sens: 1.00, access: 1, seats: 6, eta: 6, desc: 'Room for the whole group' },
 ];
 const rupee = n => '₹' + Math.round(n).toLocaleString('en-IN');
 const tierMult = (surge, sens) => 1 + (surge - 1) * sens;
@@ -621,11 +645,188 @@ const tierMult = (surge, sens) => 1 + (surge - 1) * sens;
 const state = {
   routeIdx: 0, dow: 1, minutes: 555, rain: 0, event: 0,
   screen: 'home', alertArmed: false, alertBaseline: null, alertFired: false,
-  chosenTier: 2, tip: 0,
+  chosenTier: 2, tip: 0, pickupId: null, pushTier: 2,
 };
 
 const F = () => forecast(ROWS, state.routeIdx, state.minutes, state.dow, state.rain, state.event);
 const route = () => META.routes[state.routeIdx];
+
+/* ============ PICKUP POINTS (PRD §10) + COMMUTE ALERTS (PRD §8) ============ */
+const WALK_CEILING_MIN = 3;
+const PICKUP_PRICE_MIN_PCT = 0.05;
+const ACCESS_MIN_ETA_GAIN = 2;
+const ADVANCE_LEAD_MIN = 120;
+const LAST_CALL_LEAD_MIN = 20;
+const QUIET_UNTIL_MIN = 360;
+
+// Illustrative, hand-set points. zoneFactor = share of the route's surge excess felt at that
+// spot (1 = same as the pickup). Not fit from data - there is no per-cell surge data yet.
+const PICKUPS = {
+  0: { here: { etaDeltaMin: 0 }, alts: [
+    { id: 'a', name: 'Corner junction',            walkMin: 2, zoneFactor: 0.50, kind: 'zone',     etaDeltaMin: 0 },
+    { id: 'b', name: 'Metro station gate',         walkMin: 5, zoneFactor: 0.35, kind: 'zone',     etaDeltaMin: 0 } ] },
+  1: { here: { lane: 'an interior lane', etaDeltaMin: 6 }, alts: [
+    { id: 'a', name: 'Main road service gate',     walkMin: 3, zoneFactor: 0.68, kind: 'mainroad', etaDeltaMin: 0 },
+    { id: 'b', name: 'Signal junction',            walkMin: 2, zoneFactor: 0.55, kind: 'zone',     etaDeltaMin: 0 } ] },
+  2: { here: { etaDeltaMin: 0 }, alts: [
+    { id: 'a', name: 'Bus stop on the main road',  walkMin: 2, zoneFactor: 0.50, kind: 'zone',     etaDeltaMin: 0 } ] },
+  3: { here: { lane: 'a narrow lane', etaDeltaMin: 5 }, alts: [
+    { id: 'a', name: 'Petrol pump on the main road', walkMin: 3, zoneFactor: 0.72, kind: 'mainroad', etaDeltaMin: 0 } ] },
+  4: { here: { etaDeltaMin: 0 }, alts: [] },
+};
+
+const surgeAtPickup = (base, zoneFactor) => 1 + (base - 1) * zoneFactor;
+
+function currentPickup() {
+  const cfg = PICKUPS[state.routeIdx];
+  const alt = state.pickupId && cfg.alts.find(a => a.id === state.pickupId);
+  return alt || { name: route().origin, zoneFactor: 1, etaDeltaMin: cfg.here.etaDeltaMin };
+}
+
+function pickupSurge() {
+  const f = F();
+  return surgeAtPickup(f.status === 'ok' ? f.multiplier : 1.0, currentPickup().zoneFactor);
+}
+
+const tierEta = t => t.eta + Math.round(currentPickup().etaDeltaMin * t.access);
+
+function pickupRecs() {
+  const f = F(), r = route(), t = TIERS[state.chosenTier], cfg = PICKUPS[state.routeIdx];
+  const out = { zone: null, main: null, trace: [] };
+  if (f.status !== 'ok') { out.trace.push('route forecast is silent, so no pickup recommendation'); return out; }
+  const mult = zf => tierMult(surgeAtPickup(f.multiplier, zf), t.sens);
+  const fare = zf => r.baseFare * t.ratio * mult(zf);
+  const hereFare = fare(1), hereMult = mult(1);
+  out.hereFare = hereFare; out.hereMult = hereMult;
+  out.trace.push(`${t.name} · here ${hereMult.toFixed(2)}× ${rupee(hereFare)}`);
+  if (!cfg.alts.length) out.trace.push('no curated pickup points for this route');
+
+  cfg.alts.forEach(a => {
+    const saving = hereFare - fare(a.zoneFactor), pct = saving / hereFare;
+    const walkOk = a.walkMin <= WALK_CEILING_MIN;
+    if (a.kind === 'zone') {
+      if (!walkOk) out.trace.push(`✗ ${a.name} · ${a.walkMin} min walk is over the ${WALK_CEILING_MIN} min ceiling`);
+      else if (pct < MATERIAL_SAVING) out.trace.push(`✗ ${a.name} · saves ${(pct * 100).toFixed(0)}%, under the ${MATERIAL_SAVING * 100}% floor`);
+      else {
+        out.trace.push(`✓ ${a.name} · ${a.walkMin} min · saves ${(pct * 100).toFixed(0)}%`);
+        if (!out.zone || saving > out.zone.saving) out.zone = { ...a, saving, pct, mult: mult(a.zoneFactor), fare: fare(a.zoneFactor) };
+      }
+    } else {
+      const gain = Math.round((cfg.here.etaDeltaMin - a.etaDeltaMin) * t.access);
+      if (!cfg.here.lane) return;
+      if (!walkOk) out.trace.push(`✗ ${a.name} · ${a.walkMin} min walk is over the ${WALK_CEILING_MIN} min ceiling`);
+      else if (gain < ACCESS_MIN_ETA_GAIN) out.trace.push(`✗ ${a.name} · ${t.name} gains ${gain} min, under ${ACCESS_MIN_ETA_GAIN}`);
+      else {
+        out.trace.push(`✓ ${a.name} · ${a.walkMin} min · ~${gain} min faster pickup`);
+        out.main = { ...a, gain, saving, pct, showPrice: pct >= PICKUP_PRICE_MIN_PCT };
+      }
+    }
+  });
+  return out;
+}
+
+const pickupTraceText = () => '\n<b>pickup</b> ' + pickupRecs().trace.join('\n       ');
+
+function renderPickupCards() {
+  const r = route(), t = TIERS[state.chosenTier], cfg = PICKUPS[state.routeIdx];
+  if (state.pickupId) {
+    const p = currentPickup(), m = tierMult(pickupSurge(), t.sens);
+    return `<div class="fcard is-clear" style="margin:10px 0 2px">
+      <div class="fc-kicker" style="color:var(--lime)">Pickup moved</div>
+      <h2 class="fc-head" style="font-size:15px">${p.name} · ${p.walkMin} min walk</h2>
+      <p class="fc-sub">${rupee(r.baseFare * t.ratio * m)} for ${t.name} at this spot (${m.toFixed(2)}×).</p>
+      <div class="actions"><button class="btn" data-pickup="reset">Back to ${r.origin}</button></div>
+    </div>`;
+  }
+  const rec = pickupRecs();
+  let html = '';
+  if (rec.zone) {
+    const z = rec.zone;
+    html += `<div class="fcard is-clear" style="margin:10px 0 2px">
+      <div class="fc-kicker" style="color:var(--lime)">Cheaper pickup nearby</div>
+      <h2 class="fc-head" style="font-size:15px">Walk ~${z.walkMin} min to ${z.name}</h2>
+      <div class="advice"><span class="was">${rec.hereMult.toFixed(2)}×</span> here → <strong>${z.mult.toFixed(2)}×</strong> there · about <strong>${rupee(z.saving)}</strong> less (${rupee(rec.hereFare)} → ${rupee(z.fare)})</div>
+      <div class="actions"><button class="btn primary" data-pickup="${z.id}">Navigate to pickup point</button></div>
+      <div class="basis">Simulated zone prices from the route forecast · ${t.name} · walk ≤ ${WALK_CEILING_MIN} min</div>
+    </div>`;
+  }
+  if (rec.main) {
+    const m = rec.main;
+    html += `<div class="fcard" style="margin:10px 0 2px">
+      <div class="fc-kicker">Easier pickup</div>
+      <h2 class="fc-head" style="font-size:15px">A driver may take longer to reach ${r.origin}</h2>
+      <p class="fc-sub">It's on ${cfg.here.lane}. ${m.name} is ${m.walkMin} min away, about ${m.gain} min faster pickup${m.showPrice ? ` and about ${rupee(m.saving)} cheaper` : ''}.</p>
+      <div class="actions"><button class="btn" data-pickup="${m.id}">Use ${m.name} instead</button></div>
+      <div class="basis">Hand-curated low-access point · effect scaled by ride type (${t.name})</div>
+    </div>`;
+  }
+  return html;
+}
+
+function commuteAlerts() {
+  const r = route(), t = TIERS[state.pushTier], depart = r.plannedMinutes;
+  if (depart == null) return { status: 'nopattern' };
+  const at = min => {
+    const f = forecast(ROWS, state.routeIdx, ((min % 1440) + 1440) % 1440, state.dow, state.rain, state.event);
+    return f.status === 'ok' ? tierMult(f.multiplier, t.sens) : null;
+  };
+  let hit = null;
+  for (let s = depart - 60; s <= depart + 60; s += 15) {
+    const m = at(s);
+    if (m != null && m >= RISK_MEDIUM) { hit = s; break; }
+  }
+  if (hit == null) return { status: 'quiet', depart, t };
+
+  let onset = hit;
+  while (hit - onset < 240) {
+    const m = at(onset - 15);
+    if (m == null || m < RISK_MEDIUM) break;
+    onset -= 15;
+  }
+  let peak = 0, peakAt = onset, end = null;
+  for (let s = onset; s <= onset + 360; s += 15) {
+    const m = at(s);
+    if (m == null) continue;
+    if (m >= RISK_MEDIUM) { if (m > peak) { peak = m; peakAt = s; } }
+    else { end = s; break; }
+  }
+  const fare = m => Math.round(r.baseFare * t.ratio * m);
+  const advanceAt = Math.max(onset - ADVANCE_LEAD_MIN, QUIET_UNTIL_MIN);
+  const lastAt = Math.max(onset - LAST_CALL_LEAD_MIN, QUIET_UNTIL_MIN);
+  const leaveAt = onset - 15, lm = at(leaveAt), dm = at(depart);
+  const leave = leaveAt < depart && leaveAt >= advanceAt && lm != null && dm != null && (dm - lm) / dm >= MATERIAL_SAVING
+    ? { s: leaveAt, fareThen: fare(lm), fareDepart: fare(dm) } : null;
+  return { status: 'ok', t, depart, onset, peak, peakAt, end, leave, fare, dest: r.destination,
+           advanceAt, lastAt, endM: end != null ? at(end) : null };
+}
+
+function renderPush() {
+  const el = document.getElementById('pushout');
+  if (!el) return;
+  const r = route(), a = commuteAlerts(), t = TIERS[state.pushTier];
+  if (a.status === 'nopattern') {
+    el.innerHTML = `<p class="note" style="margin:0">No learned commute to ${r.destination} yet. Push alerts only run for a route the rider travels regularly. Try Embassy Tech Village (9:15am) or Marathahalli (6:45pm).</p>`;
+    return;
+  }
+  const head = `<p class="note" style="margin:0 0 2px">Learned commute: ${r.origin} → ${r.destination}, usually leaving ${fmtTime(a.depart)} · ${t.name}</p>`;
+  if (a.status === 'quiet') {
+    el.innerHTML = head + `<p class="note" style="margin:8px 0 0">${t.name} fares stay under ${RISK_MEDIUM}× around ${fmtTime(a.depart)} in these conditions, so no alert fires. Silence is the correct output here.</p>`;
+    return;
+  }
+  const card = (time, kind, title, body) => `<div class="notif">
+      <div class="notif-head"><span>Surge Alert · Wayfare</span><span>${fmtTime(time)}</span></div>
+      <div class="notif-title">${title}</div>
+      <div class="notif-body">${body}</div>
+      <div class="notif-foot"><span class="notif-kind">${kind}</span><button class="btn" type="button" data-pushjump="${time}">Show phone at ${fmtTime(time)}</button></div>
+    </div>`;
+  const items = [];
+  if (a.advanceAt < a.lastAt) items.push(card(a.advanceAt, 'Advance alert', 'Surge likely on your commute',
+    `Fares to ${a.dest} will likely hit ${a.peak.toFixed(2)}× around ${fmtTime(a.peakAt)}.${a.leave ? ` Leave by ${fmtTime(a.leave.s)} and you'd pay about ${rupee(a.leave.fareThen)} instead of ${rupee(a.leave.fareDepart)}.` : ''}`));
+  items.push(card(a.lastAt, 'Last call', a.lastAt > a.onset - LAST_CALL_LEAD_MIN ? 'Surge may already be building' : 'Surge starts soon',
+    `Fares to ${a.dest} ${a.lastAt > a.onset - LAST_CALL_LEAD_MIN ? 'began' : 'start'} climbing around ${fmtTime(a.onset)} and could reach ${a.peak.toFixed(2)}× by ${fmtTime(a.peakAt)}.${a.leave ? ' Leave now and you\'ll beat it.' : ''}`));
+  if (a.end != null) items.push(card(a.end, 'All clear · P1', 'Fares are back to normal', `${a.dest} is ${a.endM.toFixed(2)}×, about ${rupee(a.fare(a.endM))}.`));
+  el.innerHTML = head + items.join('');
+}
 
 /* ---------- chart ---------- */
 function chart(points, nowMin) {
@@ -788,7 +989,7 @@ function renderPlan() {
 /* ---------- choose ---------- */
 function renderChoose() {
   const r = route(), f = F();
-  const surge = f.status === 'ok' ? f.multiplier : 1.0;
+  const surge = pickupSurge();
   const surging = f.status === 'ok' && (f.risk === 'medium' || f.risk === 'high');
   const least = surging ? TIERS.reduce((a, b) => (a.sens <= b.sens ? a : b)) : null;
 
@@ -815,7 +1016,7 @@ function renderChoose() {
       <span class="tier-art"></span>
       <span class="tier-mid">
         <span class="tier-n">${t.name}${t.seats ? ` <span class="seat">◍${t.seats}</span>` : ''}${least === t ? '<span class="leasttag">Least affected</span>' : ''}</span>
-        <span class="tier-e">${fmtTime(state.minutes + t.eta)} · ${t.eta} min</span>
+        <span class="tier-e">${fmtTime(state.minutes + tierEta(t))} · ${tierEta(t)} min</span>
         <span class="tier-d">${t.desc}</span>
       </span>
       <span class="tier-right">
@@ -831,9 +1032,9 @@ function renderChoose() {
 
   return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0 4px">
       <button class="pill ghost" type="button" data-goto="home" aria-label="Back">←</button>
-      <strong style="font-size:19px">Choose a ride</strong>
+      <div><strong style="font-size:19px">Choose a ride</strong><div class="fc-sub" style="margin-top:2px">Pickup · ${currentPickup().name}</div></div>
     </div>
-    ${banner}${list}
+    ${banner}${renderPickupCards()}${list}
     <div class="paybar"><span class="paybar-ic">◍ ▤</span><span class="paybar-t">Personal<br><span class="paybar-s">Cash</span></span><span style="color:var(--muted)">›</span></div>
     <button class="cta" data-act="request">Choose ${chosen.name} · ${rupee(chosenPrice)}</button>`;
 }
@@ -841,7 +1042,7 @@ function renderChoose() {
 /* ---------- requested / matched ---------- */
 function renderRequested() {
   const r = route(), f = F();
-  const surge = f.status === 'ok' ? f.multiplier : 1.0;
+  const surge = pickupSurge();
   const t = TIERS[state.chosenTier];
   const price = r.baseFare * t.ratio * tierMult(surge, t.sens) + state.tip;
   const tips = [45, 55, 65].map(v =>
@@ -865,7 +1066,7 @@ function renderRequested() {
 
 function renderMatched() {
   const r = route(), f = F();
-  const surge = f.status === 'ok' ? f.multiplier : 1.0;
+  const surge = pickupSurge();
   const t = TIERS[state.chosenTier];
   const price = r.baseFare * t.ratio * tierMult(surge, t.sens) + state.tip;
   return `<div class="eta-pill">Arriving in 4 min</div>
@@ -912,7 +1113,7 @@ function renderPanel() {
 <b>tier 2</b> route, ±45m                n=${String(t2).padStart(4)}  ${tick(t2 >= 8)}
 <b>tier 3</b> route, ±90m                n=${String(t3).padStart(4)}  ${tick(t3 >= 8)}
 <b>tier 4</b> city-wide, ±45m            n=${String(t4).padStart(4)}  ${tick(t4 >= 8)}
-<b>result</b> ${f.status === 'silent' ? 'silent — nothing to stand behind' : f.basis}`;
+<b>result</b> ${f.status === 'silent' ? 'silent — nothing to stand behind' : f.basis}${pickupTraceText()}`;
 }
 
 function renderEval() {
@@ -945,15 +1146,21 @@ function render() {
     s === 'choose' ? renderChoose() :
     s === 'requested' ? renderRequested() :
     s === 'matched' ? renderMatched() : renderHome();
-  renderNav(); renderPanel(); renderEval();
+  renderNav(); renderPanel(); renderPush(); renderEval();
 }
 
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-goto],[data-act],[data-tier],[data-route],[data-tip],[data-jump]');
+  const el = e.target.closest('[data-goto],[data-act],[data-tier],[data-route],[data-tip],[data-jump],[data-pickup],[data-pushjump]');
   if (!el) return;
+  if (el.dataset.pickup != null) state.pickupId = el.dataset.pickup === 'reset' ? null : el.dataset.pickup;
+  if (el.dataset.pushjump != null) {
+    state.minutes = Math.min(1425, Math.round((((+el.dataset.pushjump % 1440) + 1440) % 1440) / 15) * 15);
+    state.screen = 'home';
+    syncTime();
+  }
   if (el.dataset.goto) state.screen = el.dataset.goto;
   if (el.dataset.tier != null) state.chosenTier = +el.dataset.tier;
-  if (el.dataset.route != null) { state.routeIdx = +el.dataset.route; document.getElementById('route').value = state.routeIdx; state.screen = 'choose'; }
+  if (el.dataset.route != null) { state.routeIdx = +el.dataset.route; state.pickupId = null; document.getElementById('route').value = state.routeIdx; state.screen = 'choose'; }
   if (el.dataset.tip != null) state.tip = state.tip === +el.dataset.tip ? 0 : +el.dataset.tip;
   if (el.dataset.jump != null) { state.minutes = +el.dataset.jump; syncTime(); }
   const a = el.dataset.act;
@@ -967,7 +1174,7 @@ document.addEventListener('click', e => {
   if (a === 'book') { state.screen = 'choose'; state.alertFired = false; state.alertArmed = false; }
   if (a === 'request') state.screen = 'requested';
   if (a === 'match') state.screen = 'matched';
-  if (a === 'reset') { state.screen = 'home'; state.tip = 0; state.alertArmed = false; state.alertFired = false; }
+  if (a === 'reset') { state.screen = 'home'; state.tip = 0; state.alertArmed = false; state.alertFired = false; state.pickupId = null; }
   render();
 });
 
@@ -980,7 +1187,7 @@ document.getElementById('time').addEventListener('input', e => {
   document.getElementById('timeval').textContent = fmtTime(state.minutes);
   render();
 });
-document.getElementById('route').addEventListener('change', e => { state.routeIdx = +e.target.value; render(); });
+document.getElementById('route').addEventListener('change', e => { state.routeIdx = +e.target.value; state.pickupId = null; render(); });
 document.getElementById('dow').addEventListener('change', e => { state.dow = +e.target.value; render(); });
 document.getElementById('rain').addEventListener('change', e => { state.rain = e.target.checked ? 1 : 0; render(); });
 document.getElementById('event').addEventListener('change', e => { state.event = e.target.checked ? 1 : 0; render(); });
@@ -988,6 +1195,9 @@ document.getElementById('event').addEventListener('change', e => { state.event =
 document.getElementById('route').innerHTML = META.routes.map((r, i) =>
   `<option value="${i}">${r.destination}</option>`).join('');
 document.getElementById('route').value = 0;
+document.getElementById('pushmode').innerHTML = TIERS.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+document.getElementById('pushmode').value = state.pushTier;
+document.getElementById('pushmode').addEventListener('change', e => { state.pushTier = +e.target.value; render(); });
 syncTime();
 render();
 </script>
