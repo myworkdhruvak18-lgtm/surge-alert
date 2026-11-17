@@ -641,7 +641,7 @@ const ROWS = (function(){
 // than cabs, so it moves about a quarter as much - which is why it ends up
 // tagged "Least affected" during a spike.
 const TIERS = [
-  { name: 'Two-wheeler',   ratio: 0.642, sens: 0.25, access: 0, seats: 0, eta: 3, desc: 'Pillion ride, cheapest way across town' },
+  { name: 'Two-wheeler',   ratio: 0.642, sens: 0.25, access: 0, off: true, seats: 0, eta: 3, desc: 'Pillion ride, cheapest way across town' },
   { name: 'Three-wheeler', ratio: 1.322, sens: 0.55, access: 0.5, seats: 0, eta: 2, desc: 'Metered auto, no haggling' },
   { name: 'Standard',      ratio: 1.000, sens: 1.00, access: 1, seats: 4, eta: 5, desc: 'Compact car, up to 4' },
   { name: 'Sedan',         ratio: 1.834, sens: 1.00, access: 1, seats: 4, eta: 6, desc: 'More legroom and boot space' },
@@ -736,21 +736,24 @@ function pickupRecs() {
   const f = F(), r = route(), t = TIERS[state.chosenTier], sel = selectedPickup();
   const out = { case1: null, case2: null, merged: false, trace: [], hereMult: null, hereFare: null, candidates: [] };
   if (f.status !== 'ok') { out.trace.push('route forecast is silent, so no pickup recommendation'); return out; }
+  if (t.off) { out.trace.push(`${t.name}: pickup recommendations are off for this ride type`); return out; }
   const multAt = p => tierMult(surgeAtPickup(f.multiplier, p.zoneFactor), t.sens);
   const fareOf = (p, disc) => r.baseFare * t.ratio * multAt(p) - (disc || 0);
   const hereMult = multAt(sel), hereFare = fareOf(sel);
   out.hereMult = hereMult; out.hereFare = hereFare;
-  out.trace.push(`${t.name} · at ${sel.name} ${hereMult.toFixed(2)}× ${rupee(hereFare)}`);
+  const hereSurge = surgeAtPickup(f.multiplier, sel.zoneFactor);
+  out.trace.push(`${t.name} · at ${sel.name} ${hereMult.toFixed(2)}× ${rupee(hereFare)} (zone surge ${hereSurge.toFixed(2)}×)`);
 
   pickupPts().forEach(p => {
     if (p.own || p.id === sel.id) return;
     const sup = supplyScore(p, t), avail = sup >= AVAILABLE_MIN;
-    const candMult = Math.max(SURGE_DROP_FLOOR, multAt(p));
-    const drop = hereMult - candMult;
+    const candSurge = Math.max(SURGE_DROP_FLOOR, surgeAtPickup(f.multiplier, p.zoneFactor));
+    const drop = hereSurge - candSurge;
+    const candMult = Math.max(1, multAt(p));
     let c1 = null, why1 = '';
     if (!avail) why1 = `unavailable (supply ${sup.toFixed(2)} under ${AVAILABLE_MIN})`;
     else if (p.walkMin > WALK_CAP_MIN) why1 = `${p.walkMin} min walk is over the ${WALK_CAP_MIN} min cap`;
-    else if (drop < SURGE_DROP_MIN) why1 = `surge drop ${Math.max(0, drop).toFixed(2)} is under ${SURGE_DROP_MIN.toFixed(2)}`;
+    else if (drop < SURGE_DROP_MIN) why1 = `zone surge drop ${Math.max(0, drop).toFixed(2)} is under ${SURGE_DROP_MIN.toFixed(2)}`;
     else c1 = { ...p, drop, mult: candMult, fare: fareOf(p), saving: hereFare - fareOf(p) };
 
     let c2 = null, why2 = '';
@@ -767,7 +770,7 @@ function pickupRecs() {
       }
     }
     out.candidates.push({ id: p.id, avail, c1, c2 });
-    out.trace.push(`${c1 ? '✓' : '✗'} ${p.name} · ${p.walkMin} min · case 1: ${c1 ? `drop ${drop.toFixed(2)} (${hereMult.toFixed(2)}× to ${candMult.toFixed(2)}×)` : why1}`);
+    out.trace.push(`${c1 ? '✓' : '✗'} ${p.name} · ${p.walkMin} min · case 1: ${c1 ? `zone surge drop ${drop.toFixed(2)} (${hereSurge.toFixed(2)}× to ${candSurge.toFixed(2)}×)` : why1}`);
     if (p.kind === 'main') out.trace.push(`${c2 ? '✓' : '✗'}   case 2: ${c2 ? `saves ${rupee(c2.saving)}, ~${c2.gain} min faster` : why2}`);
     if (c1 && (!out.case1 || c1.drop > out.case1.drop || (c1.drop === out.case1.drop && c1.walkMin < out.case1.walkMin))) out.case1 = c1;
     if (c2 && (!out.case2 || c2.saving > out.case2.saving)) out.case2 = c2;
@@ -815,7 +818,7 @@ function renderPickupCards() {
       <h2 class="fc-head" style="font-size:15px">Walk ~${c1.walkMin} min to ${c1.name}</h2>
       ${compare(c1, rec.hereMult)}
       <div class="actions"><button class="btn primary" data-pickup="${c1.id}">Navigate to pickup point</button></div>
-      <div class="basis">Simulated zone prices · surge down ${c1.drop.toFixed(2)}× · walk cap ${WALK_CAP_MIN} min · ${t.name}</div>
+      <div class="basis">Simulated zone prices · zone surge down ${c1.drop.toFixed(2)}× · walk cap ${WALK_CAP_MIN} min · ${t.name}</div>
     </div>`;
   }
   if (c2) {

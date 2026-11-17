@@ -128,14 +128,14 @@ Where available, a forecast is annotated with a short reason: "Heavy rain", "Eve
 
 A point qualifies when all of these hold:
 - **Walk is within a 5 minute hard cap** from the rider's own spot.
-- **Its surge for the selected ride type is at least 0.30× lower** than at the selected point, measured against a 1.0× floor (a zone can never count as cheaper than 1.0×).
+- **Its zone surge is at least 0.30× lower** than at the selected point, measured on the underlying surge before ride-type dampening and against a 1.0× floor (a zone can never count as cheaper than 1.0×). The price shown to the rider still uses the selected ride type's own multiplier.
 - **The point is available** (see Availability below).
 
 When several qualify, show the one with the biggest drop, nearest on a tie. The required drop does not rise with walk time: how much someone will walk is what the cap is for, and the saving rule depends only on surge. Nothing shows when the route forecast is silent.
 
 *Why 5 minutes.* The only figure with an established standard behind it: a 400 m / 5 min catchment for low-frequency stops (NZTA guidance), a 500 m median bus walk in Melbourne, and Indian city pedestrian speeds of about 64-71 m/min, which put 5 minutes at roughly 320-355 m. Ride-hailing products advertise only "a couple of blocks" and no ride-hailing source gives an upper limit, so this is transferred from transit planning and micromobility, not measured for ride-hailing. The 2025 "zero-walk" study suggests even 5 minutes is optimistic. No evidence supports letting the cap rise as the saving grows; one micromobility study found tolerance varies widely (about 7 minutes for one rider group, 1 for another) but gives no curve.
 
-*Why 0.30.* It is one full risk band (the engine's bands are 1.25× and 1.55×), and at surge levels of 1.3× to 2.0× it equals at least 15% of the fare, matching the 15% materiality floor used for "leave by". Because of the 1.0× floor, nothing surfaces below roughly 1.3× surge. Hand-set and configurable, not derived from data.
+*Why 0.30.* It is one full risk band (the engine's bands are 1.25× and 1.55×), and at surge levels of 1.3× to 2.0× it equals at least 15% of the fare, matching the 15% materiality floor used for "leave by". Because of the 1.0× floor, nothing surfaces below roughly 1.3× surge. Because it is measured on the underlying surge, a ride type whose price is dampened (autos) qualifies like a car but saves fewer rupees for the same drop. Hand-set and configurable, not derived from data.
 
 #### 10b. Case 2: access-driven (a main-road point)
 
@@ -158,8 +158,8 @@ A point is available when its score is at least 0.5, where score = point supply 
 
 | Ride type | Case 1 fires | Case 2 fires | Why |
 |---|---|---|---|
-| Two-wheeler (Bike, Scooty, Bike Saver) | 0 | 0 | Price moves only 0.25 of the surge, so a 0.30 drop is unreachable; no lane-access benefit. Decided: stays off in v1 |
-| Three-wheeler | 106 | 1,032 | Price moves 0.55 of the surge, so case 1 is rare; case 2 is half-strength and misses ₹10 without surge |
+| Two-wheeler (Bike, Scooty, Bike Saver) | 0 | 0 | Explicitly switched off for this ride type, and it has no lane-access benefit. Decided: stays off in v1 |
+| Three-wheeler | 755 | 1,032 | Case 1 is measured on the underlying zone surge, so it qualifies like a car but saves fewer rupees; case 2 is half-strength and misses ₹10 without surge |
 | Standard | 854 | 1,233 | Full exposure |
 | Sedan | 621 | 1,001 | Full exposure, lower availability |
 | Six-seater | 10 | 535 | Mostly gated by the hand-set 0.65 supply factor, not by price |
@@ -202,7 +202,7 @@ Zone factors, walk discounts and availability factors are all hand-set. There is
 - **New:** which modes ship in v1's per-mode model — all modes present in the ride-selection sheet (Bike, Auto, Go, Go AC, Premier, XL, etc.), or a smaller initial set (e.g. Auto + Go + Premier, the three with likely the most seed-data volume), with the rest added once real fare history exists?
 - **New (v5):** how does 10a actually get per-cell data — simulate H3-hex-level synthetic data (consistent with how the route-level seed set was built), or ship with a cruder named-sub-zone proxy first and treat true per-cell resolution as a later pass? This blocks 10a from being more than a demo placeholder until decided.
 - **Decided 2026-11-17:** the walk cap for 10a is 5 minutes, backed by transit-planning norms and Indian pedestrian speeds (transferred evidence, not ride-hailing data). It stays a configurable parameter so a per-city value can replace it once real rider data exists.
-- **New (v5):** the 0.30 surge-drop rule is measured on the selected ride type's displayed multiplier, which starves autos (106 of 13,824 sweep scenarios). Should it instead apply to the underlying zone surge so autos are treated like cars?
+- **Decided 2026-11-17:** the 0.30 surge-drop rule applies to the underlying zone surge, not the ride type's dampened multiplier, so autos qualify like cars (auto case 1 went from 106 to 755 of 13,824 sweep scenarios). Two-wheelers are switched off explicitly rather than by the threshold.
 - **New (v5):** who funds the 10b walk discount? The build assumes the platform does and that driver payout stays on the full fare. If it came out of the fare, it would cut the driver's 80% share under MVAG 2025, the exact harm this product's action hierarchy exists to avoid.
 - **New (v5):** when several 10a points qualify, the build shows only the biggest drop (nearest on a tie). Real apps list many points; is one recommendation enough, or should the cheapest and the nearest both show?
 - **Decided 2026-11-17:** two-wheeler riders are the most price-sensitive segment and the one Rapido is built around, yet both pickup features are effectively off for them under the current constants. Decision: keep them off for v1 and revisit only with real bike-taxi rider input (for example a fixed-fee pickup point rather than a surge-driven one), not by tuning more constants.

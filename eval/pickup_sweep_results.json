@@ -4,15 +4,15 @@
   "violationCount": 0,
   "violations": [],
   "caseCounts": {
-    "case1": 1591,
+    "case1": 2240,
     "case2": 3801,
-    "both": 967,
-    "merged": 29,
-    "neither": 64695
+    "both": 1341,
+    "merged": 41,
+    "neither": 64420
   },
   "surgeActive": {
-    "scenarios": 14420,
-    "case1": 1591
+    "scenarios": 21530,
+    "case1": 2240
   },
   "laneScenarios": {
     "scenarios": 6144,
@@ -30,7 +30,7 @@
     },
     "Three-wheeler": {
       "scenarios": 13824,
-      "case1": 106,
+      "case1": 755,
       "case2": 1032
     },
     "Standard": {
@@ -52,22 +52,22 @@
   "byRoute": {
     "R0": {
       "scenarios": 23040,
-      "case1": 347,
+      "case1": 479,
       "case2": 0
     },
     "R1": {
       "scenarios": 15360,
-      "case1": 660,
+      "case1": 877,
       "case2": 1971
     },
     "R2": {
       "scenarios": 11520,
-      "case1": 277,
+      "case1": 420,
       "case2": 0
     },
     "R3": {
       "scenarios": 11520,
-      "case1": 307,
+      "case1": 464,
       "case2": 1830
     },
     "R4": {
@@ -79,56 +79,56 @@
   "byBand": {
     "overnight": {
       "scenarios": 18720,
-      "case1": 23,
+      "case1": 42,
       "case2": 218
     },
     "early morning": {
       "scenarios": 5760,
-      "case1": 73,
+      "case1": 103,
       "case2": 358
     },
     "morning peak": {
       "scenarios": 8640,
-      "case1": 371,
+      "case1": 511,
       "case2": 612
     },
     "midday": {
       "scenarios": 18720,
-      "case1": 336,
+      "case1": 492,
       "case2": 1488
     },
     "evening peak": {
       "scenarios": 10080,
-      "case1": 421,
+      "case1": 581,
       "case2": 632
     },
     "late evening": {
       "scenarios": 7200,
-      "case1": 367,
+      "case1": 511,
       "case2": 493
     }
   },
   "byRain": {
     "rain=0": {
       "scenarios": 34560,
-      "case1": 644,
+      "case1": 887,
       "case2": 2124
     },
     "rain=1": {
       "scenarios": 34560,
-      "case1": 947,
+      "case1": 1353,
       "case2": 1677
     }
   },
   "byEvent": {
     "event=0": {
       "scenarios": 34560,
-      "case1": 555,
+      "case1": 763,
       "case2": 2109
     },
     "event=1": {
       "scenarios": 34560,
-      "case1": 1036,
+      "case1": 1477,
       "case2": 1692
     }
   },

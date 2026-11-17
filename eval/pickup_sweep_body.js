@@ -31,7 +31,7 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
       const base = f.multiplier;
       const mult = p => tierMult(1 + (base - 1) * p.zoneFactor, t.sens);
       const hereMult = mult(sel);
-      const surging = hereMult >= 1.3;
+      const surging = (1 + (base - 1) * sel.zoneFactor) >= 1.3;
       if (surging) S.surgeActive.scenarios++;
       if (sel.interior && t.access > 0) { S.laneScenarios.scenarios++; if (hereMult < 1.02) S.laneScenarios.noSurgeScenarios++; }
 
@@ -44,7 +44,7 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
 
       const c1 = rec.case1, c2 = rec.case2;
       if (c1) {
-        const drop = hereMult - Math.max(1, mult(c1));
+        const drop = (1 + (base - 1) * sel.zoneFactor) - Math.max(1, 1 + (base - 1) * c1.zoneFactor);
         if (c1.walkMin > 5) bad('case 1 beyond the 5 min cap', ctx);
         if (drop < 0.3 - 1e-9) bad('case 1 drop under 0.30', { ...ctx, drop });
         if (supplyScore(c1, t) < 0.5) bad('case 1 candidate unavailable', ctx);
