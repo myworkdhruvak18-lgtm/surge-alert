@@ -103,6 +103,7 @@ A "wait / it'll be cheaper later" message rendered with zero capture actions is 
 ### 7. Miscellaneous
 
 - Forecasts are always a **band + risk level** (Low / Medium / High), never a single false-precision number, and clipped to India's MVAG 2025 bounds (0.5×–2.0×) — **per mode**, since different vehicle categories may have different effective bounds in practice even under the same national ceiling.
+- **Calibration, measured (eval v3.1):** the band is the p25 to p75 of similar past trips, and on the held-out weeks it holds 67.7% of new outcomes, not the 50% an interval of that name would imply, so describe it as a typical range. The confidence score ranks reliability correctly but is not a probability, and 99.3% of forecasts score 0.80 or higher. The Medium risk label is right only 72.3% of the time, against 95.4% for Low and 87.7% for High. Synthetic stationary data, so treat these as a method working, not a measurement of real riders.
 - Existing fare, promo, and receipt logic are unchanged; the forecast layer only adds context, never alters pricing.
 - A five-minute fare hold during a stalled driver match (`C1x`) is service recovery for a failed match, not a pricing feature, and must not be generalized into a forward-looking price lock — see Non-Goals.
 
@@ -183,7 +184,7 @@ Zone factors and availability factors are all hand-set. There is no per-cell sur
 
 **Leading**
 - Forecast coverage — % of destination-set sessions where the engine can produce a confident forecast (not just current-price-only) — reported **overall and broken out per mode**, so a high aggregate number can't hide a mode that's silent almost everywhere.
-- Forecast precision/recall vs. the naive rush-hour baseline on held-out data — per mode as well as aggregate, same reasoning.
+- Forecast precision/recall vs. the naive rush-hour baseline on held-out data — per mode as well as aggregate, same reasoning. Also report the margin over the strongest simple baseline (a rain/event-aware hour-of-week average): on the synthetic eval it is 2.6 F1 points, against 15.6 over rush hour alone.
 - Intent-capture rate — % of testers shown an elevated forecast who say they'd take a capture action rather than abandon/app-switch — **mode-shift now counted as a capture action**, alongside alert/reserve. **Added v5:** a taken pickup-point shift (10a) counts the same way.
 - **Added v5:** pickup-point recommendation coverage: % of sessions where 10a has enough data to show a recommendation at all, tracked per ride type. Gated entirely on resolving the per-cell data question.
 

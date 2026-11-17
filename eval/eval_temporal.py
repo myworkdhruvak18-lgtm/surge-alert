@@ -1,14 +1,23 @@
 """
-Time-ordered evaluation of the Surge Alert forecast engine against a naive rush-hour baseline.
+Time-ordered evaluation of the Surge Alert forecast engine.
 
 Train = every row on a day before the cutoff (18 weeks). Test = every row from the cutoff on
 (the final 8 weeks), which the engine never saw. As a comparison it also scores a random row
 split of the same data, which is what earlier versions of this eval actually did while the
 app labelled it "temporal".
 
+What it scores
+  1. Classification (is the multiplier at least 1.25x?) for the engine and three baselines:
+       naive           surge happens in weekday rush hours, nothing else
+       hour-of-week    mean multiplier for (route, day of week, hour); no weather or events
+       hour+conditions the same, split by rain and event too (a no-frills lookup)
+  2. Calibration of what the engine tells a rider: does the p25-p75 band hold about half of
+     outcomes, does the confidence score track accuracy, are the low/medium/high risk labels
+     reliable, and how large is the point error?
+
 The forecast function is a port of forecast() in app/app.html (same matching tiers, same
-confidence maths). Run `python eval_temporal.py --parity` to print forecasts on ALL rows for a
-fixed set of queries; eval/parity_check.js prints the app's answers for the same queries.
+confidence maths). `python eval_temporal.py --parity` prints forecasts on ALL rows for a fixed
+set of queries; eval/parity_check.js checks the app's answers against them.
 
 Usage: python eval_temporal.py            (writes eval_results.json)
 """
@@ -22,8 +31,9 @@ import numpy as np
 
 SURGE_CAP, SURGE_FLOOR = 2.0, 0.5
 MIN_OBS, CONFIDENT_OBS = 8, 20
-RISK_MEDIUM = 1.25
+RISK_MEDIUM, RISK_HIGH = 1.25, 1.55
 TIERS = [('Two-wheeler', 0.25), ('Three-wheeler', 0.55), ('Standard', 1.00), ('Sedan', 1.00), ('Six-seater', 1.00)]
+CONF_BINS = [(0.0, 0.8), (0.8, 0.9), (0.9, 0.95), (0.95, 1.01)]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,6 +44,14 @@ def clip(x):
 
 def round2(x):
     return math.floor(x * 100 + 0.5 + 1e-9) / 100
+
+
+def cents(x):
+    return int(round(x * 100))
+
+
+def risk_of(x):
+    return 'high' if x >= RISK_HIGH else 'medium' if x >= RISK_MEDIUM else 'low'
 
 
 class Engine:
@@ -85,9 +103,42 @@ class Engine:
             if scope == 'population':
                 conf *= 0.70
             conf = round(max(0, min(1, conf)) * 1000) / 1000
-            out = {'status': 'ok', 'point': point, 'multiplier': round2(point), 'n': n, 'scope': scope, 'confidence': conf}
+            out = {'status': 'ok', 'point': point, 'multiplier': round2(point), 'low': round2(low), 'high': round2(high),
+                   'n': n, 'scope': scope, 'confidence': conf}
         self.cache[key] = out
         return out
+
+
+class HourOfWeek:
+    """Mean multiplier per (route, day of week, hour), optionally split by rain and event.
+    A cell with fewer than 8 rows falls back to (route, weekday/weekend, hour), then to
+    (weekday/weekend, hour) across all routes."""
+
+    def __init__(self, rows, with_conditions):
+        self.start = 0 if with_conditions else 1
+        self.tables = [{}, {}, {}, {}]
+        for route, dow, minutes, rain, event, mult, *_ in rows:
+            for t, k in zip(self.tables, self._keys(int(route), int(dow), int(minutes), int(rain), int(event))):
+                s = t.get(k)
+                if s is None:
+                    t[k] = [mult, 1]
+                else:
+                    s[0] += mult
+                    s[1] += 1
+
+    @staticmethod
+    def _keys(route, dow, minutes, rain, event):
+        hour, wk = minutes // 60, dow >= 5
+        return [(route, dow, hour, rain, event), (route, dow, hour), (route, wk, hour), (wk, hour)]
+
+    def predict(self, route, dow, minutes, rain, event):
+        keys = self._keys(route, dow, minutes, rain, event)
+        for t, k in list(zip(self.tables, keys))[self.start:]:
+            s = t.get(k)
+            if s and s[1] >= MIN_OBS:
+                return s[0] / s[1]
+        s = self.tables[3][keys[3]]
+        return s[0] / s[1]
 
 
 def prf1(tp, fp, fn, tn):
@@ -103,28 +154,82 @@ def naive(dow, minutes):
     return 1 if dow < 5 and (420 <= minutes <= 630 or 1020 <= minutes <= 1230) else 0
 
 
-def score(train_rows, test_rows):
+def score(train_rows, test_rows, extras=False):
     eng = Engine(train_rows)
-    agg = {'engine': [0, 0, 0, 0], 'baseline': [0, 0, 0, 0]}
-    modes = {n: [0, 0, 0, 0] for n, _ in TIERS}
+    how, howc = HourOfWeek(train_rows, False), HourOfWeek(train_rows, True)
+    names = ['naive', 'engine', 'how', 'howc']
+    agg = {k: [0, 0, 0, 0] for k in names}
+    modes = {n: {k: [0, 0, 0, 0] for k in names} for n, _ in TIERS}
     silent = 0
+    n = len(test_rows)
+
+    band = {'inside': 0, 'zero': 0, 'inside_nz': 0, 'n_nz': 0}
+    bins = [{'n': 0, 'inside': 0, 'correct': 0, 'abs_err': 0.0} for _ in CONF_BINS]
+    risk = {k: {'low': 0, 'medium': 0, 'high': 0} for k in ('low', 'medium', 'high')}
+    err = {'engine': [0.0, 0.0], 'how': 0.0, 'howc': 0.0}
 
     def tally(c, pred, truth):
         c[0 if pred and truth else 1 if pred else 2 if truth else 3] += 1
 
     for route, dow, minutes, rain, event, mult, *_ in test_rows:
-        f = eng.forecast(int(route), int(dow), int(minutes), int(rain), int(event))
+        route, dow, minutes, rain, event = int(route), int(dow), int(minutes), int(rain), int(event)
+        f = eng.forecast(route, dow, minutes, rain, event)
         ok = f['status'] == 'ok'
         silent += 0 if ok else 1
-        tally(agg['engine'], ok and f['point'] >= RISK_MEDIUM, mult >= RISK_MEDIUM)
-        tally(agg['baseline'], naive(dow, minutes), mult >= RISK_MEDIUM)
+        mh, mc = how.predict(route, dow, minutes, rain, event), howc.predict(route, dow, minutes, rain, event)
+        truth = mult >= RISK_MEDIUM
+        preds = {'naive': naive(dow, minutes) == 1, 'engine': ok and f['point'] >= RISK_MEDIUM, 'how': mh >= RISK_MEDIUM, 'howc': mc >= RISK_MEDIUM}
+        for k in names:
+            tally(agg[k], preds[k], truth)
         for name, sens in TIERS:
-            truth = clip(1 + (mult - 1) * sens) >= RISK_MEDIUM
-            pred = ok and clip(1 + (f['point'] - 1) * sens) >= RISK_MEDIUM
-            tally(modes[name], pred, truth)
-    n = len(test_rows)
-    return {'n_test': n, 'coverage': round(1 - silent / n, 4), 'engine': prf1(*agg['engine']),
-            'baseline': prf1(*agg['baseline']), 'per_mode': {k: prf1(*v) for k, v in modes.items()}}
+            t_truth = clip(1 + (mult - 1) * sens) >= RISK_MEDIUM
+            t_preds = {'naive': preds['naive'], 'engine': ok and clip(1 + (f['point'] - 1) * sens) >= RISK_MEDIUM,
+                       'how': clip(1 + (mh - 1) * sens) >= RISK_MEDIUM, 'howc': clip(1 + (mc - 1) * sens) >= RISK_MEDIUM}
+            for k in names:
+                tally(modes[name][k], t_preds[k], t_truth)
+        if not (extras and ok):
+            continue
+        inside = cents(f['low']) <= cents(mult) <= cents(f['high'])
+        zero = cents(f['low']) == cents(f['high'])
+        band['inside'] += inside
+        band['zero'] += zero
+        if not zero:
+            band['n_nz'] += 1
+            band['inside_nz'] += inside
+        for i, (lo, hi) in enumerate(CONF_BINS):
+            if lo <= f['confidence'] < hi:
+                b = bins[i]
+                b['n'] += 1
+                b['inside'] += inside
+                b['correct'] += preds['engine'] == truth
+                b['abs_err'] += abs(mult - f['point'])
+                break
+        risk[risk_of(f['point'])][risk_of(mult)] += 1
+        err['engine'][0] += abs(mult - f['point'])
+        err['engine'][1] += mult - f['point']
+        err['how'] += abs(mult - mh)
+        err['howc'] += abs(mult - mc)
+
+    result = {'n_test': n, 'coverage': round(1 - silent / n, 4), 'engine': prf1(*agg['engine']), 'baseline': prf1(*agg['naive']),
+              'how': prf1(*agg['how']), 'howc': prf1(*agg['howc']),
+              'per_mode': {k: prf1(*v['engine']) for k, v in modes.items()},
+              'per_mode_baselines': {k: {b: prf1(*v[b]) for b in ('naive', 'how', 'howc')} for k, v in modes.items()}}
+    if extras:
+        m = n - silent
+        result['calibration'] = {
+            'band': {'rows': m, 'coverage': round(band['inside'] / m, 4), 'zero_width_share': round(band['zero'] / m, 4),
+                     'rows_nondegenerate': band['n_nz'], 'coverage_nondegenerate': round(band['inside_nz'] / band['n_nz'], 4) if band['n_nz'] else None},
+            'confidence_buckets': [{'range': [lo, min(hi, 1.0)], 'rows': b['n'], 'share': round(b['n'] / m, 4),
+                                    'band_coverage': round(b['inside'] / b['n'], 4) if b['n'] else None,
+                                    'accuracy': round(b['correct'] / b['n'], 4) if b['n'] else None,
+                                    'mae': round(b['abs_err'] / b['n'], 4) if b['n'] else None}
+                                   for (lo, hi), b in zip(CONF_BINS, bins)],
+            'risk_reliability': {p: {'rows': sum(c.values()), **{a: round(v / sum(c.values()), 4) if sum(c.values()) else None for a, v in c.items()}}
+                                 for p, c in risk.items()},
+            'point_error': {'engine_mae': round(err['engine'][0] / m, 4), 'engine_bias': round(err['engine'][1] / m, 4),
+                            'how_mae': round(err['how'] / m, 4), 'howc_mae': round(err['howc'] / m, 4)},
+        }
+    return result
 
 
 def load():
@@ -141,7 +246,8 @@ def parity():
         q = (int(rng.integers(0, 5)), int(rng.integers(0, 7)), int(rng.integers(0, 24) * 60 + rng.integers(0, 4) * 15),
              int(rng.integers(0, 2)), int(rng.integers(0, 2)))
         f = eng.forecast(*q)
-        out.append({'q': q, 'status': f['status'], 'multiplier': f.get('multiplier'), 'n': f['n'], 'scope': f['scope'], 'confidence': f.get('confidence')})
+        out.append({'q': q, 'status': f['status'], 'multiplier': f.get('multiplier'), 'low': f.get('low'), 'high': f.get('high'),
+                    'n': f['n'], 'scope': f['scope'], 'confidence': f.get('confidence')})
     print(json.dumps(out))
 
 
@@ -154,8 +260,7 @@ def main():
     cutoff = start + datetime.timedelta(days=cut)
     print(f"train {len(train):,} rows, days 0-{cut - 1} | test {len(test):,} rows, days {cut}-{d['n_days'] - 1} | cutoff {cutoff}")
 
-    temporal = score(train, test)
-
+    temporal = score(train, test, extras=True)
     rng = np.random.default_rng(7)
     perm = rng.permutation(len(rows))
     n_tr = len(train)
@@ -168,10 +273,11 @@ def main():
     }
     with open(os.path.join(HERE, 'eval_results.json'), 'w') as f:
         json.dump(result, f, indent=2)
-    print('TEMPORAL  engine', temporal['engine'], '\n          baseline', temporal['baseline'], '\n          coverage', temporal['coverage'])
-    print('RANDOM    engine', rnd['engine'], '\n          baseline', rnd['baseline'])
-    for k, v in temporal['per_mode'].items():
-        print('mode', k, v)
+    for k in ('engine', 'baseline', 'how', 'howc'):
+        print('TEMPORAL', k.ljust(9), temporal[k])
+    print('coverage', temporal['coverage'])
+    print('RANDOM  engine', rnd['engine']['f1'], ' naive', rnd['baseline']['f1'], ' how', rnd['how']['f1'], ' howc', rnd['howc']['f1'])
+    print(json.dumps(temporal['calibration'], indent=1))
 
 
 if __name__ == '__main__':
