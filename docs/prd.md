@@ -150,11 +150,11 @@ A point is available when its score is at least 0.5, where score = point supply 
 
 | Ride type | Card fires | Note |
 |---|---|---|
-| Two-wheeler (Bike, Scooty, Bike Saver) | 358 | Price moves only 0.25 of the surge, so savings are small (₹15 to ₹30 once the ₹15 floor applies). The floor blocked 617 further scenarios that passed every other check |
-| Three-wheeler | 858 | Price moves 0.55 of the surge, so it saves fewer rupees than a car |
-| Standard | 975 | Full exposure |
-| Sedan | 700 | Full exposure, lower availability |
-| Six-seater | 10 | Mostly gated by the hand-set 0.65 supply factor, not by price |
+| Two-wheeler (Bike, Scooty, Bike Saver) | 402 | Price moves only 0.25 of the surge, so savings are small (₹15 to ₹23 once the ₹15 floor applies). The floor blocked 657 further scenarios that passed every other check |
+| Three-wheeler | 961 | Price moves 0.55 of the surge, so it saves fewer rupees than a car |
+| Standard | 1,059 | Full exposure |
+| Sedan | 802 | Full exposure, lower availability |
+| Six-seater | 13 | Mostly gated by the hand-set 0.65 supply factor, not by price |
 
 "Scooty" and "Bike Saver" are not separate tiers in the model; they collapse into Two-wheeler.
 
@@ -200,9 +200,9 @@ Zone factors and availability factors are all hand-set. There is no per-cell sur
 - **New (v5):** how does 10a actually get per-cell data — simulate H3-hex-level synthetic data (consistent with how the route-level seed set was built), or ship with a cruder named-sub-zone proxy first and treat true per-cell resolution as a later pass? This blocks 10a from being more than a demo placeholder until decided.
 - **Decided 2026-11-17:** the walk window for 10a is 2 to 8 minutes (the product owner's rule). The research supports about 5 minutes as the upper end and nothing for ride-hailing beyond that, so 8 is an unvalidated choice. It stays a configurable parameter so a per-city value can replace it once real rider data exists.
 - **Decided 2026-11-17:** the 0.30 surge-drop rule applies to the underlying zone surge, not the ride type's dampened multiplier, so autos qualify like cars (auto case 1 went from 106 to 755 of 13,824 sweep scenarios).
-- **Decided 2026-11-17:** when several 10a points qualify, the app shows the nearest one (the bigger drop only breaks a tie), so riders aren't sent farther for a marginally bigger saving. Consequence: nearer points clear the 0.30× bar by less, so the saving is more fragile to other riders piling on. In the sweep, 11% of recommendations hold with some piling-on, down from 30% when the biggest drop was shown.
-- **Decided 2026-11-17 (reverses the earlier keep-bikes-off decision):** 10a applies to every ride type, two-wheelers included, with a ₹15 minimum fare saving. The floor mostly bites bikes: it blocked 617 two-wheeler scenarios and none for any other ride type.
-- **Decided 2026-11-17:** the app re-quotes on arrival (see 10a). Still open: the pile-on effect uses hand-set erosion factors (35% and 70% of the gap) and the result is very sensitive to them. In the sweep, 96% of recommendations still held after the walk with no piling-on, 11% with some, and none with many. Real convergence data is needed before anyone should trust a number here.
+- **Decided 2026-11-17:** when several 10a points qualify, the app shows the nearest one (the bigger drop only breaks a tie), so riders aren't sent farther for a marginally bigger saving. Consequence: nearer points clear the 0.30× bar by less, so the saving is more fragile to other riders piling on. In the sweep, 9% of recommendations hold with some piling-on, down from 29% when the biggest drop was shown.
+- **Decided 2026-11-17 (reverses the earlier keep-bikes-off decision):** 10a applies to every ride type, two-wheelers included, with a ₹15 minimum fare saving. The floor mostly bites bikes: it blocked 657 two-wheeler scenarios and none for any other ride type.
+- **Decided 2026-11-17:** the app re-quotes on arrival (see 10a). Still open: the pile-on effect uses hand-set erosion factors (35% and 70% of the gap) and the result is very sensitive to them. In the sweep, 98% of recommendations still held after the walk with no piling-on, 9% with some, and none with many. Real convergence data is needed before anyone should trust a number here.
 - **New (v5):** the build assumes the base fare is identical at every pickup point and only surge differs. In reality moving the pickup changes the trip's distance and time, so the base fare shifts a little, up or down.
 
 ---

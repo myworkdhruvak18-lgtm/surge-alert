@@ -1,116 +1,150 @@
 """
-Regenerates the Surge Alert synthetic dataset with a REAL rain/event effect
-on the true multiplier, and enough density per (route, dow-class, hour,
-rain, event) cell that the engine's strict match tier (Section 1 of the PRD)
-can actually succeed for plausible queries -- so toggling rain/event in the
-prototype visibly changes the forecast, not just the confidence score.
+Generates the Surge Alert synthetic dataset with a real calendar.
 
-Encoding matches app.html's packed format exactly:
-  v = route | (dow<<3) | (minutes<<6) | (rain<<17) | (event<<18) | (code<<19)
-  code = round(multiplier*100) - 50   (multiplier in [0.50, 2.05], 8 bits -> 0..255)
-decode (from app.html):
-  route = v&7; dow=(v>>3)&7; minutes=(v>>6)&2047; rain=(v>>17)&1; event=(v>>18)&1
-  multiplier = (((v>>19)&255)+50)/100
+Every row belongs to a dated day. Weather and events are day-level (rain comes in spells that
+persist from day to day; an event occupies an evening window), and each day carries a small
+demand shock, so rows from the same day are correlated. That is what makes a time-ordered
+train/test split meaningful: a random row split would put the same day on both sides.
+
+The process is still stationary (no trend, no seasonality), so a time-ordered split is only a
+mild test here. Real data will drift.
+
+Row format: [route, dow, minutes, rain, event, multiplier, day]
+  dow: 0 = Monday ... 6 = Sunday, derived from the date. day: 0 = START.
+
+Usage: python generate_data.py [path to write the app's packed ROWS string]
 """
-import random, json
+import datetime
+import json
+import os
+import random
+import sys
 
-random.seed(42)
+random.seed(7)
 
+START = datetime.date(2026, 5, 18)   # a Monday
+N_DAYS = 182                         # 26 whole weeks
+TRAIN_DAYS = 126                     # 18 weeks train, 8 weeks test (cutoff 2026-09-21)
 N_ROUTES = 5
 SURGE_FLOOR, SURGE_CAP = 0.5, 2.0
-
-# Per-route base "busyness" multiplier on top of the time-of-day curve.
 ROUTE_BUSY = [1.00, 1.15, 0.90, 1.05, 0.80]
+ROWS_PER_ROUTE = 28000
+
+RAIN_STAY, RAIN_START = 0.70, 0.30   # P(rainy today | rainy yesterday / dry yesterday)
+RAIN_LEN = (7.0, 12.0)               # hours
+EVENT_DAY_P = 0.60
+EVENT_LEN = (4.0, 6.0)               # hours
+DAY_SHOCK_SD = 0.04
+
 
 def clip(x):
     return max(SURGE_FLOOR, min(SURGE_CAP, x))
 
+
 def base_curve(dow, minutes):
-    """Typical time-of-day/day-of-week surge shape, before rain/event/noise."""
     weekend = dow >= 5
     hour = minutes / 60.0
     if not weekend:
-        if 7.5 <= hour <= 10.0:      # weekday morning peak
-            peak = 1.0 - abs(hour - 8.75) / 1.25
-            return 1.15 + 0.55 * max(0, peak)
-        if 17.0 <= hour <= 20.5:     # weekday evening peak
-            peak = 1.0 - abs(hour - 18.75) / 1.75
-            return 1.20 + 0.60 * max(0, peak)
+        if 7.5 <= hour <= 10.0:
+            return 1.15 + 0.55 * max(0, 1.0 - abs(hour - 8.75) / 1.25)
+        if 17.0 <= hour <= 20.5:
+            return 1.20 + 0.60 * max(0, 1.0 - abs(hour - 18.75) / 1.75)
         if 0 <= hour <= 5.5 or hour >= 23:
             return 0.70
         return 1.00
-    else:
-        if 20.0 <= hour <= 23.5:     # weekend night demand
-            peak = 1.0 - abs(hour - 21.75) / 1.75
-            return 1.15 + 0.55 * max(0, peak)
-        if 0 <= hour <= 5.5:
-            return 0.65
-        return 0.95
+    if 20.0 <= hour <= 23.5:
+        return 1.15 + 0.55 * max(0, 1.0 - abs(hour - 21.75) / 1.75)
+    if 0 <= hour <= 5.5:
+        return 0.65
+    return 0.95
 
-def gen_row(route_idx):
-    dow = random.randint(0, 6)
-    # bias minutes toward active hours (more bookings when people actually book)
-    bucket = random.choices(
-        ['morning', 'evening', 'night', 'other'],
-        weights=[28, 30, 18, 24],
-    )[0]
+
+def make_days():
+    days, rainy = [], random.random() < 0.5
+    for d in range(N_DAYS):
+        rainy = random.random() < (RAIN_STAY if rainy else RAIN_START)
+        rain_win = None
+        if rainy:
+            s = random.uniform(5, 14)
+            rain_win = (s * 60, (s + random.uniform(*RAIN_LEN)) * 60)
+        event_win = None
+        if random.random() < EVENT_DAY_P:
+            s = random.uniform(6, 21)
+            event_win = (s * 60, (s + random.uniform(*EVENT_LEN)) * 60)
+        days.append({'dow': (START + datetime.timedelta(days=d)).weekday(), 'rain': rain_win,
+                     'event': event_win, 'shock': random.gauss(0, DAY_SHOCK_SD)})
+    return days
+
+
+def pick_minutes():
+    bucket = random.choices(['morning', 'evening', 'night', 'other'], weights=[28, 30, 18, 24])[0]
     if bucket == 'morning':
-        minutes = int(random.gauss(8.75, 0.9) * 60) % 1440
-    elif bucket == 'evening':
-        minutes = int(random.gauss(18.75, 1.1) * 60) % 1440
-    elif bucket == 'night':
-        minutes = int(random.gauss(21.5, 1.5) * 60) % 1440
-    else:
-        minutes = random.randint(0, 1439)
+        return int(random.gauss(8.75, 0.9) * 60) % 1440
+    if bucket == 'evening':
+        return int(random.gauss(18.75, 1.1) * 60) % 1440
+    if bucket == 'night':
+        return int(random.gauss(21.5, 1.5) * 60) % 1440
+    return random.randint(0, 1439)
 
-    rain = 1 if random.random() < 0.22 else 0
-    event = 1 if random.random() < 0.12 else 0
 
-    mult = base_curve(dow, minutes) * ROUTE_BUSY[route_idx]
+def inside(win, minutes):
+    return 1 if win and win[0] <= minutes <= win[1] else 0
+
+
+def gen_row(route_idx, d, day):
+    minutes = pick_minutes()
+    rain, event = inside(day['rain'], minutes), inside(day['event'], minutes)
+    mult = base_curve(day['dow'], minutes) * ROUTE_BUSY[route_idx] + day['shock']
     if rain:
         mult += random.uniform(0.28, 0.42)
     if event:
         mult += random.uniform(0.32, 0.48)
     mult += random.gauss(0, 0.06)
-    mult = clip(mult)
+    return [route_idx, day['dow'], minutes, rain, event, round(clip(mult), 2), d]
 
-    return [route_idx, dow, minutes, rain, event, round(mult, 2)]
-
-def main():
-    rows = []
-    # ~140k rows: enough that strict (route+dow-class+-/-45min+same rain+same
-    # event) matches clear the 8-observation floor at common query times.
-    for route_idx in range(N_ROUTES):
-        n = int(28000 * ROUTE_BUSY[route_idx])
-        for _ in range(n):
-            rows.append(gen_row(route_idx))
-    random.shuffle(rows)  # keep "array order == chronological" assumption harmless
-    print('total rows', len(rows))
-
-    packed = []
-    for r in rows:
-        route, dow, minutes, rain, event, mult = r
-        code = round(mult * 100) - 50
-        code = max(0, min(255, code))
-        v = route | (dow << 3) | (minutes << 6) | (rain << 17) | (event << 18) | (code << 19)
-        packed.append(base36(v))
-    packed_str = ','.join(packed)
-    print('packed length', len(packed_str))
-
-    with open('rows_new.json', 'w') as f:
-        json.dump(rows, f)
-    with open('packed_new.txt', 'w') as f:
-        f.write(packed_str)
 
 def base36(v):
     digits = '0123456789abcdefghijklmnopqrstuvwxyz'
-    if v == 0:
-        return '0'
     out = []
     while v:
-        v, d = divmod(v, 36)
-        out.append(digits[d])
-    return ''.join(reversed(out))
+        v, r = divmod(v, 36)
+        out.append(digits[r])
+    return ''.join(reversed(out)) or '0'
+
+
+def pack(rows):
+    parts = []
+    for route, dow, minutes, rain, event, mult, _day in rows:
+        code = max(0, min(255, round(mult * 100) - 50))
+        parts.append(base36(route | (dow << 3) | (minutes << 6) | (rain << 17) | (event << 18) | (code << 19)))
+    return ','.join(parts)
+
+
+def main():
+    days = make_days()
+    rows = []
+    for route_idx in range(N_ROUTES):
+        per_day = int(ROWS_PER_ROUTE * ROUTE_BUSY[route_idx]) / N_DAYS
+        for d, day in enumerate(days):
+            n = int(per_day) + (1 if random.random() < per_day - int(per_day) else 0)
+            rows.extend(gen_row(route_idx, d, day) for _ in range(n))
+    rows.sort(key=lambda r: (r[6], r[2]))
+
+    n = len(rows)
+    print('rows', n, '| train rows', sum(1 for r in rows if r[6] < TRAIN_DAYS), '| test rows', sum(1 for r in rows if r[6] >= TRAIN_DAYS))
+    print('rain share of rows  %.3f' % (sum(r[3] for r in rows) / n))
+    print('event share of rows %.3f' % (sum(r[4] for r in rows) / n))
+    print('rainy days %d of %d, event days %d' % (sum(1 for d in days if d['rain']), N_DAYS, sum(1 for d in days if d['event'])))
+    print('cutoff', START + datetime.timedelta(days=TRAIN_DAYS), 'last day', START + datetime.timedelta(days=N_DAYS - 1))
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(here, 'rows.json'), 'w') as f:
+        json.dump({'start': START.isoformat(), 'train_days': TRAIN_DAYS, 'n_days': N_DAYS, 'rows': rows}, f)
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], 'w') as f:
+            f.write(pack(rows))
+        print('packed ROWS string written to', sys.argv[1])
+
 
 if __name__ == '__main__':
     main()

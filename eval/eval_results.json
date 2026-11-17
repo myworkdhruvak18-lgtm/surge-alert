@@ -1,0 +1,161 @@
+{
+  "start": "2026-05-18",
+  "cutoff": "2026-09-21",
+  "last_day": "2026-11-15",
+  "train_days": 126,
+  "test_days": 56,
+  "n_train": 94991,
+  "n_test": 42216,
+  "temporal": {
+    "n_test": 42216,
+    "coverage": 1.0,
+    "engine": {
+      "tp": 21282,
+      "fp": 1641,
+      "fn": 888,
+      "tn": 18405,
+      "precision": 0.9284,
+      "recall": 0.9599,
+      "f1": 0.9439,
+      "accuracy": 0.9401
+    },
+    "baseline": {
+      "tp": 16416,
+      "fp": 3098,
+      "fn": 5754,
+      "tn": 16948,
+      "precision": 0.8412,
+      "recall": 0.7405,
+      "f1": 0.7876,
+      "accuracy": 0.7903
+    },
+    "per_mode": {
+      "Two-wheeler": {
+        "tp": 1340,
+        "fp": 322,
+        "fn": 713,
+        "tn": 39841,
+        "precision": 0.8063,
+        "recall": 0.6527,
+        "f1": 0.7214,
+        "accuracy": 0.9755
+      },
+      "Three-wheeler": {
+        "tp": 14350,
+        "fp": 1917,
+        "fn": 810,
+        "tn": 25139,
+        "precision": 0.8822,
+        "recall": 0.9466,
+        "f1": 0.9132,
+        "accuracy": 0.9354
+      },
+      "Standard": {
+        "tp": 21282,
+        "fp": 1641,
+        "fn": 888,
+        "tn": 18405,
+        "precision": 0.9284,
+        "recall": 0.9599,
+        "f1": 0.9439,
+        "accuracy": 0.9401
+      },
+      "Sedan": {
+        "tp": 21282,
+        "fp": 1641,
+        "fn": 888,
+        "tn": 18405,
+        "precision": 0.9284,
+        "recall": 0.9599,
+        "f1": 0.9439,
+        "accuracy": 0.9401
+      },
+      "Six-seater": {
+        "tp": 21282,
+        "fp": 1641,
+        "fn": 888,
+        "tn": 18405,
+        "precision": 0.9284,
+        "recall": 0.9599,
+        "f1": 0.9439,
+        "accuracy": 0.9401
+      }
+    }
+  },
+  "random_split": {
+    "n_test": 42216,
+    "coverage": 1.0,
+    "engine": {
+      "tp": 21771,
+      "fp": 1647,
+      "fn": 918,
+      "tn": 17880,
+      "precision": 0.9297,
+      "recall": 0.9595,
+      "f1": 0.9444,
+      "accuracy": 0.9392
+    },
+    "baseline": {
+      "tp": 16454,
+      "fp": 3039,
+      "fn": 6235,
+      "tn": 16488,
+      "precision": 0.8441,
+      "recall": 0.7252,
+      "f1": 0.7801,
+      "accuracy": 0.7803
+    },
+    "per_mode": {
+      "Two-wheeler": {
+        "tp": 1870,
+        "fp": 383,
+        "fn": 718,
+        "tn": 39245,
+        "precision": 0.83,
+        "recall": 0.7226,
+        "f1": 0.7726,
+        "accuracy": 0.9739
+      },
+      "Three-wheeler": {
+        "tp": 14847,
+        "fp": 1884,
+        "fn": 936,
+        "tn": 24549,
+        "precision": 0.8874,
+        "recall": 0.9407,
+        "f1": 0.9133,
+        "accuracy": 0.9332
+      },
+      "Standard": {
+        "tp": 21771,
+        "fp": 1647,
+        "fn": 918,
+        "tn": 17880,
+        "precision": 0.9297,
+        "recall": 0.9595,
+        "f1": 0.9444,
+        "accuracy": 0.9392
+      },
+      "Sedan": {
+        "tp": 21771,
+        "fp": 1647,
+        "fn": 918,
+        "tn": 17880,
+        "precision": 0.9297,
+        "recall": 0.9595,
+        "f1": 0.9444,
+        "accuracy": 0.9392
+      },
+      "Six-seater": {
+        "tp": 21771,
+        "fp": 1647,
+        "fn": 918,
+        "tn": 17880,
+        "precision": 0.9297,
+        "recall": 0.9595,
+        "f1": 0.9444,
+        "accuracy": 0.9392
+      }
+    }
+  }
+}

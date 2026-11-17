@@ -1,10 +1,10 @@
 # Pickup-Point Scenario Sweep
 
-**Date:** 2026-11-17 · **Run with:** `node eval/pickup_sweep.js` (reads `app/app.html` directly, so it tests the shipped logic) · **Companion:** `docs/prd.md` Section 10
+**Date:** 2026-11-17 · **Run with:** `node eval/pickup_sweep.js` (reads `app/app.html` directly, so it tests the shipped logic and the shipped data) · **Companion:** `docs/prd.md` Section 10
 
 ## What it covers
 
-Every combination of: 5 routes × 2 day types (weekday, weekend; the engine only distinguishes these) × 96 quarter-hours × rain on/off × event on/off × every selectable pickup point on the route × 5 ride types. That is **80,640 scenarios**. Each one runs the real `pickupRecs()` and is checked against rules re-derived independently in `pickup_sweep_body.js`. A 1 minute point and a 9 minute point are included on purpose so both edges of the 2 to 8 minute window are exercised.
+Every combination of: 5 routes × 2 day types (weekday, weekend; the engine only distinguishes these) × 96 quarter-hours × rain on/off × event on/off × every selectable pickup point on the route × 5 ride types. That is **80,640 scenarios**. Each one runs the real `pickupRecs()` and is checked against rules re-derived independently in `pickup_sweep_body.js`. A 1 minute point and a 9 minute point are included on purpose so both edges of the 2 to 8 minute window are exercised. The forecasts feeding it come from the dated dataset described in `eval/eval_report.md` (v3).
 
 ## Result
 
@@ -14,21 +14,21 @@ Every combination of: 5 routes × 2 day types (weekday, weekend; the engine only
 
 | Ride type | Card fires | Of |
 |---|---|---|
-| Two-wheeler | 358 | 16,128 |
-| Three-wheeler | 858 | 16,128 |
-| Standard | 975 | 16,128 |
-| Sedan | 700 | 16,128 |
-| Six-seater | 10 | 16,128 |
+| Two-wheeler | 402 | 16,128 |
+| Three-wheeler | 961 | 16,128 |
+| Standard | 1,059 | 16,128 |
+| Sedan | 802 | 16,128 |
+| Six-seater | 13 | 16,128 |
 
-Overall the card fires in 2,901 of the 23,395 scenarios where the selected point has a zone surge of at least 1.3×.
+Overall the card fires in 3,237 of the 24,005 scenarios where the selected point has a zone surge of at least 1.3×.
 
 ## Findings worth knowing
 
-1. **The ₹15 floor only ever blocks two-wheelers.** It stopped 617 two-wheeler scenarios that passed every other rule, and none for any other ride type. Two-wheeler firings are 358, with savings of ₹15 to ₹23. A bike's price moves only 0.25 of the underlying surge, so for bikes the ₹15 floor, not the 0.30 drop, is the rule that actually decides.
-2. **Autos qualify like cars (858 of 16,128)** because the 0.30 rule applies to the underlying zone surge, though they save fewer rupees per drop.
+1. **The ₹15 floor only ever blocks two-wheelers.** It stopped 657 two-wheeler scenarios that passed every other rule, and none for any other ride type. Two-wheeler firings are 402, with savings of ₹15 to ₹23. A bike's price moves only 0.25 of the underlying surge, so for bikes the ₹15 floor, not the 0.30 drop, is the rule that actually decides.
+2. **Autos qualify like cars (961 of 16,128)** because the 0.30 rule applies to the underlying zone surge, though they save fewer rupees per drop.
 3. **Six-seater is mostly gated by the availability model, not by price.** 46,844 of 55,296 Six-seater candidate checks were unavailable. That comes from a hand-set 0.65 ride-type supply factor, not from data.
 4. **Overnight is mostly unavailable.** 52,312 of 74,880 candidate checks overnight (70%) fell under the 0.5 availability line, especially with rain or an event. Hand-set time-of-day factors again.
-5. **Rain and events raise the firing rate** as intended: 1,799 vs 1,102 for rain, 1,939 vs 962 for events.
+5. **Rain and events raise the firing rate** as intended: 2,162 vs 1,075 for rain, 2,317 vs 920 for events.
 
 ## Re-quote on arrival
 
@@ -36,21 +36,21 @@ Every scenario where the card fires was re-quoted at its arrival time (the walk 
 
 | Other riders | Held | Of | Share |
 |---|---|---|---|
-| None | 2,785 | 2,901 | 96% |
-| Some | 306 | 2,901 | 11% |
-| Many | 0 | 2,901 | 0% |
+| None | 3,163 | 3,237 | 98% |
+| Some | 293 | 3,237 | 9% |
+| Many | 0 | 3,237 | 0% |
 
 By ride type (None / Some / Many):
 
 | Ride type | None | Some | Many |
 |---|---|---|---|
-| Two-wheeler | 339 / 358 | 19 / 358 | 0 / 358 |
-| Three-wheeler | 825 / 858 | 82 / 858 | 0 / 858 |
-| Standard | 941 / 975 | 136 / 975 | 0 / 975 |
-| Sedan | 671 / 700 | 69 / 700 | 0 / 700 |
-| Six-seater | 9 / 10 | 0 / 10 | 0 / 10 |
+| Two-wheeler | 394 / 402 | 19 / 402 | 0 / 402 |
+| Three-wheeler | 938 / 961 | 78 / 961 | 0 / 961 |
+| Standard | 1,032 / 1,059 | 129 / 1,059 | 0 / 1,059 |
+| Sedan | 786 / 802 | 67 / 802 | 0 / 802 |
+| Six-seater | 13 / 13 | 0 / 13 | 0 / 13 |
 
-How to read it: the 116 failures with no piling-on are forecast drift during the walk. Most recommendations clear the 0.30× bar by only a little, so even modest piling-on breaks them, and "Many" breaks every one (eroding 70% of a gap would need an original drop of about 1.0× to still clear 0.30×). The 35% and 70% erosion factors are hand-set, so this is a warning about how fragile the promise is, not a measurement of how many riders really converge. Showing the nearest qualifying point rather than the biggest drop lowers the "Some" share from 30% to 11%, because nearer points clear the bar by less.
+How to read it: the 74 failures with no piling-on are forecast drift during the walk. Most recommendations clear the 0.30× bar by only a little, so even modest piling-on breaks them, and "Many" breaks every one (eroding 70% of a gap would need an original drop of about 1.0× to still clear 0.30×). The 35% and 70% erosion factors are hand-set, so this is a warning about how fragile the promise is, not a measurement of how many riders really converge. Showing the nearest qualifying point rather than the biggest drop lowers the "Some" share from 29% to 9%, because nearer points clear the bar by less.
 
 ## Controls check
 
