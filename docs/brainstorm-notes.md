@@ -1,5 +1,23 @@
 # PM Project — Brainstorm Notes
 
+## ⭐ RESEARCH FINDING (2026-11-17) — pickup-point recommendations, Rapido correction
+
+Question raised: should the app recommend shifting to a nearby cheaper pickup point during surge, and separately, recommend moving from a narrow lane to the main road where fares are typically lower — the assumption going in was that Rapido already ships both.
+
+**Researched directly — the Rapido assumption doesn't hold.** No public source (official blog/newsroom, app store listing, product press coverage from YourStory/Inc42/Entrackr, or any product teardown) confirms Rapido has either feature. Rapido's actual surge-related product is **Power Pass**, a paid subscription giving flat fares / surge protection — structurally unrelated to pickup-point suggestions (source: YourStory, https://yourstory.com/2019/07/bike-taxi-app-rapido-power-pass-subscription-programme). Rapido's dispatch/routing runs on Google Maps Platform (Google Cloud case study, https://cloud.google.com/customers/rapido-maps) but no pickup-point-suggestion feature is documented anywhere found.
+
+**The real precedent is Uber, not Rapido — and for a different reason than fare.** Uber documents a genuine "narrow lane → main road" pickup system in Jaipur's old city: interior lanes prevent drivers from physically reaching or waiting for riders, so Uber pre-defines pickup points outside them (Uber's own blog, https://www.uber.com/en-IN/blog/jaipur/pro-tip-uber-experience-in-the-old-city-2/; general pickup-spots mechanism at https://help.uber.com/h/9edf05bf-ac3a-4cf8-b08e-76e9ca767f7f). This is framed entirely as an access/wait-time fix, never as a fare-savings feature. Gojek has a similar predefined-pickup-point feature near malls/landmarks, same reasoning (https://blog.gojek.io/how-we-do-delightful-customer-pickups).
+
+**Implication for this project:** the fare-driven version of pickup-shift (PRD Section 10a) is **original to this project** — no India ride-hailing app has publicly shipped it. That's a stronger thing to be able to say in an interview than "I copied Rapido's feature," provided it's stated honestly rather than accidentally implied to already exist. The access-driven version (Section 10b) has a real, sourced precedent to build on (Uber's Jaipur system) — but this project's extension of it to also show a fare comparison is itself original; Uber's version doesn't do that.
+
+**Walk-distance data — real, but not India- or fare-specific.** No India-specific or ride-hailing-specific study on how far riders will walk to save money exists. Best available, all transferred estimates:
+- Uber's own Express POOL conjoint research tested "walk 1 block" / "walk 2-3 blocks" / "no walking" trade-offs, marketed as "walk a little, save a lot" — riders *overestimated* the real walking burden relative to the trade-off they were actually offered (case study: https://oldsite.epicpeople.org/perfect-uberpool/7).
+- Academic work on Lyft data (Management Science, 2022–2025) found static/fixed walking-pickup points capture up to 96% of the value of fully dynamic walking-pickup optimization in dense urban networks, and that showing the pickup point before rider opt-in increases acceptance (https://pubsonline.informs.org/doi/epdf/10.1287/mnsc.2022.03201).
+- Via (on-demand shuttle, not ride-hail, but closest real-world analogue) reports an average real-world pickup walk of **~550 ft / 2-3 minutes** across its deployments (https://ridewithvia.com/resources/long-walking-distance-prevents-people-from-using-transit-heres-how-to-change-that).
+- A 2025 study found a **discontinuous "zero-walk" effect** — riders strongly prefer zero walking over even a short walk; the drop-off in willingness isn't a smooth curve (Pellegrini & Fielbaum, https://ses.library.usyd.edu.au/handle/2123/33702).
+
+**Decision:** use ~2-3 minutes / 1-2 blocks as the v1 default walk ceiling for Section 10a, explicitly labeled in the PRD as a transferred, non-India, non-fare-specific estimate — not a measured fact — consistent with how this project already treats the UCLA Anderson driver-earnings citation (real study, honestly caveated as not India-specific). Full product implications in `prd.md` Section 10.
+
 ## ✅ CONVERGED DIRECTION (final, as of this session)
 **Surge-pricing hike prediction & timing-nudge feature for Uber (India).** *(Narrowed from "Uber/Ola/Rapido" to Uber-only — see scope decision below.)*
 

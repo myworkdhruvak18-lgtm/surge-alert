@@ -1,6 +1,6 @@
 # PRD — Surge Alert: Route Fare Forecast & Timing Nudge
 
-**Status:** Draft v4 — added per-mode surge modeling, 2026-09-15 · **Owner:** Dhruva (solo, PM portfolio project) · **Timeline:** 2-4 weeks, spec through demo · **Platform:** Uber only (v1)
+**Status:** Draft v5 — added pickup-point recommendations (fare-driven zone-shift + access-driven main-road shift), 2026-11-17 · **Owner:** Dhruva (solo, PM portfolio project) · **Timeline:** 2-4 weeks, spec through demo · **Platform:** Uber only (v1)
 **Full research/rationale lives in `brainstorm-notes.md`.** This doc is the build-facing spec, restructured after reviewing the team's "Inline Rating" PRD format (Background → Objective → Current Construct → Limitations → Proposed Construct, numbered and state-driven) so it reads the way an engineer expects a spec to read: rules and thresholds first, narrative rationale kept to the Background section only.
 
 ---
@@ -13,6 +13,8 @@ To fix this, a forecast engine will read the rider's own historical fare data an
 
 **Why per-mode, not just per-route (added v4):** India-specific research complicates the "wait for it to ease" premise the v1-v3 spine leaned on. The CCI's 2022 market study (2,000 riders, Delhi/Mumbai/Jaipur/Indore) found that when facing a surge, Indian riders overwhelmingly **substitute mode, not time** — Delhi riders shift to metro, Mumbai riders to autos, Tier-II riders to personal vehicles — rather than waiting the surge out. That's a materially different behavior than the "hold on, it eases in ~12 min" model the time-series surface (`S1`-`S3`) is built around. It doesn't invalidate the wait-based forecast (heavy/frequent riders — this product's primary persona — showed the highest tolerance for waiting and highest surge tolerance in the same study), but it means mode-shift can't stay a single "Least affected" tag bolted onto the cab flow — it needs to be a real, independently-forecast signal so a rider can compare *this route's* current Auto multiplier against its Bike or Go multiplier, not just be told one mode happens to be cheaper right now.
 
+**Why pickup-point recommendations, and why now (added v5):** v4's action hierarchy covers timing (wait) and mode (shift), but not location — a rider at a high-surge pickup point today has no way to know that walking a short distance would put them in a materially cheaper zone, or that their exact spot (an interior lane) is itself the reason their pickup options look worse. v1-v4 deferred this as "Zone-shift recommendations... needs per-cell surge data the v1 seed set doesn't have" (see the superseded Non-Goals entry below). Research done for this version (full detail in `brainstorm-notes.md`) found: **no India ride-hailing app publicly ships a fare-motivated pickup-shift feature** — not Rapido (its surge-related product, Power Pass, is a paid flat-fare subscription, unrelated to pickup suggestions), not Ola, not Uber. The closest real precedent is Uber's own documented pickup-point system in Jaipur's old city, which relocates pickups from narrow interior lanes to the main road — but that's an **access/wait-time fix** (drivers physically can't reach narrow lanes), not a fare feature. This means: (a) the general fare-driven zone-shift idea is original to this project, not a copy of an existing feature, and (b) the access-driven "interior lane → main road" pattern has a real precedent to build on, just not for the reason this spec extends it. Treat both honestly as such in any write-up — see Sections 10a/10b.
+
 ## Objective
 
 - Show price context (current fare vs. typical-for-this-route-and-hour) at destination-set, for every route, with no personalization required.
@@ -22,6 +24,7 @@ To fix this, a forecast engine will read the rider's own historical fare data an
 - Pair every "wait, it'll be cheaper" message with an action that keeps the rider inside the Uber flow (notify-when-drops, schedule-later, or a cheaper mode/zone) — a wait message with no action attached must never render.
 - Extend the same engine to a scheduled push for riders with a learned commute pattern, so the pull (in-app) and push (notification) surfaces are one model, not two.
 - Beat a naive "surge = rush hour" baseline on forecast precision/recall, evaluated on held-out data, to prove the model adds real signal — evaluated per mode as well as in aggregate, since a model that's accurate for cabs but noisy for autos would overstate its own reliability.
+- **Added v5:** where the data supports it, recommend a specific nearby pickup point — either because it's in a materially cheaper surge zone (fare-driven), or because the rider's current spot is itself degrading their pickup options (access-driven, e.g. an interior lane) — always showing the price difference between "here" and "there," never a silent redirect.
 
 ## Current Construct
 
@@ -114,7 +117,31 @@ For a rider with a learned route pattern, the same engine runs on a schedule ins
 
 Where available, a forecast is annotated with a short reason: "Heavy rain", "Event nearby", "Weekday morning peak", "Saturday night demand". v1 reason tags are derived from the same time-of-day/rain/event fields the forecast engine already matches on — not a separate signal, and not wired to a live weather/events API in v1 (static per the seed dataset). Reason tags are shared across modes on the same route/time (a rainy evening affects all modes' demand context), but the multiplier and confidence each mode shows remains independently computed.
 
-## Non-Goals (v1)
+### 10. Pickup-Point Recommendations (added v5)
+
+Two distinct sub-features, with different triggers, different confidence bases, and different honesty requirements. They are not the same feature wearing two names — 10a needs real surge-geography data this project doesn't have yet; 10b doesn't.
+
+#### 10a. Fare-driven zone-shift
+
+**Eligibility:** requires per-cell (not just per-route) surge data — the current fare at the rider's exact pickup cell *and* at each adjacent cell within a ~400m walk, both independently confident per Section 1's matching rules. **This data does not exist in the v1 seed set** (route-level matching only, no sub-route geographic resolution). Shipping this sub-feature for real, not as a demo placeholder, is gated on either (a) acquiring or simulating per-cell data at the H3-hex granularity the brainstorm notes already researched, or (b) a cruder proxy (e.g. treating named sub-zones of a route as pseudo-cells) — an open question, not a decision, see Open Questions.
+
+**Display rule, once eligible:** "Walk ~`<N>` min to `<zone name>` — `<cheaper multiplier>` vs `<current multiplier>` here, about `<₹saved>` less." Always shows both numbers side by side — a recommendation with only the cheaper price and no current-price anchor is a blocking bug, same class of issue as Section 5's bare "wait" message.
+
+**Walk-distance ceiling:** capped at the practical distance research suggests riders will actually walk for a fare difference — **~2-3 minutes / 1-2 blocks**, per Uber's own Express POOL conjoint research and Via's observed real-world average pickup walk (~550 ft). This is a **transferred estimate**, not India- or surge-specific data (no such study exists for Indian ride-hailing) — stated honestly in-product nowhere (riders don't need the citation), but the number itself should be treated as a starting assumption to validate, not a measured fact, in any internal review. A 2025 study found a "zero-walk" cliff — riders strongly prefer *no* walking over even a short one — which argues for a high bar on the minimum saving (materiality threshold, same 15% floor as Section 2A's "leave by" comparison) before this ever surfaces at all.
+
+**Capture action:** "Navigate to pickup point" — same principle as Section 5, a recommendation with no way to act on it is useless. Does not replace the existing mode-shift or wait actions; it's a third, independent lever in the same hierarchy.
+
+#### 10b. Access-driven main-road shift
+
+**Eligibility:** does not require surge-geography data at all — this is a static, pre-defined mapping (interior lane / low-access pickup point → nearest main-road pickup point), the same pattern Uber already ships in Jaipur's old city for driver-reachability reasons. v1 can ship this with a hand-curated list of known low-access points per route/city (consistent with how Section 9's reason tags are already static per the seed dataset) rather than needing a live geocoding signal.
+
+**Why it belongs in this PRD and not just in dispatch/ops:** the real-world version of this (Uber's Jaipur pattern) is framed purely as "your driver can't reach you here" — this project's extension is to **also show the fare difference**, if any, between the interior pickup point and the main-road one. This is an honest "extension," not a copy: no sourced evidence found that any India ride-hailing app frames this as a price-comparison feature today (see Background). The fare difference may be zero or negligible in many cases (this is fundamentally an access fix, not a surge fix) — the copy must not imply a saving where none exists.
+
+**Display rule:** "Pickup from `<current point>` may take longer for a driver to reach · `<main-road point>` is `<N>` min away" + price line only if a real, confidently-matched difference exists: "and about `<₹X>` cheaper" — omitted entirely, not zeroed, when there's no fare difference to show (same silence principle as Section 4).
+
+**Capture action:** "Use `<main-road point>` instead" — a one-tap pickup-location change, not a separate flow.
+
+
 
 - Ola and Rapido support — Uber-only; all verified research (pricing mechanics, Ride Pass, driver revenue-share, seed data) is Uber-specific.
 - Cross-platform price comparison or app-switch recommendations.
@@ -123,7 +150,7 @@ Where available, a forecast is annotated with a short reason: "Heavy rain", "Eve
 - Dedicated bike-taxi legality prediction — mode-shift fallback only; category has flipped legal status four times in five years in Karnataka alone, too volatile to model. (Per-mode surge modeling still covers Bike as a mode where it's legally operating and has data — this non-goal is specifically about predicting *legality*, not about excluding Bike from the surge engine.)
 - Driver-facing companion features — named as future vision, out of scope for v1.
 - Real production integration with Uber — a standalone demo layer; no live Uber API calls.
-- Zone-shift recommendations (walk to a cheaper adjacent pickup cell) — the conceptually strongest action in the hierarchy, but needs per-cell surge data the v1 seed set doesn't have. Deferred to v2.
+- ~~Zone-shift recommendations (walk to a cheaper adjacent pickup cell) — the conceptually strongest action in the hierarchy, but needs per-cell surge data the v1 seed set doesn't have. Deferred to v2.~~ **Superseded in v5** — pulled into scope as Section 10a, but the underlying data gap this non-goal named is still real and unresolved (see Section 10a's eligibility note and Open Questions). The access-driven sibling (Section 10b) does not have this gap and can ship independently.
 - **Cross-mode comparison beyond the rider's own city/route data** — the engine ranks modes using the same historical-match logic as everything else; it does not attempt to model structural mode-choice behavior (e.g. "riders in this city generally prefer Auto over Bike regardless of price") — that's a different, harder problem than surfacing each mode's own honest multiplier.
 
 ## Success Metrics
@@ -131,10 +158,11 @@ Where available, a forecast is annotated with a short reason: "Heavy rain", "Eve
 **Leading**
 - Forecast coverage — % of destination-set sessions where the engine can produce a confident forecast (not just current-price-only) — reported **overall and broken out per mode**, so a high aggregate number can't hide a mode that's silent almost everywhere.
 - Forecast precision/recall vs. the naive rush-hour baseline on held-out data — per mode as well as aggregate, same reasoning.
-- Intent-capture rate — % of testers shown an elevated forecast who say they'd take a capture action rather than abandon/app-switch — **mode-shift now counted as a capture action**, alongside alert/reserve.
+- Intent-capture rate — % of testers shown an elevated forecast who say they'd take a capture action rather than abandon/app-switch — **mode-shift now counted as a capture action**, alongside alert/reserve. **Added v5:** pickup-point shift (10a or 10b) counted the same way once either ships.
+- **Added v5:** pickup-point recommendation coverage — % of sessions where 10a or 10b has enough data/mapping to show a recommendation at all, tracked separately per sub-feature since 10b should be near-100% (static mapping) while 10a's coverage is gated entirely on resolving the per-cell data question.
 
 **Lagging**
-- Modeled ₹ saved per week for a consistent rider (explicitly labeled modeled, not measured) — now able to model savings from mode-shift, not just wait, which should raise this number and better reflect what the CCI data says Indian riders actually do.
+- Modeled ₹ saved per week for a consistent rider (explicitly labeled modeled, not measured) — now able to model savings from mode-shift, not just wait, which should raise this number and better reflect what the CCI data says Indian riders actually do. **Added v5:** once 10a ships, its modeled savings should be reported separately from wait/mode-shift savings, not folded in — it's the least-validated of the three levers (transferred walk-distance assumption, no real per-cell data yet) and blending it in would quietly inflate confidence in the other two.
 - Qualitative trust signal: would a tester still act on a forecast after seeing one be wrong once.
 
 ## Open Questions
@@ -143,6 +171,9 @@ Where available, a forecast is annotated with a short reason: "Heavy rain", "Eve
 - What forecast horizon does v1 commit to — 30, 60, or 90 minutes — and at what geographic granularity does a "route" match to history?
 - Who provides real user feedback within the 2–4 week window?
 - **New:** which modes ship in v1's per-mode model — all modes present in the ride-selection sheet (Bike, Auto, Go, Go AC, Premier, XL, etc.), or a smaller initial set (e.g. Auto + Go + Premier, the three with likely the most seed-data volume), with the rest added once real fare history exists?
+- **New (v5):** how does 10a actually get per-cell data — simulate H3-hex-level synthetic data (consistent with how the route-level seed set was built), or ship with a cruder named-sub-zone proxy first and treat true per-cell resolution as a later pass? This blocks 10a from being more than a demo placeholder until decided.
+- **New (v5):** is the ~2-3 minute walk ceiling (transferred from Uber Express POOL / Via data, not India-specific) the right default, or should it be a configurable per-city parameter from day one, given no real Indian-rider walk-tolerance data exists to validate it against?
+- **New (v5):** who curates the "low-access pickup point" list for 10b, and does it launch with the same small set of seed routes/cities as the rest of v1, or need its own separate scoping?
 
 ---
 *Companion docs: `brainstorm-notes.md` (full research/rationale), `roadmap.md` (Now/Next/Later view, kept in sync with this doc).*
