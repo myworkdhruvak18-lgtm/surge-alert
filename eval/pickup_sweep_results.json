@@ -3,23 +3,27 @@
   "silentForecast": 0,
   "violationCount": 0,
   "violations": [],
-  "fires": 3094,
+  "fires": 2586,
   "surgeActive": {
     "scenarios": 21530,
-    "fires": 3094
+    "fires": 2586
   },
   "candidateEvals": 165120,
   "candidatesUnavailable": 61208,
   "bikeRupeeSavings": {
-    "fires": 854,
-    "under20": 696,
-    "min": 6.931853759999996,
+    "fires": 346,
+    "under20": 188,
+    "min": 15.107544000000019,
     "max": 27.77773499999998
   },
+  "blockedByRupeeFloor": {
+    "Two-wheeler": 508
+  },
+  "blockedTotal": 508,
   "byTier": {
     "Two-wheeler": {
       "scenarios": 13824,
-      "fires": 854
+      "fires": 346
     },
     "Three-wheeler": {
       "scenarios": 13824,
@@ -41,19 +45,19 @@
   "byRoute": {
     "R0": {
       "scenarios": 23040,
-      "fires": 662
+      "fires": 649
     },
     "R1": {
       "scenarios": 15360,
-      "fires": 1203
+      "fires": 1053
     },
     "R2": {
       "scenarios": 11520,
-      "fires": 590
+      "fires": 420
     },
     "R3": {
       "scenarios": 11520,
-      "fires": 639
+      "fires": 464
     },
     "R4": {
       "scenarios": 7680,
@@ -63,47 +67,47 @@
   "byBand": {
     "overnight": {
       "scenarios": 18720,
-      "fires": 64
+      "fires": 51
     },
     "early morning": {
       "scenarios": 5760,
-      "fires": 157
+      "fires": 113
     },
     "morning peak": {
       "scenarios": 8640,
-      "fires": 698
+      "fires": 586
     },
     "midday": {
       "scenarios": 18720,
-      "fires": 656
+      "fires": 550
     },
     "evening peak": {
       "scenarios": 10080,
-      "fires": 812
+      "fires": 683
     },
     "late evening": {
       "scenarios": 7200,
-      "fires": 707
+      "fires": 603
     }
   },
   "byRain": {
     "rain=0": {
       "scenarios": 34560,
-      "fires": 1184
+      "fires": 1000
     },
     "rain=1": {
       "scenarios": 34560,
-      "fires": 1910
+      "fires": 1586
     }
   },
   "byEvent": {
     "event=0": {
       "scenarios": 34560,
-      "fires": 1018
+      "fires": 868
     },
     "event=1": {
       "scenarios": 34560,
-      "fires": 2076
+      "fires": 1718
     }
   },
   "unavailByBand": {
