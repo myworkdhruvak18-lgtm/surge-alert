@@ -313,7 +313,7 @@ h1{
   <header class="masthead">
     <div class="eyebrow">Wayfare · surge forecast</div>
     <h1>Surge Alert Bench</h1>
-    <p class="dek">The forecast feature from the Wayfare boards, running on a real engine. Move the clock and the numbers on the phone recompute — multiplier, confidence band, sample size and the leave-by recommendation all come out of the same model the evaluation was scored against, not out of a fixture file.</p>
+    <p class="dek">The forecast feature from the Wayfare boards, running on a real engine. Move the clock and the numbers on the phone recompute — multiplier, typical range, confidence, sample size and the leave-by recommendation all come out of the same model the evaluation was scored against, not out of a fixture file.</p>
     <div class="sim-note"><span class="sim-dot"></span> Simulated Bengaluru fare history · not real Uber data</div>
   </header>
 
@@ -1203,7 +1203,7 @@ function renderHome() {
         </div>
         <div class="sect-label" style="margin-bottom:2px">Cheaper right now</div>
         <div class="alts">${alts}</div>
-        <div class="basis">${f.basis} · band ${f.bandLow.toFixed(2)}–${f.bandHigh.toFixed(2)}× · confidence ${(f.confidence * 100).toFixed(0)}%</div>
+        <div class="basis">${f.basis} · typical range ${f.bandLow.toFixed(2)}–${f.bandHigh.toFixed(2)}× · confidence ${(f.confidence * 100).toFixed(0)}%</div>
       </div>`;
     } else if (lb) {
       card = `<div class="fcard is-medium">
@@ -1360,7 +1360,7 @@ function renderPanel() {
   const cells = f.status === 'silent'
     ? [['status', 'SILENT', cls], ['matched n', f.nObservations, ''], ['floor', '8 trips', ''], ['scope', f.scope, '']]
     : [['multiplier', f.multiplier.toFixed(2) + '×', cls],
-       ['band p25–p75', f.bandLow.toFixed(2) + '–' + f.bandHigh.toFixed(2), ''],
+       ['typical range', f.bandLow.toFixed(2) + '–' + f.bandHigh.toFixed(2), ''],
        ['risk', f.risk, cls],
        ['confidence', (f.confidence * 100).toFixed(0) + '%', ''],
        ['matched n', f.nObservations.toLocaleString('en-IN'), ''],
@@ -1393,7 +1393,7 @@ function renderEval() {
     <div class="evalrow"><span>Forecast coverage</span><span>${pct(e.coverage)}</span></div>
     <div class="evalrow"><span>Held-out trips scored</span><span>${e.n_test.toLocaleString('en-IN')}</span></div>
     <div class="evalrow"><span>Random split, for comparison</span><span>${pct(e.random.engine_f1)} · ${pct(e.random.baseline_f1)}</span></div>
-    <div class="evalrow"><span>p25–p75 band holds (ideal 50%)</span><span>${pct(e.band_coverage)}</span></div>`;
+    <div class="evalrow"><span>Typical range (p25–p75) holds</span><span>${pct(e.band_coverage)}</span></div>`;
   document.getElementById('evalnote').innerHTML =
     `Temporal split — trained on the ${e.train_days} days before ${e.cutoff}, scored on the ${e.test_days} days from ${e.cutoff} on, which the engine never saw. Silence counts as “no surge predicted”, so the engine can’t flatter itself by staying quiet on hard cases. <strong>Caveat that matters:</strong> this dataset is simulated from time-of-day rules, so a time-of-day model beats a time-of-day baseline partly by construction. It also has no trend or seasonality, so a time-ordered split is only a mild test: compare the random-split row (engine · baseline F1). The margin shows the pipeline works end to end — it is not yet evidence the approach beats a heuristic on real fares.`;
 }

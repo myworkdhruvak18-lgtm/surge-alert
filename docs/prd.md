@@ -59,7 +59,7 @@ Three variants, by where the rider is in the booking flow and how much history e
 
 **A. Home screen, learned commute route — full time-series treatment (`S1`/`S2`/`S3`)**
 - The chart/trend is shown for the rider's **default or most-recently-booked mode** for that route, with a lightweight mode switcher (matching the app's own mode tabs) that re-renders the same chart against that mode's own history — not a rescaled copy of the default mode's curve.
-- *Before* the predicted peak: multiplier trend chart, "likely to hit `<band high>` by `<peak time>`", a "leave by `<time>`, pay `<₹X>` instead of `<₹Y>`" comparison (only shown if the saving clears the 15% materiality threshold), actions **Reserve `<time>`** / **Alert me at 1.0×**.
+- *Before* the predicted peak: multiplier trend chart, "likely to hit `<range high>` by `<peak time>`", a "leave by `<time>`, pay `<₹X>` instead of `<₹Y>`" comparison (only shown if the saving clears the 15% materiality threshold), actions **Reserve `<time>`** / **Alert me at 1.0×**.
 - *During* the peak: "Surging now · `<multiplier>` · `<₹fare>` right now", "Easing off in about `<N>` min", actions **Alert me at 1.0×** / **Book anyway**, plus a "Cheaper right now" block ranking mode-shift alternatives by savings — each alternative's number is that mode's own live-forecast multiplier, sourced the same way as the primary mode's, never a static discount assumption.
 - *After* the peak clears: "Your alert fired · back to normal", "Waiting saved you about `<₹saved>`", action **Book now**.
 
@@ -102,8 +102,8 @@ A "wait / it'll be cheaper later" message rendered with zero capture actions is 
 
 ### 7. Miscellaneous
 
-- Forecasts are always a **band + risk level** (Low / Medium / High), never a single false-precision number, and clipped to India's MVAG 2025 bounds (0.5×–2.0×) — **per mode**, since different vehicle categories may have different effective bounds in practice even under the same national ceiling.
-- **Calibration, measured (eval v3.1):** the band is the p25 to p75 of similar past trips, and on the held-out weeks it holds 67.7% of new outcomes, not the 50% an interval of that name would imply, so describe it as a typical range. The confidence score ranks reliability correctly but is not a probability, and 99.3% of forecasts score 0.80 or higher. The Medium risk label is right only 72.3% of the time, against 95.4% for Low and 87.7% for High. Synthetic stationary data, so treat these as a method working, not a measurement of real riders.
+- Forecasts are always a **typical range + risk level** (Low / Medium / High), never a single false-precision number, and clipped to India's MVAG 2025 bounds (0.5×–2.0×) — **per mode**, since different vehicle categories may have different effective bounds in practice even under the same national ceiling.
+- **Calibration, measured (eval v3.1):** the band is the p25 to p75 of similar past trips, and on the held-out weeks it holds 67.7% of new outcomes, not the 50% an interval of that name would imply, so it is labelled a typical range, not an interval, in the app, the engine panel and the eval panel (decided 2026-11-17; the engine is unchanged). The confidence score ranks reliability correctly but is not a probability, and 99.3% of forecasts score 0.80 or higher. The Medium risk label is right only 72.3% of the time, against 95.4% for Low and 87.7% for High. Synthetic stationary data, so treat these as a method working, not a measurement of real riders.
 - Existing fare, promo, and receipt logic are unchanged; the forecast layer only adds context, never alters pricing.
 - A five-minute fare hold during a stalled driver match (`C1x`) is service recovery for a failed match, not a pricing feature, and must not be generalized into a forward-looking price lock — see Non-Goals.
 

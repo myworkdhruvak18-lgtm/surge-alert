@@ -71,9 +71,9 @@ These checks are on the time-ordered test period, 42,216 forecasts.
 
 The engine's typical miss is **0.072** of a multiplier (mean absolute error), with a bias of -0.015 (actual outcomes run slightly below the forecast on average). The two lookup baselines miss by 0.090 (with rain and events) and 0.156 (time only), so the engine's point error is 20% lower than the stronger baseline's.
 
-### The p25 to p75 band is wider than its name suggests
+### The p25 to p75 range holds two thirds of outcomes, not half
 
-The band is the 25th to 75th percentile of similar past trips, so as a prediction interval for the next trip it should hold about half of outcomes. It holds **67.7%** (67.2% counting only bands with some width; 1.8% of bands have zero width because they sit at the 2.0× cap). It is conservative: the matched history spans a ±45 minute window that mixes different moments of the morning and evening ramps, so its spread is wider than the spread at the exact minute, and the 2-decimal grid adds a little through ties. This is not a bug in the app's label (the numbers shown really are the p25 and p75 of similar trips), but the band should be described as a typical range that holds about two thirds of outcomes, not as a 50% interval. The engine was not changed, because narrowing the band would change every forecast in the app.
+The band is the 25th to 75th percentile of similar past trips, so as a prediction interval for the next trip it should hold about half of outcomes. It holds **67.7%** (67.2% counting only bands with some width; 1.8% of bands have zero width because they sit at the 2.0× cap). It is conservative: the matched history spans a ±45 minute window that mixes different moments of the morning and evening ramps, so its spread is wider than the spread at the exact minute, and the 2-decimal grid adds a little through ties. The numbers shown really are the p25 and p75 of similar trips, so the old label was accurate about what they are but not about what they promise. The app now calls it a typical range (decided 2026-11-17), which holds about two thirds of outcomes, and no longer implies a 50% interval. The engine was not changed, because narrowing the band would change every forecast in the app.
 
 ### The confidence score ranks reliability, but barely varies
 
@@ -106,7 +106,7 @@ Low is dependable (95.4%) and high mostly is (87.7%). A medium forecast is right
 
 ## For a resume or interview
 
-Say what it is, and lead with the strongest honest comparison: *"Built and evaluated a historical-matching surge forecast on a time-ordered holdout (trained on 18 weeks, tested on the final 8): 94.4% F1 vs 91.8% for a rain/event-aware hour-of-week lookup and 78.8% for a rush-hour heuristic, on synthetic data."* Then the two stories worth telling: the eval had been labelled temporal while using a random split, and it was found, corrected and re-run with both numbers shown; and calibration showed the band holds two thirds of outcomes rather than half, so it should be called a typical range.
+Say what it is, and lead with the strongest honest comparison: *"Built and evaluated a historical-matching surge forecast on a time-ordered holdout (trained on 18 weeks, tested on the final 8): 94.4% F1 vs 91.8% for a rain/event-aware hour-of-week lookup and 78.8% for a rush-hour heuristic, on synthetic data."* Then the two stories worth telling: the eval had been labelled temporal while using a random split, and it was found, corrected and re-run with both numbers shown; and calibration showed the band holds two thirds of outcomes rather than half, so it is now labelled a typical range.
 
 ## Reproduce
 
