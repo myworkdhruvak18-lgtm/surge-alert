@@ -30,7 +30,7 @@ Question raised: what is the maximum walk the surge-driven pickup shift should e
 
 **Decision:** hard cap of 5 minutes for the surge-driven shift (PRD 10a), labeled as transferred from transit planning, not measured for ride-hailing. The cap does not rise with the size of the saving: no evidence supports that, and the user's rule is that the saving depends only on the surge at the zone. The surge-drop threshold (0.30×, 1.0× floor) is a hand-set design choice, reasoned from the engine's own 0.30-wide risk bands and the 15% materiality floor, not a sourced number.
 
-**Walk discount for the access-driven case (PRD 10b):** chosen over modeling skipped gully time. Precedent is Uber Express POOL's walk-for-discount. Real ride-hailing does not bill the rider for the driver's approach, so without a discount a no-surge price drop has no natural source. Flagged assumption: the platform funds it.
+**Walk discount for the access-driven case (PRD 10b, dropped on 2026-11-17 along with that case):** chosen over modeling skipped gully time. Precedent is Uber Express POOL's walk-for-discount. Real ride-hailing does not bill the rider for the driver's approach, so without a discount a no-surge price drop has no natural source. Flagged assumption: the platform funds it.
 
 ## ✅ CONVERGED DIRECTION (final, as of this session)
 **Surge-pricing hike prediction & timing-nudge feature for Uber (India).** *(Narrowed from "Uber/Ola/Rapido" to Uber-only — see scope decision below.)*

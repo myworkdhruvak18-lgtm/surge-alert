@@ -641,11 +641,11 @@ const ROWS = (function(){
 // than cabs, so it moves about a quarter as much - which is why it ends up
 // tagged "Least affected" during a spike.
 const TIERS = [
-  { name: 'Two-wheeler',   ratio: 0.642, sens: 0.25, access: 0, off: true, seats: 0, eta: 3, desc: 'Pillion ride, cheapest way across town' },
-  { name: 'Three-wheeler', ratio: 1.322, sens: 0.55, access: 0.5, seats: 0, eta: 2, desc: 'Metered auto, no haggling' },
-  { name: 'Standard',      ratio: 1.000, sens: 1.00, access: 1, seats: 4, eta: 5, desc: 'Compact car, up to 4' },
-  { name: 'Sedan',         ratio: 1.834, sens: 1.00, access: 1, seats: 4, eta: 6, desc: 'More legroom and boot space' },
-  { name: 'Six-seater',    ratio: 2.037, sens: 1.00, access: 1, seats: 6, eta: 6, desc: 'Room for the whole group' },
+  { name: 'Two-wheeler',   ratio: 0.642, sens: 0.25, seats: 0, eta: 3, desc: 'Pillion ride, cheapest way across town' },
+  { name: 'Three-wheeler', ratio: 1.322, sens: 0.55, seats: 0, eta: 2, desc: 'Metered auto, no haggling' },
+  { name: 'Standard',      ratio: 1.000, sens: 1.00, seats: 4, eta: 5, desc: 'Compact car, up to 4' },
+  { name: 'Sedan',         ratio: 1.834, sens: 1.00, seats: 4, eta: 6, desc: 'More legroom and boot space' },
+  { name: 'Six-seater',    ratio: 2.037, sens: 1.00, seats: 6, eta: 6, desc: 'Room for the whole group' },
 ];
 const rupee = n => '₹' + Math.round(n).toLocaleString('en-IN');
 const tierMult = (surge, sens) => 1 + (surge - 1) * sens;
@@ -661,10 +661,8 @@ const route = () => META.routes[state.routeIdx];
 
 /* ============ PICKUP POINTS (PRD §10) + COMMUTE ALERTS (PRD §8) ============ */
 const WALK_CAP_MIN = 5;
-const CASE2_WALK_MAX_MIN = 3;
 const SURGE_DROP_MIN = 0.3;
 const SURGE_DROP_FLOOR = 1.0;
-const CASE2_MIN_DROP_RS = 10;
 const AVAILABLE_MIN = 0.5;
 const ADVANCE_LEAD_MIN = 120;
 const LAST_CALL_LEAD_MIN = 20;
@@ -675,32 +673,32 @@ const QUIET_UNTIL_MIN = 360;
 // score. None of this is fit from data: there is no per-cell surge or driver-supply data yet.
 const PICKUPS = {
   0: [
-    { id: 'h',  own: true, name: 'Smoky Docky Brookefield', walkMin: 0, zoneFactor: 1, kind: 'own', supply: 0.95, etaDeltaMin: 0 },
-    { id: 'a',  name: 'Corner junction',        walkMin: 2, zoneFactor: 0.50, kind: 'junction', supply: 0.95 },
-    { id: 'm1', name: 'Metro station · Exit 1', walkMin: 3, zoneFactor: 0.62, kind: 'exit',     supply: 0.90 },
-    { id: 'm2', name: 'Metro station · Exit 2', walkMin: 4, zoneFactor: 0.45, kind: 'exit',     supply: 0.90 },
-    { id: 'm3', name: 'Metro station · Exit 3', walkMin: 5, zoneFactor: 0.40, kind: 'exit',     supply: 0.90 },
-    { id: 'm4', name: 'Metro station · Exit 4', walkMin: 7, zoneFactor: 0.35, kind: 'exit',     supply: 0.90 },
+    { id: 'h',  own: true, name: 'Smoky Docky Brookefield', walkMin: 0, zoneFactor: 1, supply: 0.95 },
+    { id: 'a',  name: 'Corner junction',        walkMin: 2, zoneFactor: 0.50, supply: 0.95 },
+    { id: 'm1', name: 'Metro station · Exit 1', walkMin: 3, zoneFactor: 0.62, supply: 0.90 },
+    { id: 'm2', name: 'Metro station · Exit 2', walkMin: 4, zoneFactor: 0.45, supply: 0.90 },
+    { id: 'm3', name: 'Metro station · Exit 3', walkMin: 5, zoneFactor: 0.40, supply: 0.90 },
+    { id: 'm4', name: 'Metro station · Exit 4', walkMin: 7, zoneFactor: 0.35, supply: 0.90 },
   ],
   1: [
-    { id: 'h', own: true, name: 'Nextdoor Multiverse Co-Living', walkMin: 0, zoneFactor: 1, kind: 'own', interior: true, lane: 'an interior lane', supply: 0.60, etaDeltaMin: 6 },
-    { id: 'a', name: 'Main road service gate', walkMin: 3, zoneFactor: 0.68, kind: 'main',     discountRs: 15, supply: 1.00 },
-    { id: 'b', name: 'Signal junction',        walkMin: 2, zoneFactor: 0.55, kind: 'junction', supply: 0.95 },
-    { id: 'c', name: 'Metro station · Exit 1', walkMin: 5, zoneFactor: 0.40, kind: 'exit',     supply: 0.90 },
+    { id: 'h', own: true, name: 'Nextdoor Multiverse Co-Living', walkMin: 0, zoneFactor: 1, supply: 0.60 },
+    { id: 'a', name: 'Main road service gate', walkMin: 3, zoneFactor: 0.68, supply: 1.00 },
+    { id: 'b', name: 'Signal junction',        walkMin: 2, zoneFactor: 0.55, supply: 0.95 },
+    { id: 'c', name: 'Metro station · Exit 1', walkMin: 5, zoneFactor: 0.40, supply: 0.90 },
   ],
   2: [
-    { id: 'h', own: true, name: 'Sandhya Digital 4K', walkMin: 0, zoneFactor: 1, kind: 'own', supply: 0.95, etaDeltaMin: 0 },
-    { id: 'a', name: 'Bus stop on the main road', walkMin: 2, zoneFactor: 0.50, kind: 'main',     discountRs: 12, supply: 1.00 },
-    { id: 'b', name: 'Park gate',                 walkMin: 4, zoneFactor: 0.42, kind: 'junction', supply: 0.95 },
+    { id: 'h', own: true, name: 'Sandhya Digital 4K', walkMin: 0, zoneFactor: 1, supply: 0.95 },
+    { id: 'a', name: 'Bus stop on the main road', walkMin: 2, zoneFactor: 0.50, supply: 1.00 },
+    { id: 'b', name: 'Park gate',                 walkMin: 4, zoneFactor: 0.42, supply: 0.95 },
   ],
   3: [
-    { id: 'h', own: true, name: '514, 5th Main Rd', walkMin: 0, zoneFactor: 1, kind: 'own', interior: true, lane: 'a narrow lane', supply: 0.60, etaDeltaMin: 5 },
-    { id: 'a', name: 'Petrol pump on the main road', walkMin: 3, zoneFactor: 0.72, kind: 'main',     discountRs: 12, supply: 1.00 },
-    { id: 'b', name: 'Flyover underpass stop',      walkMin: 4, zoneFactor: 0.50, kind: 'junction', supply: 0.95 },
+    { id: 'h', own: true, name: '514, 5th Main Rd', walkMin: 0, zoneFactor: 1, supply: 0.60 },
+    { id: 'a', name: 'Petrol pump on the main road', walkMin: 3, zoneFactor: 0.72, supply: 1.00 },
+    { id: 'b', name: 'Flyover underpass stop',      walkMin: 4, zoneFactor: 0.50, supply: 0.95 },
   ],
   4: [
-    { id: 'h', own: true, name: 'Balaji Theatre', walkMin: 0, zoneFactor: 1, kind: 'own', supply: 0.95, etaDeltaMin: 0 },
-    { id: 'a', name: 'Market gate', walkMin: 8, zoneFactor: 0.40, kind: 'junction', supply: 0.95 },
+    { id: 'h', own: true, name: 'Balaji Theatre', walkMin: 0, zoneFactor: 1, supply: 0.95 },
+    { id: 'a', name: 'Market gate', walkMin: 8, zoneFactor: 0.40, supply: 0.95 },
   ],
 };
 
@@ -715,8 +713,6 @@ function pickupSurge() {
   const f = F();
   return surgeAtPickup(f.status === 'ok' ? f.multiplier : 1.0, selectedPickup().zoneFactor);
 }
-
-const tierEta = t => t.eta + Math.round((selectedPickup().etaDeltaMin || 0) * t.access);
 
 function timeSupply(minutes, weekend) {
   const h = minutes / 60;
@@ -734,14 +730,13 @@ function supplyScore(p, t) {
 
 function pickupRecs() {
   const f = F(), r = route(), t = TIERS[state.chosenTier], sel = selectedPickup();
-  const out = { case1: null, case2: null, merged: false, trace: [], hereMult: null, hereFare: null, candidates: [] };
+  const out = { case1: null, trace: [], hereMult: null, hereFare: null, candidates: [] };
   if (f.status !== 'ok') { out.trace.push('route forecast is silent, so no pickup recommendation'); return out; }
-  if (t.off) { out.trace.push(`${t.name}: pickup recommendations are off for this ride type`); return out; }
   const multAt = p => tierMult(surgeAtPickup(f.multiplier, p.zoneFactor), t.sens);
-  const fareOf = (p, disc) => r.baseFare * t.ratio * multAt(p) - (disc || 0);
+  const fareOf = p => r.baseFare * t.ratio * multAt(p);
   const hereMult = multAt(sel), hereFare = fareOf(sel);
-  out.hereMult = hereMult; out.hereFare = hereFare;
   const hereSurge = surgeAtPickup(f.multiplier, sel.zoneFactor);
+  out.hereMult = hereMult; out.hereFare = hereFare;
   out.trace.push(`${t.name} · at ${sel.name} ${hereMult.toFixed(2)}× ${rupee(hereFare)} (zone surge ${hereSurge.toFixed(2)}×)`);
 
   pickupPts().forEach(p => {
@@ -749,33 +744,15 @@ function pickupRecs() {
     const sup = supplyScore(p, t), avail = sup >= AVAILABLE_MIN;
     const candSurge = Math.max(SURGE_DROP_FLOOR, surgeAtPickup(f.multiplier, p.zoneFactor));
     const drop = hereSurge - candSurge;
-    const candMult = Math.max(1, multAt(p));
-    let c1 = null, why1 = '';
-    if (!avail) why1 = `unavailable (supply ${sup.toFixed(2)} under ${AVAILABLE_MIN})`;
-    else if (p.walkMin > WALK_CAP_MIN) why1 = `${p.walkMin} min walk is over the ${WALK_CAP_MIN} min cap`;
-    else if (drop < SURGE_DROP_MIN) why1 = `zone surge drop ${Math.max(0, drop).toFixed(2)} is under ${SURGE_DROP_MIN.toFixed(2)}`;
-    else c1 = { ...p, drop, mult: candMult, fare: fareOf(p), saving: hereFare - fareOf(p) };
-
-    let c2 = null, why2 = '';
-    if (p.kind === 'main') {
-      if (!sel.interior) why2 = 'your spot is not on a lane';
-      else if (t.access <= 0) why2 = `${t.name} reaches lanes, so no access benefit`;
-      else if (!avail) why2 = 'unavailable';
-      else if (p.walkMin > CASE2_WALK_MAX_MIN) why2 = `${p.walkMin} min walk is over ${CASE2_WALK_MAX_MIN}`;
-      else {
-        const disc = (p.discountRs || 0) * t.ratio * t.access;
-        const fare = fareOf(p, disc), sav = hereFare - fare;
-        if (sav < CASE2_MIN_DROP_RS) why2 = `saves ${rupee(sav)}, under ${rupee(CASE2_MIN_DROP_RS)}`;
-        else c2 = { ...p, disc, fare, saving: sav, mult: multAt(p), gain: Math.round(((sel.etaDeltaMin || 0) - (p.etaDeltaMin || 0)) * t.access) };
-      }
-    }
-    out.candidates.push({ id: p.id, avail, c1, c2 });
-    out.trace.push(`${c1 ? '✓' : '✗'} ${p.name} · ${p.walkMin} min · case 1: ${c1 ? `zone surge drop ${drop.toFixed(2)} (${hereSurge.toFixed(2)}× to ${candSurge.toFixed(2)}×)` : why1}`);
-    if (p.kind === 'main') out.trace.push(`${c2 ? '✓' : '✗'}   case 2: ${c2 ? `saves ${rupee(c2.saving)}, ~${c2.gain} min faster` : why2}`);
+    let c1 = null, why = '';
+    if (!avail) why = `unavailable (supply ${sup.toFixed(2)} under ${AVAILABLE_MIN})`;
+    else if (p.walkMin > WALK_CAP_MIN) why = `${p.walkMin} min walk is over the ${WALK_CAP_MIN} min cap`;
+    else if (drop < SURGE_DROP_MIN) why = `zone surge drop ${Math.max(0, drop).toFixed(2)} is under ${SURGE_DROP_MIN.toFixed(2)}`;
+    else c1 = { ...p, drop, mult: Math.max(1, multAt(p)), fare: fareOf(p), saving: hereFare - fareOf(p) };
+    out.candidates.push({ id: p.id, avail, c1 });
+    out.trace.push(`${c1 ? '✓' : '✗'} ${p.name} · ${p.walkMin} min · ${c1 ? `zone surge drop ${drop.toFixed(2)} (${hereSurge.toFixed(2)}× to ${candSurge.toFixed(2)}×)` : why}`);
     if (c1 && (!out.case1 || c1.drop > out.case1.drop || (c1.drop === out.case1.drop && c1.walkMin < out.case1.walkMin))) out.case1 = c1;
-    if (c2 && (!out.case2 || c2.saving > out.case2.saving)) out.case2 = c2;
   });
-  out.merged = !!(out.case1 && out.case2 && out.case1.id === out.case2.id);
   return out;
 }
 
@@ -787,7 +764,7 @@ function renderPickupPicker() {
   const t = TIERS[state.chosenTier], sel = selectedPickup();
   const rows = pts.map(p => {
     const avail = p.own || supplyScore(p, t) >= AVAILABLE_MIN;
-    const sub = p.own ? `Your spot${p.lane ? ' · ' + p.lane : ''}` : (avail ? '' : 'No drivers nearby right now');
+    const sub = p.own ? 'Your spot' : (avail ? '' : 'No drivers nearby right now');
     return `<button class="pp" type="button" data-pickup="${p.own ? 'reset' : p.id}" aria-pressed="${p.id === sel.id}" ${avail ? '' : 'disabled'}>
       <span class="pp-n">${p.name}${sub ? `<span class="pp-s">${sub}</span>` : ''}</span>
       <span class="pp-w">${p.own ? 'here' : p.walkMin + ' min walk'}</span>
@@ -797,40 +774,15 @@ function renderPickupPicker() {
 }
 
 function renderPickupCards() {
-  const r = route(), t = TIERS[state.chosenTier], sel = selectedPickup(), rec = pickupRecs();
-  const c1 = rec.case1, c2 = rec.case2;
-  const compare = (c, hereM) => `<div class="advice"><span class="was">${hereM.toFixed(2)}×</span> at ${sel.name} → <strong>${c.mult.toFixed(2)}×</strong> there · about <strong>${rupee(c.saving)}</strong> less (${rupee(rec.hereFare)} → ${rupee(c.fare)})</div>`;
-  let html = '';
-  if (c1 && c2 && rec.merged) {
-    html += `<div class="fcard is-clear" style="margin:10px 0 2px">
-      <div class="fc-kicker" style="color:var(--lime)">Cheaper and easier pickup</div>
-      <h2 class="fc-head" style="font-size:15px">Walk ~${c2.walkMin} min to ${c2.name}</h2>
-      ${compare(c2, rec.hereMult)}
-      ${c2.gain >= 1 ? `<p class="fc-sub">About ${c2.gain} min faster pickup, and a driver won't have to come into ${sel.lane}.</p>` : ''}
-      <div class="actions"><button class="btn primary" data-pickup="${c2.id}">Navigate to pickup point</button></div>
-      <div class="basis">Simulated${c2.disc > 0 ? ` · includes a ${rupee(c2.disc)} walk discount, assumed platform-funded` : ''} · ${t.name}</div>
-    </div>`;
-    return html;
-  }
-  if (c1) {
-    html += `<div class="fcard is-clear" style="margin:10px 0 2px">
+  const t = TIERS[state.chosenTier], sel = selectedPickup(), rec = pickupRecs(), c = rec.case1;
+  if (!c) return '';
+  return `<div class="fcard is-clear" style="margin:10px 0 2px">
       <div class="fc-kicker" style="color:var(--lime)">Cheaper pickup nearby</div>
-      <h2 class="fc-head" style="font-size:15px">Walk ~${c1.walkMin} min to ${c1.name}</h2>
-      ${compare(c1, rec.hereMult)}
-      <div class="actions"><button class="btn primary" data-pickup="${c1.id}">Navigate to pickup point</button></div>
-      <div class="basis">Simulated zone prices · zone surge down ${c1.drop.toFixed(2)}× · walk cap ${WALK_CAP_MIN} min · ${t.name}</div>
+      <h2 class="fc-head" style="font-size:15px">Walk ~${c.walkMin} min to ${c.name}</h2>
+      <div class="advice"><span class="was">${rec.hereMult.toFixed(2)}×</span> at ${sel.name} → <strong>${c.mult.toFixed(2)}×</strong> there · about <strong>${rupee(c.saving)}</strong> less (${rupee(rec.hereFare)} → ${rupee(c.fare)})</div>
+      <div class="actions"><button class="btn primary" data-pickup="${c.id}">Navigate to pickup point</button></div>
+      <div class="basis">Simulated zone prices · zone surge down ${c.drop.toFixed(2)}× · walk cap ${WALK_CAP_MIN} min · ${t.name}</div>
     </div>`;
-  }
-  if (c2) {
-    html += `<div class="fcard" style="margin:10px 0 2px">
-      <div class="fc-kicker">Easier pickup</div>
-      <h2 class="fc-head" style="font-size:15px">A driver may take longer to reach ${sel.name}</h2>
-      <p class="fc-sub">It's on ${sel.lane}. ${c2.name} is ${c2.walkMin} min away${c2.gain >= 1 ? `, about ${c2.gain} min faster pickup` : ''} and about ${rupee(c2.saving)} less${c2.disc > 0 ? `, including a ${rupee(c2.disc)} walk discount` : ''}.</p>
-      <div class="actions"><button class="btn" data-pickup="${c2.id}">Use ${c2.name} instead</button></div>
-      <div class="basis">Simulated · discount assumed platform-funded · ${t.name}</div>
-    </div>`;
-  }
-  return html;
 }
 
 function commuteAlerts() {
@@ -1086,7 +1038,7 @@ function renderChoose() {
       <span class="tier-art"></span>
       <span class="tier-mid">
         <span class="tier-n">${t.name}${t.seats ? ` <span class="seat">◍${t.seats}</span>` : ''}${least === t ? '<span class="leasttag">Least affected</span>' : ''}</span>
-        <span class="tier-e">${fmtTime(state.minutes + tierEta(t))} · ${tierEta(t)} min</span>
+        <span class="tier-e">${fmtTime(state.minutes + t.eta)} · ${t.eta} min</span>
         <span class="tier-d">${t.desc}</span>
       </span>
       <span class="tier-right">

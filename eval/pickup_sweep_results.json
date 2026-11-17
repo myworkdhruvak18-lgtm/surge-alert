@@ -3,133 +3,107 @@
   "silentForecast": 0,
   "violationCount": 0,
   "violations": [],
-  "caseCounts": {
-    "case1": 2240,
-    "case2": 3801,
-    "both": 1341,
-    "merged": 41,
-    "neither": 64420
-  },
+  "fires": 3094,
   "surgeActive": {
     "scenarios": 21530,
-    "case1": 2240
-  },
-  "laneScenarios": {
-    "scenarios": 6144,
-    "case2": 3801,
-    "case2NoSurge": 178,
-    "noSurgeScenarios": 857
+    "fires": 3094
   },
   "candidateEvals": 165120,
   "candidatesUnavailable": 61208,
+  "bikeRupeeSavings": {
+    "fires": 854,
+    "under20": 696,
+    "min": 6.931853759999996,
+    "max": 27.77773499999998
+  },
   "byTier": {
     "Two-wheeler": {
       "scenarios": 13824,
-      "case1": 0,
-      "case2": 0
+      "fires": 854
     },
     "Three-wheeler": {
       "scenarios": 13824,
-      "case1": 755,
-      "case2": 1032
+      "fires": 755
     },
     "Standard": {
       "scenarios": 13824,
-      "case1": 854,
-      "case2": 1233
+      "fires": 854
     },
     "Sedan": {
       "scenarios": 13824,
-      "case1": 621,
-      "case2": 1001
+      "fires": 621
     },
     "Six-seater": {
       "scenarios": 13824,
-      "case1": 10,
-      "case2": 535
+      "fires": 10
     }
   },
   "byRoute": {
     "R0": {
       "scenarios": 23040,
-      "case1": 479,
-      "case2": 0
+      "fires": 662
     },
     "R1": {
       "scenarios": 15360,
-      "case1": 877,
-      "case2": 1971
+      "fires": 1203
     },
     "R2": {
       "scenarios": 11520,
-      "case1": 420,
-      "case2": 0
+      "fires": 590
     },
     "R3": {
       "scenarios": 11520,
-      "case1": 464,
-      "case2": 1830
+      "fires": 639
     },
     "R4": {
       "scenarios": 7680,
-      "case1": 0,
-      "case2": 0
+      "fires": 0
     }
   },
   "byBand": {
     "overnight": {
       "scenarios": 18720,
-      "case1": 42,
-      "case2": 218
+      "fires": 64
     },
     "early morning": {
       "scenarios": 5760,
-      "case1": 103,
-      "case2": 358
+      "fires": 157
     },
     "morning peak": {
       "scenarios": 8640,
-      "case1": 511,
-      "case2": 612
+      "fires": 698
     },
     "midday": {
       "scenarios": 18720,
-      "case1": 492,
-      "case2": 1488
+      "fires": 656
     },
     "evening peak": {
       "scenarios": 10080,
-      "case1": 581,
-      "case2": 632
+      "fires": 812
     },
     "late evening": {
       "scenarios": 7200,
-      "case1": 511,
-      "case2": 493
+      "fires": 707
     }
   },
   "byRain": {
     "rain=0": {
       "scenarios": 34560,
-      "case1": 887,
-      "case2": 2124
+      "fires": 1184
     },
     "rain=1": {
       "scenarios": 34560,
-      "case1": 1353,
-      "case2": 1677
+      "fires": 1910
     }
   },
   "byEvent": {
     "event=0": {
       "scenarios": 34560,
-      "case1": 763,
-      "case2": 2109
+      "fires": 1018
     },
     "event=1": {
       "scenarios": 34560,
-      "case1": 1477,
-      "case2": 1692
+      "fires": 2076
     }
   },
   "unavailByBand": {
