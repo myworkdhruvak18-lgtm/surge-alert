@@ -664,7 +664,8 @@ const F = () => forecast(ROWS, state.routeIdx, state.minutes, state.dow, state.r
 const route = () => META.routes[state.routeIdx];
 
 /* ============ PICKUP POINTS (PRD §10) + COMMUTE ALERTS (PRD §8) ============ */
-const WALK_CAP_MIN = 5;
+const WALK_CAP_MIN = 8;
+const WALK_MIN_MIN = 2;
 const SURGE_DROP_MIN = 0.3;
 const SURGE_DROP_FLOOR = 1.0;
 const AVAILABLE_MIN = 0.5;
@@ -680,11 +681,13 @@ const QUIET_UNTIL_MIN = 360;
 const PICKUPS = {
   0: [
     { id: 'h',  own: true, name: 'Smoky Docky Brookefield', walkMin: 0, zoneFactor: 1, supply: 0.95 },
+    { id: 'k',  name: 'Across the road',        walkMin: 1, zoneFactor: 0.45, supply: 0.95 },
     { id: 'a',  name: 'Corner junction',        walkMin: 2, zoneFactor: 0.50, supply: 0.95 },
     { id: 'm1', name: 'Metro station · Exit 1', walkMin: 3, zoneFactor: 0.62, supply: 0.90 },
     { id: 'm2', name: 'Metro station · Exit 2', walkMin: 4, zoneFactor: 0.45, supply: 0.90 },
     { id: 'm3', name: 'Metro station · Exit 3', walkMin: 5, zoneFactor: 0.40, supply: 0.90 },
     { id: 'm4', name: 'Metro station · Exit 4', walkMin: 7, zoneFactor: 0.35, supply: 0.90 },
+    { id: 'm5', name: 'Metro station · Exit 5', walkMin: 9, zoneFactor: 0.30, supply: 0.90 },
   ],
   1: [
     { id: 'h', own: true, name: 'Nextdoor Multiverse Co-Living', walkMin: 0, zoneFactor: 1, supply: 0.60 },
@@ -694,6 +697,7 @@ const PICKUPS = {
   ],
   2: [
     { id: 'h', own: true, name: 'Sandhya Digital 4K', walkMin: 0, zoneFactor: 1, supply: 0.95 },
+    { id: 'k', name: 'Across the road',           walkMin: 1, zoneFactor: 0.50, supply: 0.95 },
     { id: 'a', name: 'Bus stop on the main road', walkMin: 2, zoneFactor: 0.50, supply: 1.00 },
     { id: 'b', name: 'Park gate',                 walkMin: 4, zoneFactor: 0.42, supply: 0.95 },
   ],
@@ -754,6 +758,7 @@ function pickupRecs() {
     const candMult = tierMult(candSurge, t.sens), candFare = r.baseFare * t.ratio * candMult, saving = hereFare - candFare;
     let c1 = null, why = '';
     if (!avail) why = `unavailable (supply ${sup.toFixed(2)} under ${AVAILABLE_MIN})`;
+    else if (p.walkMin < WALK_MIN_MIN) why = `${p.walkMin} min walk is under the ${WALK_MIN_MIN} min minimum`;
     else if (p.walkMin > WALK_CAP_MIN) why = `${p.walkMin} min walk is over the ${WALK_CAP_MIN} min cap`;
     else if (drop < SURGE_DROP_MIN) why = `zone surge drop ${Math.max(0, drop).toFixed(2)} is under ${SURGE_DROP_MIN.toFixed(2)}`;
     else if (saving < MIN_SAVING_RS) why = `saves ${rupee(saving)}, under ${rupee(MIN_SAVING_RS)}`;
@@ -831,7 +836,7 @@ function renderPickupCards() {
       <h2 class="fc-head" style="font-size:15px">Walk ~${c.walkMin} min to ${c.name}</h2>
       <div class="advice"><span class="was">${rec.hereMult.toFixed(2)}×</span> at ${sel.name} → <strong>${c.mult.toFixed(2)}×</strong> there · about <strong>${rupee(c.saving)}</strong> less (${rupee(rec.hereFare)} → ${rupee(c.fare)})</div>
       <div class="actions"><button class="btn primary" data-pickup="${c.id}" data-walk="1">Navigate to pickup point</button></div>
-      <div class="basis">Simulated zone prices · zone surge down ${c.drop.toFixed(2)}× · walk cap ${WALK_CAP_MIN} min · ${t.name}</div>
+      <div class="basis">Simulated zone prices · zone surge down ${c.drop.toFixed(2)}× · walk ${WALK_MIN_MIN} to ${WALK_CAP_MIN} min · ${t.name}</div>
     </div>`;
 }
 

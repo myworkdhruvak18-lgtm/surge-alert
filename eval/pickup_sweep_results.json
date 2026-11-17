@@ -1,93 +1,93 @@
 {
-  "scenarios": 69120,
+  "scenarios": 80640,
   "silentForecast": 0,
   "violationCount": 0,
   "violations": [],
-  "fires": 2586,
+  "fires": 2901,
   "surgeActive": {
-    "scenarios": 21530,
-    "fires": 2586
+    "scenarios": 23395,
+    "fires": 2901
   },
-  "candidateEvals": 165120,
-  "candidatesUnavailable": 61208,
+  "candidateEvals": 276480,
+  "candidatesUnavailable": 103352,
   "bikeRupeeSavings": {
-    "fires": 346,
-    "under20": 188,
-    "min": 15.107544000000019,
-    "max": 27.77773499999998
+    "fires": 358,
+    "under20": 157,
+    "min": 15.046273124999999,
+    "max": 30.092546249999998
   },
   "blockedByRupeeFloor": {
-    "Two-wheeler": 508
+    "Two-wheeler": 617
   },
-  "blockedTotal": 508,
+  "blockedTotal": 617,
   "requote": {
     "0": {
-      "total": 2586,
-      "held": 2513
+      "total": 2901,
+      "held": 2800
     },
     "1": {
-      "total": 2586,
-      "held": 797
+      "total": 2901,
+      "held": 876
     },
     "2": {
-      "total": 2586,
+      "total": 2901,
       "held": 0
     }
   },
   "requoteByTier": {
     "Standard": [
       {
-        "total": 854,
-        "held": 832
+        "total": 975,
+        "held": 944
       },
       {
-        "total": 854,
-        "held": 336
+        "total": 975,
+        "held": 374
       },
       {
-        "total": 854,
+        "total": 975,
         "held": 0
       }
     ],
     "Two-wheeler": [
       {
-        "total": 346,
-        "held": 336
+        "total": 358,
+        "held": 345
       },
       {
-        "total": 346,
-        "held": 57
+        "total": 358,
+        "held": 70
       },
       {
-        "total": 346,
+        "total": 358,
         "held": 0
       }
     ],
     "Three-wheeler": [
       {
-        "total": 755,
-        "held": 733
+        "total": 858,
+        "held": 828
       },
       {
-        "total": 755,
-        "held": 271
+        "total": 858,
+        "held": 297
       },
       {
-        "total": 755,
+        "total": 858,
         "held": 0
       }
     ],
     "Sedan": [
       {
-        "total": 621,
-        "held": 603
+        "total": 700,
+        "held": 674
       },
       {
-        "total": 621,
-        "held": 133
+        "total": 700,
+        "held": 135
       },
       {
-        "total": 621,
+        "total": 700,
         "held": 0
       }
     ],
@@ -109,37 +109,37 @@
   "requoteSilent": 0,
   "byTier": {
     "Two-wheeler": {
-      "scenarios": 13824,
-      "fires": 346
+      "scenarios": 16128,
+      "fires": 358
     },
     "Three-wheeler": {
-      "scenarios": 13824,
-      "fires": 755
+      "scenarios": 16128,
+      "fires": 858
     },
     "Standard": {
-      "scenarios": 13824,
-      "fires": 854
+      "scenarios": 16128,
+      "fires": 975
     },
     "Sedan": {
-      "scenarios": 13824,
-      "fires": 621
+      "scenarios": 16128,
+      "fires": 700
     },
     "Six-seater": {
-      "scenarios": 13824,
+      "scenarios": 16128,
       "fires": 10
     }
   },
   "byRoute": {
     "R0": {
-      "scenarios": 23040,
-      "fires": 649
+      "scenarios": 30720,
+      "fires": 679
     },
     "R1": {
       "scenarios": 15360,
       "fires": 1053
     },
     "R2": {
-      "scenarios": 11520,
+      "scenarios": 15360,
       "fires": 420
     },
     "R3": {
@@ -148,101 +148,101 @@
     },
     "R4": {
       "scenarios": 7680,
-      "fires": 0
+      "fires": 285
     }
   },
   "byBand": {
     "overnight": {
-      "scenarios": 18720,
-      "fires": 51
+      "scenarios": 21840,
+      "fires": 53
     },
     "early morning": {
-      "scenarios": 5760,
-      "fires": 113
+      "scenarios": 6720,
+      "fires": 123
     },
     "morning peak": {
-      "scenarios": 8640,
-      "fires": 586
+      "scenarios": 10080,
+      "fires": 670
     },
     "midday": {
-      "scenarios": 18720,
-      "fires": 550
+      "scenarios": 21840,
+      "fires": 589
     },
     "evening peak": {
-      "scenarios": 10080,
-      "fires": 683
+      "scenarios": 11760,
+      "fires": 778
     },
     "late evening": {
-      "scenarios": 7200,
-      "fires": 603
+      "scenarios": 8400,
+      "fires": 688
     }
   },
   "byRain": {
     "rain=0": {
-      "scenarios": 34560,
-      "fires": 1000
+      "scenarios": 40320,
+      "fires": 1102
     },
     "rain=1": {
-      "scenarios": 34560,
-      "fires": 1586
+      "scenarios": 40320,
+      "fires": 1799
     }
   },
   "byEvent": {
     "event=0": {
-      "scenarios": 34560,
-      "fires": 868
+      "scenarios": 40320,
+      "fires": 962
     },
     "event=1": {
-      "scenarios": 34560,
-      "fires": 1718
+      "scenarios": 40320,
+      "fires": 1939
     }
   },
   "unavailByBand": {
     "overnight": {
-      "evals": 44720,
-      "unavailable": 31200
+      "evals": 74880,
+      "unavailable": 52312
     },
     "early morning": {
-      "evals": 13760,
-      "unavailable": 4432
+      "evals": 23040,
+      "unavailable": 7456
     },
     "morning peak": {
-      "evals": 20640,
-      "unavailable": 6084
+      "evals": 34560,
+      "unavailable": 10392
     },
     "midday": {
-      "evals": 44720,
-      "unavailable": 7176
+      "evals": 74880,
+      "unavailable": 12376
     },
     "evening peak": {
-      "evals": 24080,
-      "unavailable": 7896
+      "evals": 40320,
+      "unavailable": 13356
     },
     "late evening": {
-      "evals": 17200,
-      "unavailable": 4420
+      "evals": 28800,
+      "unavailable": 7460
     }
   },
   "unavailByTier": {
     "Two-wheeler": {
-      "evals": 33024,
-      "unavailable": 6006
+      "evals": 55296,
+      "unavailable": 10140
     },
     "Three-wheeler": {
-      "evals": 33024,
-      "unavailable": 8044
+      "evals": 55296,
+      "unavailable": 13532
     },
     "Standard": {
-      "evals": 33024,
-      "unavailable": 6006
+      "evals": 55296,
+      "unavailable": 10140
     },
     "Sedan": {
-      "evals": 33024,
-      "unavailable": 13510
+      "evals": 55296,
+      "unavailable": 22696
     },
     "Six-seater": {
-      "evals": 33024,
-      "unavailable": 27642
+      "evals": 55296,
+      "unavailable": 46844
     }
   }
 }

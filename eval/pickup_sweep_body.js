@@ -40,12 +40,12 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
       });
       const c1 = rec.case1;
       if (!c1) {
-        const wouldFire = PICKUPS[ri].some(p => !p.own && p.id !== sel.id && p.walkMin <= 5 && supplyScore(p, t) >= 0.5 && hereS - Math.max(1, 1 + (base - 1) * p.zoneFactor) >= 0.3 - 1e-9);
+        const wouldFire = PICKUPS[ri].some(p => !p.own && p.id !== sel.id && p.walkMin >= 2 && p.walkMin <= 8 && supplyScore(p, t) >= 0.5 && hereS - Math.max(1, 1 + (base - 1) * p.zoneFactor) >= 0.3 - 1e-9);
         if (wouldFire) { S.blockedByRupeeFloor[t.name] = (S.blockedByRupeeFloor[t.name] || 0) + 1; S.blockedTotal++; }
         continue;
       }
       const drop = hereS - Math.max(1, 1 + (base - 1) * c1.zoneFactor);
-      if (c1.walkMin > 5) bad('beyond the 5 min cap', ctx);
+      if (c1.walkMin > 8 || c1.walkMin < 2) bad('walk outside 2 to 8 min', ctx);
       if (drop < 0.3 - 1e-9) bad('zone surge drop under 0.30', { ...ctx, drop });
       if (supplyScore(c1, t) < 0.5) bad('candidate unavailable', ctx);
       if (c1.id === sel.id || c1.own) bad('recommends the selected or own point', ctx);
@@ -53,7 +53,7 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
       if (c1.saving < 15 - 1e-9) bad('saving under 15 rupees', { ...ctx, saving: c1.saving });
       const expFare = route().baseFare * t.ratio * tierMult(Math.max(1, 1 + (base - 1) * c1.zoneFactor), t.sens);
       if (Math.abs(expFare - c1.fare) > 1e-6) bad('shown fare does not use the floored surge', ctx);
-      const better = PICKUPS[ri].filter(p => !p.own && p.id !== sel.id && p.walkMin <= 5 && supplyScore(p, t) >= 0.5 && hereS - Math.max(1, 1 + (base - 1) * p.zoneFactor) > drop + 1e-9);
+      const better = PICKUPS[ri].filter(p => !p.own && p.id !== sel.id && p.walkMin >= 2 && p.walkMin <= 8 && supplyScore(p, t) >= 0.5 && hereS - Math.max(1, 1 + (base - 1) * p.zoneFactor) > drop + 1e-9);
       if (better.length) bad('a bigger-drop qualifying point exists', ctx);
       S.fires++;
       [[S.byTier, t.name], [S.byRoute, 'R' + ri], [S.byBand, band(m)], [S.byRain, 'rain=' + rain], [S.byEvent, 'event=' + event]].forEach(([o, k]) => bump(o, k, 'fires'));

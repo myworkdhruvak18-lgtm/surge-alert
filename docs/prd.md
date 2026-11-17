@@ -127,7 +127,7 @@ Where available, a forecast is annotated with a short reason: "Heavy rain", "Eve
 #### 10a. Surge-driven shift
 
 A point qualifies when all of these hold:
-- **Walk is within a 5 minute hard cap** from the rider's own spot.
+- **Walk is between 2 and 8 minutes** from the rider's own spot: nothing closer than 2 minutes (treated as the same spot) and a hard cap at 8.
 - **Its zone surge is at least 0.30× lower** than at the selected point, measured on the underlying surge before ride-type dampening and against a 1.0× floor (a zone can never count as cheaper than 1.0×, and the price shown for it uses that floored surge). The price still uses the selected ride type's own multiplier.
 - **The fare saving for the selected ride type is at least ₹15.** Below that, no card at all.
 - **The point is available** (see Availability below).
@@ -136,24 +136,24 @@ When several qualify, show the one with the biggest drop, nearest on a tie. Beca
 
 *Re-quote on arrival.* When the rider takes the recommendation ("Navigate to pickup point"), the app shows a walking step and re-prices when they arrive, using the forecast at the arrival time. If the saving no longer clears the same bar (a 0.30× zone-surge drop and ₹15), the rider gets a "price changed" card with two choices: book at the new point anyway, or go back to the original spot. If the price moved but still qualifies, the card says it was updated and shows the old and new price. If the forecast is silent at arrival, nothing is quoted. The prototype simulates the walk (the phone clock moves ahead) and models other riders piling onto the same suggestion with a control (None, Some, Many) that erodes 0%, 35% or 70% of the advertised gap; those two numbers are hand-set. Only the recommendation triggers this step; picking a point from the list does not.
 
-*Why 5 minutes.* The only figure with an established standard behind it: a 400 m / 5 min catchment for low-frequency stops (NZTA guidance), a 500 m median bus walk in Melbourne, and Indian city pedestrian speeds of about 64-71 m/min, which put 5 minutes at roughly 320-355 m. Ride-hailing products advertise only "a couple of blocks" and no ride-hailing source gives an upper limit, so this is transferred from transit planning and micromobility, not measured for ride-hailing. The 2025 "zero-walk" study suggests even 5 minutes is optimistic. No evidence supports letting the cap rise as the saving grows; one micromobility study found tolerance varies widely (about 7 minutes for one rider group, 1 for another) but gives no curve.
+*Why 2 to 8 minutes.* Both limits are the product owner's rules. The minimum means a point closer than 2 minutes is treated as the same spot and is never recommended. The 8 minute cap is longer than the evidence supports: the only standards found are a 400 m / 5 min catchment for low-frequency stops and an 800 m / 10 min catchment for high-frequency stops (NZTA guidance), a 500 m median bus walk in Melbourne, and Indian city pedestrian speeds of about 64-71 m/min, which put 8 minutes at roughly 510-570 m. Ride-hailing products advertise only "a couple of blocks" and no ride-hailing source gives an upper limit, so 8 minutes sits inside the transit norm for busy stops but beyond anything shown for ride-hailing, and the 2025 "zero-walk" study suggests even 5 minutes is optimistic. The first research pass recommended 5 minutes. No evidence supports letting the limits move with the size of the saving.
 
 *Why 0.30.* It is one full risk band (the engine's bands are 1.25× and 1.55×), and at surge levels of 1.3× to 2.0× it equals at least 15% of the fare, matching the 15% materiality floor used for "leave by". Because of the 1.0× floor, nothing surfaces below roughly 1.3× surge. Because it is measured on the underlying surge, a ride type whose price is dampened (autos, bikes) qualifies like a car but saves fewer rupees for the same drop. Hand-set and configurable, not derived from data.
 
-*Why ₹15.* It keeps the card from asking for a walk of up to 5 minutes to save a few rupees. It is a flat rupee floor, so it barely touches cars (a 0.30 drop saves them about ₹60 or more) and mostly bites two-wheelers, whose price moves only 0.25 of the surge: on a ₹288 route a 0.30 drop saves a bike rider about ₹14. As a loose sanity check, ₹15 over 5 minutes is about ₹3 per walking minute, the same order as the roughly €0.02 per minute (about ₹2) one e-moped study implied; that study is not ride-hailing and was read at abstract level only. Hand-set and configurable.
+*Why ₹15.* It keeps the card from asking for a walk of up to 8 minutes to save a few rupees. It is a flat rupee floor, so it barely touches cars (a 0.30 drop saves them about ₹60 or more) and mostly bites two-wheelers, whose price moves only 0.25 of the surge: on a ₹288 route a 0.30 drop saves a bike rider about ₹14. As a loose sanity check, ₹15 over an 8 minute walk is about ₹2 per walking minute, close to the roughly €0.02 per minute (about ₹2) one e-moped study implied; that study is not ride-hailing and was read at abstract level only. Hand-set and configurable.
 
 #### Availability (simulated)
 
 A point is available when its score is at least 0.5, where score = point supply × time-of-day × rain (×0.8) × event (×0.8) × ride-type supply. Time-of-day runs from 0.6 overnight to 1.0 midday, lower in weekday peaks. Ride-type supply runs from 1.0 for cars and bikes down to 0.65 for six-seaters. Unavailable points are greyed out in the list, cannot be selected, and are never recommended. Every one of these numbers is hand-set; there is no driver-supply data.
 
-#### Per ride type (built; counts from `eval/pickup_sweep_report.md`, 69,120 scenarios, 13,824 per ride type)
+#### Per ride type (built; counts from `eval/pickup_sweep_report.md`, 80,640 scenarios, 16,128 per ride type)
 
 | Ride type | Card fires | Note |
 |---|---|---|
-| Two-wheeler (Bike, Scooty, Bike Saver) | 346 | Price moves only 0.25 of the surge, so savings are small (₹15 to ₹28 once the ₹15 floor applies). The floor blocked 508 further scenarios that passed every other check |
-| Three-wheeler | 755 | Price moves 0.55 of the surge, so it saves fewer rupees than a car |
-| Standard | 854 | Full exposure |
-| Sedan | 621 | Full exposure, lower availability |
+| Two-wheeler (Bike, Scooty, Bike Saver) | 358 | Price moves only 0.25 of the surge, so savings are small (₹15 to ₹30 once the ₹15 floor applies). The floor blocked 617 further scenarios that passed every other check |
+| Three-wheeler | 858 | Price moves 0.55 of the surge, so it saves fewer rupees than a car |
+| Standard | 975 | Full exposure |
+| Sedan | 700 | Full exposure, lower availability |
 | Six-seater | 10 | Mostly gated by the hand-set 0.65 supply factor, not by price |
 
 "Scooty" and "Bike Saver" are not separate tiers in the model; they collapse into Two-wheeler.
@@ -198,11 +198,11 @@ Zone factors and availability factors are all hand-set. There is no per-cell sur
 - Who provides real user feedback within the 2–4 week window?
 - **New:** which modes ship in v1's per-mode model — all modes present in the ride-selection sheet (Bike, Auto, Go, Go AC, Premier, XL, etc.), or a smaller initial set (e.g. Auto + Go + Premier, the three with likely the most seed-data volume), with the rest added once real fare history exists?
 - **New (v5):** how does 10a actually get per-cell data — simulate H3-hex-level synthetic data (consistent with how the route-level seed set was built), or ship with a cruder named-sub-zone proxy first and treat true per-cell resolution as a later pass? This blocks 10a from being more than a demo placeholder until decided.
-- **Decided 2026-11-17:** the walk cap for 10a is 5 minutes, backed by transit-planning norms and Indian pedestrian speeds (transferred evidence, not ride-hailing data). It stays a configurable parameter so a per-city value can replace it once real rider data exists.
+- **Decided 2026-11-17:** the walk window for 10a is 2 to 8 minutes (the product owner's rule). The research supports about 5 minutes as the upper end and nothing for ride-hailing beyond that, so 8 is an unvalidated choice. It stays a configurable parameter so a per-city value can replace it once real rider data exists.
 - **Decided 2026-11-17:** the 0.30 surge-drop rule applies to the underlying zone surge, not the ride type's dampened multiplier, so autos qualify like cars (auto case 1 went from 106 to 755 of 13,824 sweep scenarios).
 - **New (v5):** when several 10a points qualify, the build shows only the biggest drop (nearest on a tie). Real apps list many points; is one recommendation enough, or should the cheapest and the nearest both show?
-- **Decided 2026-11-17 (reverses the earlier keep-bikes-off decision):** 10a applies to every ride type, two-wheelers included, with a ₹15 minimum fare saving. The floor mostly bites bikes: it blocked 508 two-wheeler scenarios and none for any other ride type.
-- **Decided 2026-11-17:** the app re-quotes on arrival (see 10a). Still open: the pile-on effect uses hand-set erosion factors (35% and 70% of the gap) and the result is very sensitive to them. In the sweep, 97% of recommendations still held after the walk with no piling-on, 31% with some, and none with many. Real convergence data is needed before anyone should trust a number here.
+- **Decided 2026-11-17 (reverses the earlier keep-bikes-off decision):** 10a applies to every ride type, two-wheelers included, with a ₹15 minimum fare saving. The floor mostly bites bikes: it blocked 617 two-wheeler scenarios and none for any other ride type.
+- **Decided 2026-11-17:** the app re-quotes on arrival (see 10a). Still open: the pile-on effect uses hand-set erosion factors (35% and 70% of the gap) and the result is very sensitive to them. In the sweep, 97% of recommendations still held after the walk with no piling-on, 30% with some, and none with many. Real convergence data is needed before anyone should trust a number here.
 - **New (v5):** the build assumes the base fare is identical at every pickup point and only surge differs. In reality moving the pickup changes the trip's distance and time, so the base fare shifts a little, up or down.
 
 ---
