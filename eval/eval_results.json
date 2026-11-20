@@ -4,272 +4,304 @@
   "last_day": "2026-11-15",
   "train_days": 126,
   "test_days": 56,
-  "n_train": 94991,
-  "n_test": 42216,
+  "n_train": 271828,
+  "n_test": 120816,
   "temporal": {
-    "n_test": 42216,
-    "coverage": 1.0,
+    "n_test": 120816,
+    "coverage": 0.9998,
     "engine": {
-      "tp": 21282,
-      "fp": 1641,
-      "fn": 888,
-      "tn": 18405,
-      "precision": 0.9284,
-      "recall": 0.9599,
-      "f1": 0.9439,
-      "accuracy": 0.9401
+      "tp": 44267,
+      "fp": 4833,
+      "fn": 4157,
+      "tn": 67559,
+      "precision": 0.9016,
+      "recall": 0.9142,
+      "f1": 0.9078,
+      "accuracy": 0.9256
     },
     "baseline": {
-      "tp": 16416,
-      "fp": 3098,
-      "fn": 5754,
-      "tn": 16948,
-      "precision": 0.8412,
-      "recall": 0.7405,
-      "f1": 0.7876,
-      "accuracy": 0.7903
+      "tp": 36804,
+      "fp": 19133,
+      "fn": 11620,
+      "tn": 53259,
+      "precision": 0.658,
+      "recall": 0.76,
+      "f1": 0.7053,
+      "accuracy": 0.7455
     },
     "how": {
-      "tp": 19164,
-      "fp": 4521,
-      "fn": 3006,
-      "tn": 15525,
-      "precision": 0.8091,
-      "recall": 0.8644,
-      "f1": 0.8359,
-      "accuracy": 0.8217
+      "tp": 37928,
+      "fp": 8870,
+      "fn": 10496,
+      "tn": 63522,
+      "precision": 0.8105,
+      "recall": 0.7832,
+      "f1": 0.7966,
+      "accuracy": 0.8397
     },
     "howc": {
-      "tp": 20040,
-      "fp": 1461,
-      "fn": 2130,
-      "tn": 18585,
-      "precision": 0.932,
-      "recall": 0.9039,
-      "f1": 0.9178,
-      "accuracy": 0.9149
+      "tp": 40677,
+      "fp": 3985,
+      "fn": 7747,
+      "tn": 68407,
+      "precision": 0.9108,
+      "recall": 0.84,
+      "f1": 0.874,
+      "accuracy": 0.9029
     },
     "per_mode": {
       "Two-wheeler": {
-        "tp": 1340,
-        "fp": 322,
-        "fn": 713,
-        "tn": 39841,
-        "precision": 0.8063,
-        "recall": 0.6527,
-        "f1": 0.7214,
-        "accuracy": 0.9755
+        "tp": 2934,
+        "fp": 758,
+        "fn": 1660,
+        "tn": 24201,
+        "precision": 0.7947,
+        "recall": 0.6387,
+        "f1": 0.7082,
+        "accuracy": 0.9182
       },
       "Three-wheeler": {
-        "tp": 14350,
-        "fp": 1917,
-        "fn": 810,
-        "tn": 25139,
-        "precision": 0.8822,
-        "recall": 0.9466,
-        "f1": 0.9132,
-        "accuracy": 0.9354
+        "tp": 12497,
+        "fp": 1748,
+        "fn": 1182,
+        "tn": 18336,
+        "precision": 0.8773,
+        "recall": 0.9136,
+        "f1": 0.8951,
+        "accuracy": 0.9132
       },
       "Standard": {
-        "tp": 21282,
-        "fp": 1641,
-        "fn": 888,
-        "tn": 18405,
-        "precision": 0.9284,
-        "recall": 0.9599,
-        "f1": 0.9439,
-        "accuracy": 0.9401
+        "tp": 21164,
+        "fp": 1686,
+        "fn": 872,
+        "tn": 18491,
+        "precision": 0.9262,
+        "recall": 0.9604,
+        "f1": 0.943,
+        "accuracy": 0.9394
       },
       "Sedan": {
-        "tp": 21282,
-        "fp": 1641,
-        "fn": 888,
-        "tn": 18405,
-        "precision": 0.9284,
-        "recall": 0.9599,
-        "f1": 0.9439,
-        "accuracy": 0.9401
+        "tp": 7421,
+        "fp": 602,
+        "fn": 407,
+        "tn": 6351,
+        "precision": 0.925,
+        "recall": 0.948,
+        "f1": 0.9363,
+        "accuracy": 0.9317
       },
       "Six-seater": {
-        "tp": 21282,
-        "fp": 1641,
-        "fn": 888,
-        "tn": 18405,
-        "precision": 0.9284,
-        "recall": 0.9599,
-        "f1": 0.9439,
-        "accuracy": 0.9401
+        "tp": 251,
+        "fp": 39,
+        "fn": 36,
+        "tn": 180,
+        "precision": 0.8655,
+        "recall": 0.8746,
+        "f1": 0.87,
+        "accuracy": 0.8518
       }
     },
     "per_mode_baselines": {
       "Two-wheeler": {
         "naive": {
-          "tp": 1902,
-          "fp": 17612,
-          "fn": 151,
-          "tn": 22551,
-          "precision": 0.0975,
-          "recall": 0.9264,
-          "f1": 0.1764,
-          "accuracy": 0.5792
+          "tp": 3967,
+          "fp": 9793,
+          "fn": 627,
+          "tn": 15166,
+          "precision": 0.2883,
+          "recall": 0.8635,
+          "f1": 0.4323,
+          "accuracy": 0.6474
         },
         "how": {
-          "tp": 0,
-          "fp": 0,
-          "fn": 2053,
-          "tn": 40163,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "accuracy": 0.9514
+          "tp": 1704,
+          "fp": 1025,
+          "fn": 2890,
+          "tn": 23934,
+          "precision": 0.6244,
+          "recall": 0.3709,
+          "f1": 0.4654,
+          "accuracy": 0.8675
         },
         "howc": {
-          "tp": 292,
-          "fp": 21,
-          "fn": 1761,
-          "tn": 40142,
-          "precision": 0.9329,
-          "recall": 0.1422,
-          "f1": 0.2468,
-          "accuracy": 0.9578
+          "tp": 2624,
+          "fp": 589,
+          "fn": 1970,
+          "tn": 24370,
+          "precision": 0.8167,
+          "recall": 0.5712,
+          "f1": 0.6722,
+          "accuracy": 0.9134
         }
       },
       "Three-wheeler": {
         "naive": {
-          "tp": 12249,
-          "fp": 7265,
-          "fn": 2911,
-          "tn": 19791,
-          "precision": 0.6277,
-          "recall": 0.808,
-          "f1": 0.7065,
-          "accuracy": 0.759
+          "tp": 10618,
+          "fp": 5013,
+          "fn": 3061,
+          "tn": 15071,
+          "precision": 0.6793,
+          "recall": 0.7762,
+          "f1": 0.7245,
+          "accuracy": 0.7609
         },
         "how": {
-          "tp": 11867,
-          "fp": 2704,
-          "fn": 3293,
-          "tn": 24352,
-          "precision": 0.8144,
-          "recall": 0.7828,
-          "f1": 0.7983,
-          "accuracy": 0.8579
+          "tp": 10480,
+          "fp": 2357,
+          "fn": 3199,
+          "tn": 17727,
+          "precision": 0.8164,
+          "recall": 0.7661,
+          "f1": 0.7905,
+          "accuracy": 0.8354
         },
         "howc": {
-          "tp": 12977,
-          "fp": 1532,
-          "fn": 2183,
-          "tn": 25524,
-          "precision": 0.8944,
-          "recall": 0.856,
-          "f1": 0.8748,
-          "accuracy": 0.912
+          "tp": 11316,
+          "fp": 1288,
+          "fn": 2363,
+          "tn": 18796,
+          "precision": 0.8978,
+          "recall": 0.8273,
+          "f1": 0.8611,
+          "accuracy": 0.8919
         }
       },
       "Standard": {
         "naive": {
-          "tp": 16416,
-          "fp": 3098,
-          "fn": 5754,
-          "tn": 16948,
-          "precision": 0.8412,
-          "recall": 0.7405,
-          "f1": 0.7876,
-          "accuracy": 0.7903
+          "tp": 16221,
+          "fp": 3200,
+          "fn": 5815,
+          "tn": 16977,
+          "precision": 0.8352,
+          "recall": 0.7361,
+          "f1": 0.7825,
+          "accuracy": 0.7864
         },
         "how": {
-          "tp": 19164,
-          "fp": 4521,
-          "fn": 3006,
-          "tn": 15525,
-          "precision": 0.8091,
-          "recall": 0.8644,
-          "f1": 0.8359,
-          "accuracy": 0.8217
+          "tp": 18717,
+          "fp": 3893,
+          "fn": 3319,
+          "tn": 16284,
+          "precision": 0.8278,
+          "recall": 0.8494,
+          "f1": 0.8385,
+          "accuracy": 0.8292
         },
         "howc": {
-          "tp": 20040,
-          "fp": 1461,
-          "fn": 2130,
-          "tn": 18585,
-          "precision": 0.932,
-          "recall": 0.9039,
-          "f1": 0.9178,
-          "accuracy": 0.9149
+          "tp": 19671,
+          "fp": 1412,
+          "fn": 2365,
+          "tn": 18765,
+          "precision": 0.933,
+          "recall": 0.8927,
+          "f1": 0.9124,
+          "accuracy": 0.9105
         }
       },
       "Sedan": {
         "naive": {
-          "tp": 16416,
-          "fp": 3098,
-          "fn": 5754,
-          "tn": 16948,
-          "precision": 0.8412,
-          "recall": 0.7405,
+          "tp": 5794,
+          "fp": 1091,
+          "fn": 2034,
+          "tn": 5862,
+          "precision": 0.8415,
+          "recall": 0.7402,
           "f1": 0.7876,
-          "accuracy": 0.7903
+          "accuracy": 0.7886
         },
         "how": {
-          "tp": 19164,
-          "fp": 4521,
-          "fn": 3006,
-          "tn": 15525,
-          "precision": 0.8091,
-          "recall": 0.8644,
-          "f1": 0.8359,
-          "accuracy": 0.8217
+          "tp": 6789,
+          "fp": 1552,
+          "fn": 1039,
+          "tn": 5401,
+          "precision": 0.8139,
+          "recall": 0.8673,
+          "f1": 0.8398,
+          "accuracy": 0.8247
         },
         "howc": {
-          "tp": 20040,
-          "fp": 1461,
-          "fn": 2130,
-          "tn": 18585,
-          "precision": 0.932,
-          "recall": 0.9039,
-          "f1": 0.9178,
-          "accuracy": 0.9149
+          "tp": 6828,
+          "fp": 653,
+          "fn": 1000,
+          "tn": 6300,
+          "precision": 0.9127,
+          "recall": 0.8723,
+          "f1": 0.892,
+          "accuracy": 0.8882
         }
       },
       "Six-seater": {
         "naive": {
-          "tp": 16416,
-          "fp": 3098,
-          "fn": 5754,
-          "tn": 16948,
-          "precision": 0.8412,
-          "recall": 0.7405,
-          "f1": 0.7876,
-          "accuracy": 0.7903
+          "tp": 204,
+          "fp": 36,
+          "fn": 83,
+          "tn": 183,
+          "precision": 0.85,
+          "recall": 0.7108,
+          "f1": 0.7742,
+          "accuracy": 0.7648
         },
         "how": {
-          "tp": 19164,
-          "fp": 4521,
-          "fn": 3006,
-          "tn": 15525,
-          "precision": 0.8091,
-          "recall": 0.8644,
-          "f1": 0.8359,
-          "accuracy": 0.8217
+          "tp": 238,
+          "fp": 43,
+          "fn": 49,
+          "tn": 176,
+          "precision": 0.847,
+          "recall": 0.8293,
+          "f1": 0.838,
+          "accuracy": 0.8182
         },
         "howc": {
-          "tp": 20040,
-          "fp": 1461,
-          "fn": 2130,
-          "tn": 18585,
-          "precision": 0.932,
-          "recall": 0.9039,
-          "f1": 0.9178,
-          "accuracy": 0.9149
+          "tp": 238,
+          "fp": 43,
+          "fn": 49,
+          "tn": 176,
+          "precision": 0.847,
+          "recall": 0.8293,
+          "f1": 0.838,
+          "accuracy": 0.8182
         }
+      }
+    },
+    "per_mode_coverage": {
+      "Two-wheeler": {
+        "test_rows": 29553,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Three-wheeler": {
+        "test_rows": 33763,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Standard": {
+        "test_rows": 42213,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Sedan": {
+        "test_rows": 14781,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Six-seater": {
+        "test_rows": 506,
+        "silent_rows": 20,
+        "coverage": 0.9605,
+        "city_wide_fallback_share": 0.0672
       }
     },
     "calibration": {
       "band": {
-        "rows": 42216,
-        "coverage": 0.6774,
-        "zero_width_share": 0.0181,
-        "rows_nondegenerate": 41453,
-        "coverage_nondegenerate": 0.6717
+        "rows": 120796,
+        "coverage": 0.5027,
+        "zero_width_share": 0.2453,
+        "rows_nondegenerate": 91169,
+        "coverage_nondegenerate": 0.6463
       },
       "confidence_buckets": [
         {
@@ -277,329 +309,361 @@
             0.0,
             0.8
           ],
-          "rows": 294,
-          "share": 0.007,
-          "band_coverage": 0.5238,
-          "accuracy": 0.8741,
-          "mae": 0.1257
+          "rows": 2112,
+          "share": 0.0175,
+          "band_coverage": 0.4304,
+          "accuracy": 0.8352,
+          "mae": 0.1285
         },
         {
           "range": [
             0.8,
             0.9
           ],
-          "rows": 13809,
-          "share": 0.3271,
-          "band_coverage": 0.8016,
-          "accuracy": 0.9061,
-          "mae": 0.092
+          "rows": 19595,
+          "share": 0.1622,
+          "band_coverage": 0.7247,
+          "accuracy": 0.9025,
+          "mae": 0.0941
         },
         {
           "range": [
             0.9,
             0.95
           ],
-          "rows": 12827,
-          "share": 0.3038,
-          "band_coverage": 0.673,
-          "accuracy": 0.9371,
-          "mae": 0.0729
+          "rows": 38927,
+          "share": 0.3223,
+          "band_coverage": 0.615,
+          "accuracy": 0.914,
+          "mae": 0.0688
         },
         {
           "range": [
             0.95,
             1.0
           ],
-          "rows": 15286,
-          "share": 0.3621,
-          "band_coverage": 0.5718,
-          "accuracy": 0.9746,
-          "mae": 0.0525
+          "rows": 60162,
+          "share": 0.498,
+          "band_coverage": 0.3603,
+          "accuracy": 0.9438,
+          "mae": 0.0502
         }
       ],
       "risk_reliability": {
         "low": {
-          "rows": 19293,
-          "low": 0.954,
-          "medium": 0.0451,
-          "high": 0.0009
+          "rows": 71696,
+          "low": 0.9421,
+          "medium": 0.0567,
+          "high": 0.0012
         },
         "medium": {
-          "rows": 10388,
-          "low": 0.1574,
-          "medium": 0.723,
-          "high": 0.1196
+          "rows": 29268,
+          "low": 0.1645,
+          "medium": 0.7499,
+          "high": 0.0856
         },
         "high": {
-          "rows": 12535,
-          "low": 0.0005,
-          "medium": 0.1225,
-          "high": 0.877
+          "rows": 19832,
+          "low": 0.0009,
+          "medium": 0.1328,
+          "high": 0.8663
         }
       },
       "point_error": {
-        "engine_mae": 0.0721,
-        "engine_bias": -0.0147,
-        "how_mae": 0.1559,
-        "howc_mae": 0.0901
+        "engine_mae": 0.0647,
+        "engine_bias": -0.0088,
+        "how_mae": 0.1223,
+        "howc_mae": 0.0781
       }
     }
   },
   "random_split": {
-    "n_test": 42216,
-    "coverage": 1.0,
+    "n_test": 120816,
+    "coverage": 0.9999,
     "engine": {
-      "tp": 21771,
-      "fp": 1647,
-      "fn": 918,
-      "tn": 17880,
-      "precision": 0.9297,
-      "recall": 0.9595,
-      "f1": 0.9444,
-      "accuracy": 0.9392
+      "tp": 45439,
+      "fp": 4816,
+      "fn": 4260,
+      "tn": 66301,
+      "precision": 0.9042,
+      "recall": 0.9143,
+      "f1": 0.9092,
+      "accuracy": 0.9249
     },
     "baseline": {
-      "tp": 16454,
-      "fp": 3039,
-      "fn": 6235,
-      "tn": 16488,
-      "precision": 0.8441,
-      "recall": 0.7252,
-      "f1": 0.7801,
-      "accuracy": 0.7803
+      "tp": 36996,
+      "fp": 18942,
+      "fn": 12703,
+      "tn": 52175,
+      "precision": 0.6614,
+      "recall": 0.7444,
+      "f1": 0.7004,
+      "accuracy": 0.7381
     },
     "how": {
-      "tp": 19150,
-      "fp": 3810,
-      "fn": 3539,
-      "tn": 15717,
-      "precision": 0.8341,
-      "recall": 0.844,
-      "f1": 0.839,
-      "accuracy": 0.8259
+      "tp": 38516,
+      "fp": 8452,
+      "fn": 11183,
+      "tn": 62665,
+      "precision": 0.82,
+      "recall": 0.775,
+      "f1": 0.7969,
+      "accuracy": 0.8375
     },
     "howc": {
-      "tp": 20458,
-      "fp": 1319,
-      "fn": 2231,
-      "tn": 18208,
-      "precision": 0.9394,
-      "recall": 0.9017,
-      "f1": 0.9202,
-      "accuracy": 0.9159
+      "tp": 42031,
+      "fp": 3941,
+      "fn": 7668,
+      "tn": 67176,
+      "precision": 0.9143,
+      "recall": 0.8457,
+      "f1": 0.8787,
+      "accuracy": 0.9039
     },
     "per_mode": {
       "Two-wheeler": {
-        "tp": 1870,
-        "fp": 383,
-        "fn": 718,
-        "tn": 39245,
-        "precision": 0.83,
-        "recall": 0.7226,
-        "f1": 0.7726,
-        "accuracy": 0.9739
+        "tp": 2935,
+        "fp": 681,
+        "fn": 1699,
+        "tn": 24068,
+        "precision": 0.8117,
+        "recall": 0.6334,
+        "f1": 0.7115,
+        "accuracy": 0.919
       },
       "Three-wheeler": {
-        "tp": 14847,
-        "fp": 1884,
-        "fn": 936,
-        "tn": 24549,
-        "precision": 0.8874,
-        "recall": 0.9407,
-        "f1": 0.9133,
-        "accuracy": 0.9332
+        "tp": 12795,
+        "fp": 1776,
+        "fn": 1169,
+        "tn": 17929,
+        "precision": 0.8781,
+        "recall": 0.9163,
+        "f1": 0.8968,
+        "accuracy": 0.9125
       },
       "Standard": {
-        "tp": 21771,
-        "fp": 1647,
-        "fn": 918,
-        "tn": 17880,
-        "precision": 0.9297,
-        "recall": 0.9595,
-        "f1": 0.9444,
-        "accuracy": 0.9392
+        "tp": 21933,
+        "fp": 1751,
+        "fn": 849,
+        "tn": 17960,
+        "precision": 0.9261,
+        "recall": 0.9627,
+        "f1": 0.944,
+        "accuracy": 0.9388
       },
       "Sedan": {
-        "tp": 21771,
-        "fp": 1647,
-        "fn": 918,
-        "tn": 17880,
-        "precision": 0.9297,
-        "recall": 0.9595,
-        "f1": 0.9444,
-        "accuracy": 0.9392
+        "tp": 7545,
+        "fp": 573,
+        "fn": 483,
+        "tn": 6142,
+        "precision": 0.9294,
+        "recall": 0.9398,
+        "f1": 0.9346,
+        "accuracy": 0.9284
       },
       "Six-seater": {
-        "tp": 21771,
-        "fp": 1647,
-        "fn": 918,
-        "tn": 17880,
-        "precision": 0.9297,
-        "recall": 0.9595,
-        "f1": 0.9444,
-        "accuracy": 0.9392
+        "tp": 231,
+        "fp": 35,
+        "fn": 60,
+        "tn": 202,
+        "precision": 0.8684,
+        "recall": 0.7938,
+        "f1": 0.8294,
+        "accuracy": 0.8201
       }
     },
     "per_mode_baselines": {
       "Two-wheeler": {
         "naive": {
-          "tp": 2370,
-          "fp": 17123,
-          "fn": 218,
-          "tn": 22505,
-          "precision": 0.1216,
-          "recall": 0.9158,
-          "f1": 0.2147,
-          "accuracy": 0.5892
+          "tp": 3953,
+          "fp": 9717,
+          "fn": 681,
+          "tn": 15032,
+          "precision": 0.2892,
+          "recall": 0.853,
+          "f1": 0.4319,
+          "accuracy": 0.6461
         },
         "how": {
-          "tp": 0,
-          "fp": 0,
-          "fn": 2588,
-          "tn": 39628,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "accuracy": 0.9387
+          "tp": 1847,
+          "fp": 1046,
+          "fn": 2787,
+          "tn": 23703,
+          "precision": 0.6384,
+          "recall": 0.3986,
+          "f1": 0.4908,
+          "accuracy": 0.8696
         },
         "howc": {
-          "tp": 452,
-          "fp": 3,
-          "fn": 2136,
-          "tn": 39625,
-          "precision": 0.9934,
-          "recall": 0.1747,
-          "f1": 0.2971,
-          "accuracy": 0.9493
+          "tp": 2610,
+          "fp": 513,
+          "fn": 2024,
+          "tn": 24236,
+          "precision": 0.8357,
+          "recall": 0.5632,
+          "f1": 0.6729,
+          "accuracy": 0.9137
         }
       },
       "Three-wheeler": {
         "naive": {
-          "tp": 12544,
-          "fp": 6949,
-          "fn": 3239,
-          "tn": 19484,
-          "precision": 0.6435,
-          "recall": 0.7948,
-          "f1": 0.7112,
-          "accuracy": 0.7587
+          "tp": 10652,
+          "fp": 4927,
+          "fn": 3312,
+          "tn": 14778,
+          "precision": 0.6837,
+          "recall": 0.7628,
+          "f1": 0.7211,
+          "accuracy": 0.7553
         },
         "how": {
-          "tp": 11821,
-          "fp": 2523,
-          "fn": 3962,
-          "tn": 23910,
-          "precision": 0.8241,
-          "recall": 0.749,
-          "f1": 0.7847,
-          "accuracy": 0.8464
+          "tp": 10639,
+          "fp": 2356,
+          "fn": 3325,
+          "tn": 17349,
+          "precision": 0.8187,
+          "recall": 0.7619,
+          "f1": 0.7893,
+          "accuracy": 0.8313
         },
         "howc": {
-          "tp": 13592,
-          "fp": 1547,
-          "fn": 2191,
-          "tn": 24886,
-          "precision": 0.8978,
-          "recall": 0.8612,
-          "f1": 0.8791,
-          "accuracy": 0.9115
+          "tp": 11594,
+          "fp": 1286,
+          "fn": 2370,
+          "tn": 18419,
+          "precision": 0.9002,
+          "recall": 0.8303,
+          "f1": 0.8638,
+          "accuracy": 0.8914
         }
       },
       "Standard": {
         "naive": {
-          "tp": 16454,
-          "fp": 3039,
-          "fn": 6235,
-          "tn": 16488,
-          "precision": 0.8441,
-          "recall": 0.7252,
-          "f1": 0.7801,
-          "accuracy": 0.7803
+          "tp": 16418,
+          "fp": 3212,
+          "fn": 6364,
+          "tn": 16499,
+          "precision": 0.8364,
+          "recall": 0.7207,
+          "f1": 0.7742,
+          "accuracy": 0.7746
         },
         "how": {
-          "tp": 19150,
-          "fp": 3810,
-          "fn": 3539,
-          "tn": 15717,
-          "precision": 0.8341,
-          "recall": 0.844,
-          "f1": 0.839,
-          "accuracy": 0.8259
+          "tp": 19028,
+          "fp": 3557,
+          "fn": 3754,
+          "tn": 16154,
+          "precision": 0.8425,
+          "recall": 0.8352,
+          "f1": 0.8388,
+          "accuracy": 0.8279
         },
         "howc": {
-          "tp": 20458,
-          "fp": 1319,
-          "fn": 2231,
-          "tn": 18208,
-          "precision": 0.9394,
-          "recall": 0.9017,
-          "f1": 0.9202,
-          "accuracy": 0.9159
+          "tp": 20650,
+          "fp": 1478,
+          "fn": 2132,
+          "tn": 18233,
+          "precision": 0.9332,
+          "recall": 0.9064,
+          "f1": 0.9196,
+          "accuracy": 0.915
         }
       },
       "Sedan": {
         "naive": {
-          "tp": 16454,
-          "fp": 3039,
-          "fn": 6235,
-          "tn": 16488,
-          "precision": 0.8441,
-          "recall": 0.7252,
-          "f1": 0.7801,
-          "accuracy": 0.7803
+          "tp": 5779,
+          "fp": 1052,
+          "fn": 2249,
+          "tn": 5663,
+          "precision": 0.846,
+          "recall": 0.7199,
+          "f1": 0.7778,
+          "accuracy": 0.7761
         },
         "how": {
-          "tp": 19150,
-          "fp": 3810,
-          "fn": 3539,
-          "tn": 15717,
-          "precision": 0.8341,
-          "recall": 0.844,
-          "f1": 0.839,
-          "accuracy": 0.8259
+          "tp": 6790,
+          "fp": 1460,
+          "fn": 1238,
+          "tn": 5255,
+          "precision": 0.823,
+          "recall": 0.8458,
+          "f1": 0.8343,
+          "accuracy": 0.817
         },
         "howc": {
-          "tp": 20458,
-          "fp": 1319,
-          "fn": 2231,
-          "tn": 18208,
-          "precision": 0.9394,
-          "recall": 0.9017,
-          "f1": 0.9202,
-          "accuracy": 0.9159
+          "tp": 6965,
+          "fp": 631,
+          "fn": 1063,
+          "tn": 6084,
+          "precision": 0.9169,
+          "recall": 0.8676,
+          "f1": 0.8916,
+          "accuracy": 0.8851
         }
       },
       "Six-seater": {
         "naive": {
-          "tp": 16454,
-          "fp": 3039,
-          "fn": 6235,
-          "tn": 16488,
-          "precision": 0.8441,
-          "recall": 0.7252,
-          "f1": 0.7801,
-          "accuracy": 0.7803
+          "tp": 194,
+          "fp": 34,
+          "fn": 97,
+          "tn": 203,
+          "precision": 0.8509,
+          "recall": 0.6667,
+          "f1": 0.7476,
+          "accuracy": 0.7519
         },
         "how": {
-          "tp": 19150,
-          "fp": 3810,
-          "fn": 3539,
-          "tn": 15717,
-          "precision": 0.8341,
-          "recall": 0.844,
-          "f1": 0.839,
-          "accuracy": 0.8259
+          "tp": 212,
+          "fp": 33,
+          "fn": 79,
+          "tn": 204,
+          "precision": 0.8653,
+          "recall": 0.7285,
+          "f1": 0.791,
+          "accuracy": 0.7879
         },
         "howc": {
-          "tp": 20458,
-          "fp": 1319,
-          "fn": 2231,
-          "tn": 18208,
-          "precision": 0.9394,
-          "recall": 0.9017,
-          "f1": 0.9202,
-          "accuracy": 0.9159
+          "tp": 212,
+          "fp": 33,
+          "fn": 79,
+          "tn": 204,
+          "precision": 0.8653,
+          "recall": 0.7285,
+          "f1": 0.791,
+          "accuracy": 0.7879
         }
+      }
+    },
+    "per_mode_coverage": {
+      "Two-wheeler": {
+        "test_rows": 29383,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Three-wheeler": {
+        "test_rows": 33669,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Standard": {
+        "test_rows": 42493,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Sedan": {
+        "test_rows": 14743,
+        "silent_rows": 0,
+        "coverage": 1.0,
+        "city_wide_fallback_share": 0.0
+      },
+      "Six-seater": {
+        "test_rows": 528,
+        "silent_rows": 14,
+        "coverage": 0.9735,
+        "city_wide_fallback_share": 0.0833
       }
     }
   }

@@ -1,3 +1,5 @@
+> **SUPERSEDED (2026-11-19).** This report describes the old rules (walk 2-8 min, nearest wins, re-quote on arrival) and ran against `app/app.html`. Use `pickup_sweep_v6_report.md`, which runs against the current prototype and rules. Kept for history only.
+
 # Pickup-Point Scenario Sweep
 
 **Date:** 2026-11-17 · **Run with:** `node eval/pickup_sweep.js` (reads `app/app.html` directly, so it tests the shipped logic and the shipped data) · **Companion:** `docs/prd.md` Section 10

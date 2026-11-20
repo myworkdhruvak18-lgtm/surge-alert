@@ -15,8 +15,12 @@ What it scores
      outcomes, does the confidence score track accuracy, are the low/medium/high risk labels
      reliable, and how large is the point error?
 
-The forecast function is a port of forecast() in app/app.html (same matching tiers, same
-confidence maths). `python eval_temporal.py --parity` prints forecasts on ALL rows for a fixed
+PER-MODE (v6): every ride type has its own rows, its own forecast and its own ground truth. Each test
+row is scored against the forecast for ITS OWN ride type (no hand-set scaling of a route forecast), the
+headline numbers pool all ride types, and per-ride-type F1 and coverage are reported separately.
+
+The forecast function is a port of forecast() in app/app-uber-ui.html (same matching tiers, same
+confidence maths, matched per ride type). `python eval_temporal.py --parity` prints forecasts on ALL rows for a fixed
 set of queries; eval/parity_check.js checks the app's answers against them.
 
 Usage: python eval_temporal.py            (writes eval_results.json)
@@ -32,7 +36,8 @@ import numpy as np
 SURGE_CAP, SURGE_FLOOR = 2.0, 0.5
 MIN_OBS, CONFIDENT_OBS = 8, 20
 RISK_MEDIUM, RISK_HIGH = 1.25, 1.55
-TIERS = [('Two-wheeler', 0.25), ('Three-wheeler', 0.55), ('Standard', 1.00), ('Sedan', 1.00), ('Six-seater', 1.00)]
+TIERS = ['Two-wheeler', 'Three-wheeler', 'Standard', 'Sedan', 'Six-seater']
+MODE_BENCH = 2
 CONF_BINS = [(0.0, 0.8), (0.8, 0.9), (0.9, 0.95), (0.95, 1.01)]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -50,6 +55,10 @@ def cents(x):
     return int(round(x * 100))
 
 
+def no_surge(x):
+    return 1.0 if x < 1.05 else x
+
+
 def risk_of(x):
     return 'high' if x >= RISK_HIGH else 'medium' if x >= RISK_MEDIUM else 'low'
 
@@ -58,12 +67,16 @@ class Engine:
     def __init__(self, rows):
         a = np.asarray(rows, dtype=np.float64)
         weekend = a[:, 1] >= 5
+        mode = a[:, 7]
         self.idx = {}
-        for r in range(5):
+        self.pop = {}
+        for md in range(len(TIERS)):
             for w in (False, True):
-                m = (a[:, 0] == r) & (weekend == w)
-                self.idx[(r, w)] = (a[m, 2], a[m, 3], a[m, 4], a[m, 5])
-        self.pop = {w: (a[weekend == w, 2], a[weekend == w, 5]) for w in (False, True)}
+                pm = (weekend == w) & (mode == md)
+                self.pop[(md, w)] = (a[pm, 2], a[pm, 5])
+                for r in range(5):
+                    m = (a[:, 0] == r) & pm
+                    self.idx[(md, r, w)] = (a[m, 2], a[m, 3], a[m, 4], a[m, 5])
         self.cache = {}
 
     @staticmethod
@@ -71,13 +84,13 @@ class Engine:
         raw = np.abs(mins - minutes)
         return np.minimum(raw, 1440 - raw)
 
-    def forecast(self, route, dow, minutes, rain, event):
-        key = (route, dow >= 5, minutes, rain, event)
+    def forecast(self, route, dow, minutes, rain, event, mode=MODE_BENCH):
+        key = (mode, route, dow >= 5, minutes, rain, event)
         hit = self.cache.get(key)
         if hit is not None:
             return hit
         w = dow >= 5
-        mins, rains, events, mults = self.idx[(route, w)]
+        mins, rains, events, mults = self.idx[(mode, route, w)]
         d = self._delta(mins, minutes)
         widened = False
         vals = mults[(d <= 45) & (rains == rain) & (events == event)]
@@ -87,7 +100,7 @@ class Engine:
             vals, widened = mults[d <= 90], True
         scope = 'route'
         if len(vals) < MIN_OBS:
-            pm, pmult = self.pop[w]
+            pm, pmult = self.pop[(mode, w)]
             pv = pmult[self._delta(pm, minutes) <= 45]
             if len(pv) >= MIN_OBS:
                 vals, scope, widened = pv, 'population', True
@@ -103,7 +116,8 @@ class Engine:
             if scope == 'population':
                 conf *= 0.70
             conf = round(max(0, min(1, conf)) * 1000) / 1000
-            out = {'status': 'ok', 'point': point, 'multiplier': round2(point), 'low': round2(low), 'high': round2(high),
+            # anything under 1.05x is normal pricing (the app shows 1.00x)
+            out = {'status': 'ok', 'point': point, 'multiplier': no_surge(round2(point)), 'low': no_surge(round2(low)), 'high': no_surge(round2(high)),
                    'n': n, 'scope': scope, 'confidence': conf}
         self.cache[key] = out
         return out
@@ -116,9 +130,9 @@ class HourOfWeek:
 
     def __init__(self, rows, with_conditions):
         self.start = 0 if with_conditions else 1
-        self.tables = [{}, {}, {}, {}]
-        for route, dow, minutes, rain, event, mult, *_ in rows:
-            for t, k in zip(self.tables, self._keys(int(route), int(dow), int(minutes), int(rain), int(event))):
+        self.tables = [{}, {}, {}, {}, {}]
+        for route, dow, minutes, rain, event, mult, _day, mode in rows:
+            for t, k in zip(self.tables, self._keys(int(route), int(dow), int(minutes), int(rain), int(event), int(mode))):
                 s = t.get(k)
                 if s is None:
                     t[k] = [mult, 1]
@@ -127,17 +141,17 @@ class HourOfWeek:
                     s[1] += 1
 
     @staticmethod
-    def _keys(route, dow, minutes, rain, event):
+    def _keys(route, dow, minutes, rain, event, mode):
         hour, wk = minutes // 60, dow >= 5
-        return [(route, dow, hour, rain, event), (route, dow, hour), (route, wk, hour), (wk, hour)]
+        return [(mode, route, dow, hour, rain, event), (mode, route, dow, hour), (mode, route, wk, hour), (mode, wk, hour), (wk, hour)]
 
-    def predict(self, route, dow, minutes, rain, event):
-        keys = self._keys(route, dow, minutes, rain, event)
+    def predict(self, route, dow, minutes, rain, event, mode):
+        keys = self._keys(route, dow, minutes, rain, event, mode)
         for t, k in list(zip(self.tables, keys))[self.start:]:
             s = t.get(k)
             if s and s[1] >= MIN_OBS:
                 return s[0] / s[1]
-        s = self.tables[3][keys[3]]
+        s = self.tables[3].get(keys[3]) or self.tables[4][keys[4]]   # a ride type with no rows in this cell falls back to all ride types
         return s[0] / s[1]
 
 
@@ -159,7 +173,10 @@ def score(train_rows, test_rows, extras=False):
     how, howc = HourOfWeek(train_rows, False), HourOfWeek(train_rows, True)
     names = ['naive', 'engine', 'how', 'howc']
     agg = {k: [0, 0, 0, 0] for k in names}
-    modes = {n: {k: [0, 0, 0, 0] for k in names} for n, _ in TIERS}
+    modes = {n: {k: [0, 0, 0, 0] for k in names} for n in TIERS}
+    mode_n = {n: 0 for n in TIERS}
+    mode_silent = {n: 0 for n in TIERS}
+    mode_pop = {n: 0 for n in TIERS}
     silent = 0
     n = len(test_rows)
 
@@ -171,22 +188,22 @@ def score(train_rows, test_rows, extras=False):
     def tally(c, pred, truth):
         c[0 if pred and truth else 1 if pred else 2 if truth else 3] += 1
 
-    for route, dow, minutes, rain, event, mult, *_ in test_rows:
-        route, dow, minutes, rain, event = int(route), int(dow), int(minutes), int(rain), int(event)
-        f = eng.forecast(route, dow, minutes, rain, event)
+    for route, dow, minutes, rain, event, mult, _day, mode in test_rows:
+        route, dow, minutes, rain, event, mode = int(route), int(dow), int(minutes), int(rain), int(event), int(mode)
+        name = TIERS[mode]
+        f = eng.forecast(route, dow, minutes, rain, event, mode)
         ok = f['status'] == 'ok'
         silent += 0 if ok else 1
-        mh, mc = how.predict(route, dow, minutes, rain, event), howc.predict(route, dow, minutes, rain, event)
-        truth = mult >= RISK_MEDIUM
+        mode_n[name] += 1
+        mode_silent[name] += 0 if ok else 1
+        if ok and f['scope'] == 'population':
+            mode_pop[name] += 1
+        mh, mc = how.predict(route, dow, minutes, rain, event, mode), howc.predict(route, dow, minutes, rain, event, mode)
+        truth = mult >= RISK_MEDIUM            # the row is this ride type's own observed multiplier
         preds = {'naive': naive(dow, minutes) == 1, 'engine': ok and f['point'] >= RISK_MEDIUM, 'how': mh >= RISK_MEDIUM, 'howc': mc >= RISK_MEDIUM}
         for k in names:
             tally(agg[k], preds[k], truth)
-        for name, sens in TIERS:
-            t_truth = clip(1 + (mult - 1) * sens) >= RISK_MEDIUM
-            t_preds = {'naive': preds['naive'], 'engine': ok and clip(1 + (f['point'] - 1) * sens) >= RISK_MEDIUM,
-                       'how': clip(1 + (mh - 1) * sens) >= RISK_MEDIUM, 'howc': clip(1 + (mc - 1) * sens) >= RISK_MEDIUM}
-            for k in names:
-                tally(modes[name][k], t_preds[k], t_truth)
+            tally(modes[name][k], preds[k], truth)
         if not (extras and ok):
             continue
         inside = cents(f['low']) <= cents(mult) <= cents(f['high'])
@@ -213,7 +230,9 @@ def score(train_rows, test_rows, extras=False):
     result = {'n_test': n, 'coverage': round(1 - silent / n, 4), 'engine': prf1(*agg['engine']), 'baseline': prf1(*agg['naive']),
               'how': prf1(*agg['how']), 'howc': prf1(*agg['howc']),
               'per_mode': {k: prf1(*v['engine']) for k, v in modes.items()},
-              'per_mode_baselines': {k: {b: prf1(*v[b]) for b in ('naive', 'how', 'howc')} for k, v in modes.items()}}
+              'per_mode_baselines': {k: {b: prf1(*v[b]) for b in ('naive', 'how', 'howc')} for k, v in modes.items()},
+              'per_mode_coverage': {k: {'test_rows': mode_n[k], 'silent_rows': mode_silent[k], 'coverage': round(1 - mode_silent[k] / mode_n[k], 4) if mode_n[k] else None,
+                                       'city_wide_fallback_share': round(mode_pop[k] / mode_n[k], 4) if mode_n[k] else None} for k in TIERS}}
     if extras:
         m = n - silent
         result['calibration'] = {
@@ -244,7 +263,7 @@ def parity():
     out = []
     for _ in range(300):
         q = (int(rng.integers(0, 5)), int(rng.integers(0, 7)), int(rng.integers(0, 24) * 60 + rng.integers(0, 4) * 15),
-             int(rng.integers(0, 2)), int(rng.integers(0, 2)))
+             int(rng.integers(0, 2)), int(rng.integers(0, 2)), int(rng.integers(0, 5)))
         f = eng.forecast(*q)
         out.append({'q': q, 'status': f['status'], 'multiplier': f.get('multiplier'), 'low': f.get('low'), 'high': f.get('high'),
                     'n': f['n'], 'scope': f['scope'], 'confidence': f.get('confidence')})
