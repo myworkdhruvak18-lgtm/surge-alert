@@ -1,0 +1,351 @@
+{
+  "pickup": {
+    "scenarios": 38400,
+    "silentForecast": 0,
+    "modeSilent": 928,
+    "shortTripBlocked": 7680,
+    "eligibleScenarios": 30720,
+    "surgeActive": 9836,
+    "fires": 2751,
+    "firesByFlow": {
+      "station (one suggestion after a gate is picked)": 1131,
+      "house (up to two suggestions)": 1620
+    },
+    "byTier": {
+      "Two-wheeler": {
+        "scenarios": 6144,
+        "fires": 598
+      },
+      "Three-wheeler": {
+        "scenarios": 6144,
+        "fires": 793
+      },
+      "Standard": {
+        "scenarios": 6144,
+        "fires": 898
+      },
+      "Sedan": {
+        "scenarios": 6144,
+        "fires": 455
+      },
+      "Six-seater": {
+        "scenarios": 5216,
+        "fires": 7
+      }
+    },
+    "byRoute": {
+      "R0": {
+        "scenarios": 22344,
+        "fires": 1131
+      },
+      "R1": {
+        "scenarios": 3724,
+        "fires": 1123
+      },
+      "R2": {
+        "scenarios": 3724,
+        "fires": 497
+      }
+    },
+    "byBand": {
+      "overnight": {
+        "scenarios": 7904,
+        "fires": 54
+      },
+      "early morning": {
+        "scenarios": 2496,
+        "fires": 69
+      },
+      "morning peak": {
+        "scenarios": 3840,
+        "fires": 560
+      },
+      "midday": {
+        "scenarios": 7872,
+        "fires": 811
+      },
+      "evening peak": {
+        "scenarios": 4480,
+        "fires": 680
+      },
+      "late evening": {
+        "scenarios": 3200,
+        "fires": 577
+      }
+    },
+    "byCondition": {
+      "rain=0 event=0": {
+        "scenarios": 7448,
+        "fires": 259
+      },
+      "rain=0 event=1": {
+        "scenarios": 7448,
+        "fires": 718
+      },
+      "rain=1 event=0": {
+        "scenarios": 7448,
+        "fires": 607
+      },
+      "rain=1 event=1": {
+        "scenarios": 7448,
+        "fires": 1167
+      }
+    },
+    "topTwoShown": 0,
+    "tiesBrokenByWalk": 371,
+    "tiesBrokenByDestination": 0
+  },
+  "ping": {
+    "scenarios": 15800,
+    "fired": 687,
+    "byCondition": {
+      "rain=1 event=0": 192,
+      "rain=1 event=1": 187,
+      "rain=0 event=1": 167,
+      "rain=0 event=0": 141
+    },
+    "shareTables": {
+      "weekday morning (6:00-11:00)": {
+        "Auto (three-wheeler)": {
+          "dry": {
+            "pingShare": "6.7%",
+            "usualTimeAtOrAboveTrigger": "25.7%",
+            "cells": 105
+          },
+          "rain": {
+            "pingShare": "5.7%",
+            "usualTimeAtOrAboveTrigger": "79%",
+            "cells": 105
+          },
+          "event nearby": {
+            "pingShare": "8.6%",
+            "usualTimeAtOrAboveTrigger": "60%",
+            "cells": 105
+          },
+          "rain + event": {
+            "pingShare": "9.5%",
+            "usualTimeAtOrAboveTrigger": "81.9%",
+            "cells": 105
+          }
+        },
+        "Cab (standard/sedan/six-seater)": {
+          "dry": {
+            "pingShare": "8.6%",
+            "usualTimeAtOrAboveTrigger": "40%",
+            "cells": 105
+          },
+          "rain": {
+            "pingShare": "1.9%",
+            "usualTimeAtOrAboveTrigger": "89.5%",
+            "cells": 105
+          },
+          "event nearby": {
+            "pingShare": "1.9%",
+            "usualTimeAtOrAboveTrigger": "89.5%",
+            "cells": 105
+          },
+          "rain + event": {
+            "pingShare": "9.5%",
+            "usualTimeAtOrAboveTrigger": "85.7%",
+            "cells": 105
+          }
+        },
+        "Two-wheeler": {
+          "dry": {
+            "pingShare": "0%",
+            "usualTimeAtOrAboveTrigger": "0%",
+            "cells": 105
+          },
+          "rain": {
+            "pingShare": "10.5%",
+            "usualTimeAtOrAboveTrigger": "40%",
+            "cells": 105
+          },
+          "event nearby": {
+            "pingShare": "1.9%",
+            "usualTimeAtOrAboveTrigger": "4.8%",
+            "cells": 105
+          },
+          "rain + event": {
+            "pingShare": "12.4%",
+            "usualTimeAtOrAboveTrigger": "56.2%",
+            "cells": 105
+          }
+        }
+      },
+      "weekday evening (16:00-21:00)": {
+        "Auto (three-wheeler)": {
+          "dry": {
+            "pingShare": "7.6%",
+            "usualTimeAtOrAboveTrigger": "40%",
+            "cells": 105
+          },
+          "rain": {
+            "pingShare": "6.7%",
+            "usualTimeAtOrAboveTrigger": "85.7%",
+            "cells": 105
+          },
+          "event nearby": {
+            "pingShare": "9.5%",
+            "usualTimeAtOrAboveTrigger": "73.3%",
+            "cells": 105
+          },
+          "rain + event": {
+            "pingShare": "0%",
+            "usualTimeAtOrAboveTrigger": "100%",
+            "cells": 105
+          }
+        },
+        "Cab (standard/sedan/six-seater)": {
+          "dry": {
+            "pingShare": "9.5%",
+            "usualTimeAtOrAboveTrigger": "61%",
+            "cells": 105
+          },
+          "rain": {
+            "pingShare": "3.8%",
+            "usualTimeAtOrAboveTrigger": "92.4%",
+            "cells": 105
+          },
+          "event nearby": {
+            "pingShare": "1.9%",
+            "usualTimeAtOrAboveTrigger": "97.1%",
+            "cells": 105
+          },
+          "rain + event": {
+            "pingShare": "0%",
+            "usualTimeAtOrAboveTrigger": "100%",
+            "cells": 105
+          }
+        },
+        "Two-wheeler": {
+          "dry": {
+            "pingShare": "2.9%",
+            "usualTimeAtOrAboveTrigger": "5.7%",
+            "cells": 105
+          },
+          "rain": {
+            "pingShare": "13.3%",
+            "usualTimeAtOrAboveTrigger": "57.1%",
+            "cells": 105
+          },
+          "event nearby": {
+            "pingShare": "7.6%",
+            "usualTimeAtOrAboveTrigger": "17.1%",
+            "cells": 105
+          },
+          "rain + event": {
+            "pingShare": "10.5%",
+            "usualTimeAtOrAboveTrigger": "64.8%",
+            "cells": 105
+          }
+        }
+      },
+      "Saturday night (19:00-23:30)": {
+        "Auto (three-wheeler)": {
+          "dry": {
+            "pingShare": "8.4%",
+            "usualTimeAtOrAboveTrigger": "34.7%",
+            "cells": 95
+          },
+          "rain": {
+            "pingShare": "8.4%",
+            "usualTimeAtOrAboveTrigger": "81.1%",
+            "cells": 95
+          },
+          "event nearby": {
+            "pingShare": "12.6%",
+            "usualTimeAtOrAboveTrigger": "72.6%",
+            "cells": 95
+          },
+          "rain + event": {
+            "pingShare": "0%",
+            "usualTimeAtOrAboveTrigger": "83.2%",
+            "cells": 95
+          }
+        },
+        "Cab (standard/sedan/six-seater)": {
+          "dry": {
+            "pingShare": "11.6%",
+            "usualTimeAtOrAboveTrigger": "52.6%",
+            "cells": 95
+          },
+          "rain": {
+            "pingShare": "5.3%",
+            "usualTimeAtOrAboveTrigger": "91.6%",
+            "cells": 95
+          },
+          "event nearby": {
+            "pingShare": "4.2%",
+            "usualTimeAtOrAboveTrigger": "93.7%",
+            "cells": 95
+          },
+          "rain + event": {
+            "pingShare": "0%",
+            "usualTimeAtOrAboveTrigger": "91.6%",
+            "cells": 95
+          }
+        },
+        "Two-wheeler": {
+          "dry": {
+            "pingShare": "1.1%",
+            "usualTimeAtOrAboveTrigger": "1.1%",
+            "cells": 95
+          },
+          "rain": {
+            "pingShare": "12.6%",
+            "usualTimeAtOrAboveTrigger": "52.6%",
+            "cells": 95
+          },
+          "event nearby": {
+            "pingShare": "2.1%",
+            "usualTimeAtOrAboveTrigger": "7.4%",
+            "cells": 95
+          },
+          "rain + event": {
+            "pingShare": "12.6%",
+            "usualTimeAtOrAboveTrigger": "60%",
+            "cells": 95
+          }
+        }
+      }
+    }
+  },
+  "display": {
+    "forecastsChecked": 46848,
+    "below1": 0,
+    "inside1to105": 0,
+    "silentPerMode": {
+      "Six-seater": 1152
+    }
+  },
+  "controls": {
+    "defaults are 7-10 min, nearest walk, 2.5 km, 1.25 trigger, 1.25 ceiling, 45 min lead, 30 min advice": true,
+    "a house in rain at 9:15 gets suggestions": true,
+    "switching to nearest-wins can change the first suggestion or keep it, never add one": true,
+    "walk cap 9 removes every point over 9 min": true,
+    "walk minimum 10 keeps only 10 minute points": true,
+    "zone-surge drop 1.20 removes the cards": true,
+    "minimum saving 500 removes the cards": true,
+    "raising the minimum trip above the route length removes the cards": true,
+    "driver supply 0.1 removes the cards": true,
+    "7:30 usual time pings at 6:45 by default": true,
+    "a 60 min lead moves the ping earlier": true,
+    "quiet-until 10:00 silences a ping that would be earlier": true,
+    "trigger 1.9 silences the ping": true,
+    "ceiling 1.0 silences the ping": true,
+    "a 6:30 usual time is never pinged (would be before 6:00)": true,
+    "a 12:30am usual time is never pinged, even with quiet hours set to 0": true,
+    "no usual time from 0:00 to 23:45 produces a ping outside 0:00-23:59 (quiet hours off)": true,
+    "no usual time before 6:45am is ever pinged (default quiet hours)": true,
+    "shortcut hidden 46 min before the usual 9:15am commute and shown 45 min before": true,
+    "shortcut shown 30 min after the usual time and hidden 31 min after": true,
+    "a route with no usual commute never shows the shortcut": true,
+    "a custom usual time moves the shortcut window with it": true,
+    "editing a point changes its walk time": true,
+    "reset restores every default": true
+  },
+  "violationCount": 0,
+  "violations": [],
+  "scenarioTotal": 101072
+}
