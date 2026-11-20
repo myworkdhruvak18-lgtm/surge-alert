@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Station: confirm pickup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#ffffff;font-family:Inter,Arial,sans-serif;color:#000000;position:relative;overflow:hidden">
+  <div style="position:relative;height:236px;background:#e9ecef">
+    <svg width="390" height="236" viewBox="0 0 390 236" aria-hidden="true">
+      <rect width="390" height="236" fill="#e9ecef"/>
+      <path d="M0 176 Q40 146 90 186 L90 236 L0 236Z" fill="#bcd9ee"/>
+      <rect x="236" y="22" width="96" height="54" rx="10" fill="#cfe8d0"/>
+      <path d="M-10 30 L400 28 M-10 78 L400 76 M-10 128 L400 126 M-10 176 L400 178 M36 -10 L34 246 M98 -10 L99 246 M166 -10 L165 246 M236 -10 L237 246 M300 -10 L298 246 M356 -10 L357 246 M-10 206 L400 20" stroke="#d3d8dd" stroke-width="11" fill="none" stroke-linecap="round"/>
+      <path d="M-10 30 L400 28 M-10 78 L400 76 M-10 128 L400 126 M-10 176 L400 178 M36 -10 L34 246 M98 -10 L99 246 M166 -10 L165 246 M236 -10 L237 246 M300 -10 L298 246 M356 -10 L357 246 M-10 206 L400 20" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <line x1="190" y1="120" x2="110" y2="90" stroke="#8a8f95" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <line x1="190" y1="120" x2="270" y2="70" stroke="#8a8f95" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <line x1="190" y1="120" x2="92" y2="176" stroke="#8a8f95" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <line x1="190" y1="120" x2="262" y2="178" stroke="#8a8f95" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="110" cy="90" r="11" fill="#545454" fill-opacity=".12" stroke="#545454" stroke-width="2"/><circle cx="110" cy="90" r="4.5" fill="#545454"/>
+      <rect x="86" y="54" width="48" height="18" rx="9" fill="#ffffff" stroke="#d9d9d9"/><text x="110" y="67" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700">3 min</text>
+      <circle cx="270" cy="70" r="11" fill="#545454" fill-opacity=".12" stroke="#545454" stroke-width="2"/><circle cx="270" cy="70" r="4.5" fill="#545454"/>
+      <rect x="246" y="34" width="48" height="18" rx="9" fill="#ffffff" stroke="#d9d9d9"/><text x="270" y="47" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700">8 min</text>
+      <circle cx="92" cy="176" r="11" fill="#545454" fill-opacity=".12" stroke="#545454" stroke-width="2"/><circle cx="92" cy="176" r="4.5" fill="#545454"/>
+      <rect x="68" y="140" width="48" height="18" rx="9" fill="#ffffff" stroke="#d9d9d9"/><text x="92" y="153" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700">9 min</text>
+      <circle cx="262" cy="178" r="11" fill="#545454" fill-opacity=".12" stroke="#545454" stroke-width="2"/><circle cx="262" cy="178" r="4.5" fill="#545454"/>
+      <rect x="234" y="142" width="56" height="18" rx="9" fill="#ffffff" stroke="#d9d9d9"/><text x="262" y="155" text-anchor="middle" font-family="Inter,Arial" font-size="11" font-weight="700">10 min</text>
+      <circle cx="190" cy="120" r="18" fill="#276ef1" fill-opacity=".25"/><circle cx="190" cy="120" r="8" fill="#276ef1" stroke="#ffffff" stroke-width="3"/>
+    </svg>
+    <span style="position:absolute;left:10px;bottom:10px;background:#ffffff;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.18)"><span style="color:#545454">●</span> Gate</span>
+  </div>
+  <div style="padding:12px 18px 0 18px">
+    <div style="font-size:24px;font-weight:700">Confirm pickup</div>
+    <div style="font-size:13px;color:#6b6b6b;margin-top:2px">Smoky Docky Brookefield has several gates · choose one</div>
+    <div style="margin-top:10px;border:1px solid #e2e2e2;border-radius:12px;padding:10px 14px">
+      <div style="font-size:13px;font-weight:600;color:#545454">Which gate are you at?</div>
+      <a href="pickup-station-suggestion.dc.html" style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #eeeeee;text-decoration:none;color:#000000"><span style="font-size:15px;font-weight:600">Gate 1 · Main entrance</span><span style="margin-left:auto;font-size:13px;color:#6b6b6b">selected</span></span>
+      <a href="pickup-station-suggestion.dc.html" style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #eeeeee;text-decoration:none;color:#000000"><span style="font-size:15px;font-weight:600">Gate 2 · East side</span><span style="margin-left:auto;font-size:13px;color:#6b6b6b">3 min walk</span></span>
+      <span style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #eeeeee;text-decoration:none;color:#000000"><span style="font-size:15px;font-weight:600">Gate 3 · Metro concourse</span><span style="margin-left:auto;font-size:13px;color:#6b6b6b">8 min walk</span></span>
+      <span style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #eeeeee;text-decoration:none;color:#000000"><span style="font-size:15px;font-weight:600">Gate 4 · Bus bay</span><span style="margin-left:auto;font-size:13px;color:#6b6b6b">9 min walk</span></span>
+      <span style="display:flex;align-items:center;padding:12px 0;text-decoration:none;color:#000000"><span style="font-size:15px;font-weight:600">Gate 5 · North gate</span><span style="margin-left:auto;font-size:13px;color:#6b6b6b">10 min walk</span></span>
+    </div>
+    <a href="pickup-station-suggestion.dc.html" style="display:block;text-decoration:none;margin-top:14px"><button type="button" style="display:block;width:100%;height:52px;border:0;border-radius:8px;background:#000000;color:#ffffff;font:600 17px Inter,Arial,sans-serif">Confirm pickup · Gate 1</button></a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

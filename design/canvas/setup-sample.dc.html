@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sample ping and notification permission</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#ffffff;font-family:Inter,Arial,sans-serif;color:#000000;padding:56px 18px 28px 18px;display:flex;flex-direction:column">
+  <h1 style="margin:0 0 8px 0;font-size:28px;line-height:34px;font-weight:700">Here's what you'll get</h1>
+  <p style="margin:0 0 22px 0;font-size:15px;line-height:21px;color:#545454">A single notification, only when starting earlier would help.</p>
+  <div style="background:#f3f3f3;border-radius:22px;padding:14px 16px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#6b6b6b;margin-bottom:6px"><span>SURGE ALERT</span><span>6:45 AM</span></div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Busy fares expected on your commute</div>
+    <div style="font-size:14px;line-height:19px;color:#222222">With office start hours, Standard fares to Embassy Tech Village are likely to be high around 7:30 AM. Start by 7:00 AM to avoid the surge.</div>
+  </div>
+  <p style="margin:14px 0 0 0;font-size:13px;line-height:18px;color:#6b6b6b">You can pause for a day or mute a commute from the notification itself.</p>
+  <div style="flex-grow:1"></div>
+  <button type="button" style="height:52px;border:0;border-radius:8px;background:#000000;color:#ffffff;font:600 17px Inter,Arial,sans-serif">Turn on notifications</button>
+  <button type="button" style="height:44px;border:0;background:none;color:#545454;font:600 14px Inter,Arial,sans-serif;text-decoration:underline;margin-top:4px">Maybe later</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
