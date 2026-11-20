@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Which days do you commute</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#ffffff;font-family:Inter,Arial,sans-serif;color:#000000;padding:56px 18px 28px 18px;display:flex;flex-direction:column">
+  <h1 style="margin:0 0 8px 0;font-size:28px;line-height:34px;font-weight:700">Which days do you commute?</h1>
+  <p style="margin:0 0 22px 0;font-size:15px;line-height:21px;color:#545454">We only message you on these days. Use Pause for holidays and work-from-home days.</p>
+  <div style="display:flex;gap:8px">
+    <button type="button" aria-label="Monday, selected" style="width:42px;height:42px;border:0;border-radius:50%;background:#000000;color:#ffffff;font:600 14px Inter,Arial,sans-serif">M</button>
+    <button type="button" aria-label="Tuesday, selected" style="width:42px;height:42px;border:0;border-radius:50%;background:#000000;color:#ffffff;font:600 14px Inter,Arial,sans-serif">T</button>
+    <button type="button" aria-label="Wednesday, selected" style="width:42px;height:42px;border:0;border-radius:50%;background:#000000;color:#ffffff;font:600 14px Inter,Arial,sans-serif">W</button>
+    <button type="button" aria-label="Thursday, selected" style="width:42px;height:42px;border:0;border-radius:50%;background:#000000;color:#ffffff;font:600 14px Inter,Arial,sans-serif">T</button>
+    <button type="button" aria-label="Friday, selected" style="width:42px;height:42px;border:0;border-radius:50%;background:#000000;color:#ffffff;font:600 14px Inter,Arial,sans-serif">F</button>
+    <button type="button" aria-label="Saturday" style="width:42px;height:42px;border:0;border-radius:50%;background:#eeeeee;color:#000000;font:600 14px Inter,Arial,sans-serif">S</button>
+    <button type="button" aria-label="Sunday" style="width:42px;height:42px;border:0;border-radius:50%;background:#eeeeee;color:#000000;font:600 14px Inter,Arial,sans-serif">S</button>
+  </div>
+  <p style="margin:14px 0 0 0;font-size:13px;color:#6b6b6b">Selected: Monday to Friday</p>
+  <div style="flex-grow:1"></div>
+  <button type="button" style="height:52px;border:0;border-radius:8px;background:#000000;color:#ffffff;font:600 17px Inter,Arial,sans-serif">Continue</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

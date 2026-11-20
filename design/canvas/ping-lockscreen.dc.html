@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lock-screen ping</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:linear-gradient(180deg,#3a4a5e,#16202c);font-family:Inter,Arial,sans-serif;color:#ffffff;padding:72px 12px 28px 12px;display:flex;flex-direction:column;align-items:stretch;position:relative">
+  <div style="text-align:center">
+    <div style="font-size:15px;font-weight:600">Tuesday 17 November</div>
+    <div style="font-size:76px;line-height:82px;font-weight:300">6:45</div>
+  </div>
+  <div style="margin-top:40px;background:#f7f7f7;color:#000000;border-radius:22px;padding:14px 16px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#6b6b6b;margin-bottom:6px"><span>SURGE ALERT</span><span>now</span></div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Busy fares expected on your commute</div>
+    <div style="font-size:14px;line-height:19px;color:#222222">With office start hours, Standard fares to Embassy Tech Village are likely to be high around 7:30 AM. Start by 7:00 AM to avoid the surge.</div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button type="button" style="flex:1;height:44px;border:0;border-radius:999px;background:#e6e6e6;color:#000000;font:600 13px Inter,Arial,sans-serif">Pause today</button>
+      <button type="button" style="flex:1;height:44px;border:0;border-radius:999px;background:#e6e6e6;color:#000000;font:600 13px Inter,Arial,sans-serif">Mute this commute</button>
+    </div>
+  </div>
+  <div style="flex-grow:1"></div>
+  <div style="text-align:center;font-size:13px;color:#d0d6dd">Tap the notification to open the app</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

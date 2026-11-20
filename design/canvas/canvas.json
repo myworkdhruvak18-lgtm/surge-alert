@@ -1,0 +1,451 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-19T08:00:00Z"
+ },
+ "title": "Surge Alert - commute ping and cards",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 300,
+   "w": 390,
+   "h": 844,
+   "title": "1.1 Where do you commute?",
+   "radius": 34
+  },
+  "setup-times.dc.html": {
+   "x": 470,
+   "y": 300,
+   "w": 390,
+   "h": 844,
+   "title": "1.2 When do you leave?",
+   "radius": 34
+  },
+  "setup-days.dc.html": {
+   "x": 940,
+   "y": 300,
+   "w": 390,
+   "h": 844,
+   "title": "1.3 Which days?",
+   "radius": 34
+  },
+  "setup-ride.dc.html": {
+   "x": 1410,
+   "y": 300,
+   "w": 390,
+   "h": 844,
+   "title": "1.4 Which ride?",
+   "radius": 34
+  },
+  "setup-sample.dc.html": {
+   "x": 1880,
+   "y": 300,
+   "w": 390,
+   "h": 844,
+   "title": "1.5 Sample ping + permission",
+   "radius": 34
+  },
+  "setup-done.dc.html": {
+   "x": 2350,
+   "y": 300,
+   "w": 390,
+   "h": 844,
+   "title": "1.6 You're all set",
+   "radius": 34
+  },
+  "ping-lockscreen.dc.html": {
+   "x": 0,
+   "y": 1400,
+   "w": 390,
+   "h": 844,
+   "title": "2.1 Ping on the lock screen",
+   "radius": 34
+  },
+  "ping-banner.dc.html": {
+   "x": 470,
+   "y": 1400,
+   "w": 390,
+   "h": 844,
+   "title": "2.2 Open the app: banner",
+   "radius": 34
+  },
+  "ride-options-ping.dc.html": {
+   "x": 940,
+   "y": 1400,
+   "w": 390,
+   "h": 844,
+   "title": "2.3 Start early: ride options",
+   "radius": 34
+  },
+  "booked-ping.dc.html": {
+   "x": 1410,
+   "y": 1400,
+   "w": 390,
+   "h": 844,
+   "title": "2.4 Driver on the way",
+   "radius": 34
+  },
+  "ping-lockscreen-actions.dc.html": {
+   "x": 0,
+   "y": 2500,
+   "w": 390,
+   "h": 844,
+   "title": "3.1 Tap Pause today",
+   "radius": 34
+  },
+  "settings-paused.dc.html": {
+   "x": 940,
+   "y": 2500,
+   "w": 390,
+   "h": 844,
+   "title": "3.3 Paused for today",
+   "radius": 34
+  },
+  "settings-muted.dc.html": {
+   "x": 1410,
+   "y": 2500,
+   "w": 390,
+   "h": 844,
+   "title": "3.4 Mute one commute",
+   "radius": 34
+  },
+  "settings-alerts.dc.html": {
+   "x": 1880,
+   "y": 2500,
+   "w": 390,
+   "h": 844,
+   "title": "3.5 Alerts back on",
+   "radius": 34
+  },
+  "home-outside-window.dc.html": {
+   "x": 0,
+   "y": 3600,
+   "w": 390,
+   "h": 844,
+   "title": "4.1 Normal home",
+   "radius": 34
+  },
+  "search-destination.dc.html": {
+   "x": 470,
+   "y": 3600,
+   "w": 390,
+   "h": 844,
+   "title": "4.2 Where to?",
+   "radius": 34
+  },
+  "ride-options-surge.dc.html": {
+   "x": 940,
+   "y": 3600,
+   "w": 390,
+   "h": 844,
+   "title": "4.3 Ride options in surge",
+   "radius": 34
+  },
+  "booked-normal.dc.html": {
+   "x": 1410,
+   "y": 3600,
+   "w": 390,
+   "h": 844,
+   "title": "4.4 Driver on the way",
+   "radius": 34
+  },
+  "home-normal.dc.html": {
+   "x": 0,
+   "y": 4700,
+   "w": 390,
+   "h": 844,
+   "title": "5.1 Prices are normal",
+   "radius": 34
+  },
+  "home-surge-price.dc.html": {
+   "x": 470,
+   "y": 4700,
+   "w": 390,
+   "h": 900,
+   "title": "5.2 Standard surging",
+   "radius": 34
+  },
+  "home-three-wheeler.dc.html": {
+   "x": 1410,
+   "y": 4700,
+   "w": 390,
+   "h": 900,
+   "title": "5.4 Switch ride: Three-wheeler",
+   "radius": 34
+  },
+  "home-six-seater-silent.dc.html": {
+   "x": 1880,
+   "y": 4700,
+   "w": 390,
+   "h": 900,
+   "title": "5.5 Ride type with no forecast",
+   "radius": 34
+  },
+  "pickup-house.dc.html": {
+   "x": 0,
+   "y": 5800,
+   "w": 390,
+   "h": 844,
+   "title": "6.1 Cheaper pickup point",
+   "radius": 34
+  },
+  "booked-house-walk.dc.html": {
+   "x": 470,
+   "y": 5800,
+   "w": 390,
+   "h": 844,
+   "title": "6.2 Book here: driver on the way",
+   "radius": 34
+  },
+  "pickup-house-not-now.dc.html": {
+   "x": 940,
+   "y": 5800,
+   "w": 390,
+   "h": 844,
+   "title": "6.3 Not now: normal options",
+   "radius": 34
+  },
+  "ride-options-station.dc.html": {
+   "x": 0,
+   "y": 6900,
+   "w": 390,
+   "h": 844,
+   "title": "7.1 Choose a ride",
+   "radius": 34
+  },
+  "pickup-station.dc.html": {
+   "x": 470,
+   "y": 6900,
+   "w": 390,
+   "h": 844,
+   "title": "7.2 Choose a gate",
+   "radius": 34,
+   "is_interactive": true
+  },
+  "pickup-station-suggestion.dc.html": {
+   "x": 940,
+   "y": 6900,
+   "w": 390,
+   "h": 844,
+   "title": "7.3 Cheaper gate suggestion",
+   "radius": 34
+  },
+  "booked-station.dc.html": {
+   "x": 1410,
+   "y": 6900,
+   "w": 390,
+   "h": 844,
+   "title": "7.4 Book here: driver on the way",
+   "radius": 34
+  },
+  "house-short-trip.dc.html": {
+   "x": 0,
+   "y": 8000,
+   "w": 390,
+   "h": 844,
+   "title": "8.1 Short trip: no suggestion",
+   "radius": 34
+  },
+  "house-no-surge.dc.html": {
+   "x": 470,
+   "y": 8000,
+   "w": 390,
+   "h": 844,
+   "title": "8.2 No surge: no suggestion",
+   "radius": 34
+  },
+  "home-two-wheeler.dc.html": {
+   "x": 940,
+   "y": 4700,
+   "w": 390,
+   "h": 900,
+   "title": "5.3 Switch ride: Two-wheeler",
+   "radius": 34
+  },
+  "account-menu.dc.html": {
+   "x": 470,
+   "y": 2500,
+   "w": 390,
+   "h": 844,
+   "title": "3.2 Account: Commute alerts",
+   "radius": 34
+  },
+  "shop-ride-options.dc.html": {
+   "x": 0,
+   "y": 9100,
+   "w": 390,
+   "h": 844,
+   "title": "9.1 Choose a ride at a shop",
+   "radius": 34
+  },
+  "shop-suggestion.dc.html": {
+   "x": 470,
+   "y": 9100,
+   "w": 390,
+   "h": 844,
+   "title": "9.2 Cheaper spot nearby",
+   "radius": 34
+  },
+  "shop-booked.dc.html": {
+   "x": 940,
+   "y": 9100,
+   "w": 390,
+   "h": 844,
+   "title": "9.3 Book here: driver on the way",
+   "radius": 34
+  },
+  "driver-rule.dc.html": {
+   "x": 0,
+   "y": 10200,
+   "w": 860,
+   "h": 560,
+   "title": "10.1 Who can accept the request",
+   "radius": 12
+  },
+  "driver-escalation.dc.html": {
+   "x": 920,
+   "y": 10200,
+   "w": 390,
+   "h": 560,
+   "title": "10.2 If nobody accepts",
+   "radius": 12
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "setup-times.dc.html",
+  "setup-days.dc.html",
+  "setup-ride.dc.html",
+  "setup-sample.dc.html",
+  "setup-done.dc.html",
+  "ping-lockscreen.dc.html",
+  "ping-banner.dc.html",
+  "ride-options-ping.dc.html",
+  "booked-ping.dc.html",
+  "ping-lockscreen-actions.dc.html",
+  "account-menu.dc.html",
+  "settings-paused.dc.html",
+  "settings-muted.dc.html",
+  "settings-alerts.dc.html",
+  "home-outside-window.dc.html",
+  "search-destination.dc.html",
+  "ride-options-surge.dc.html",
+  "booked-normal.dc.html",
+  "home-normal.dc.html",
+  "home-surge-price.dc.html",
+  "home-two-wheeler.dc.html",
+  "home-three-wheeler.dc.html",
+  "home-six-seater-silent.dc.html",
+  "pickup-house.dc.html",
+  "booked-house-walk.dc.html",
+  "pickup-house-not-now.dc.html",
+  "ride-options-station.dc.html",
+  "pickup-station.dc.html",
+  "pickup-station-suggestion.dc.html",
+  "booked-station.dc.html",
+  "house-short-trip.dc.html",
+  "house-no-surge.dc.html",
+  "shop-ride-options.dc.html",
+  "shop-suggestion.dc.html",
+  "shop-booked.dc.html",
+  "driver-rule.dc.html",
+  "driver-escalation.dc.html"
+ ],
+ "notes": {
+  "j1": {
+   "x": -520,
+   "y": 300,
+   "w": 440,
+   "text": "JOURNEY 1\nFirst-time setup\n\nA rider gives their preferences: places, usual times, days and ride type, then sees a sample ping before allowing notifications.",
+   "size": "md",
+   "bold": false,
+   "fill": "gray"
+  },
+  "j2": {
+   "x": -520,
+   "y": 1400,
+   "w": 440,
+   "text": "JOURNEY 2\nCommute ping: start earlier\n\nA set-up rider gets the ping 45 minutes before their usual time, opens the app, and books at the advised start time.",
+   "size": "md",
+   "bold": false,
+   "fill": "blue"
+  },
+  "j3": {
+   "x": -520,
+   "y": 2500,
+   "w": 440,
+   "text": "JOURNEY 3\nCommute ping: pause or mute\n\nThe rider stops pings for today, or mutes one commute, from the notification or from Account > Commute alerts (also reachable from the bell on home), and can undo it there.",
+   "size": "md",
+   "bold": false,
+   "fill": "purple"
+  },
+  "j4": {
+   "x": -520,
+   "y": 3600,
+   "w": 440,
+   "text": "JOURNEY 4\nNormal home: no commute due\n\nOutside a rider's commute window (from 45 minutes before to 30 minutes after a usual time), and for riders who have not set up, the home screen is the normal one: search, Later and recent places. The forecast appears once a destination is entered.",
+   "size": "md",
+   "bold": false,
+   "fill": "gray"
+  },
+  "j5": {
+   "x": -520,
+   "y": 4700,
+   "w": 440,
+   "text": "JOURNEY 5\nHome inside the commute window\n\nOnly a set-up rider, and only from 45 minutes before to 30 minutes after their usual time, sees the forecast card and ride-type chips for their usual ride type. Everyone else sees Journey 4.",
+   "size": "md",
+   "bold": false,
+   "fill": "orange"
+  },
+  "j6": {
+   "x": -520,
+   "y": 5800,
+   "w": 440,
+   "text": "JOURNEY 6\nPickup shift at a house\n\nIn surge, a single-entry place gets one cheaper pickup point: the nearest 7 to 10 min walk, on the way to the drop. The rider books from it, or taps Not now.",
+   "size": "md",
+   "bold": false,
+   "fill": "green"
+  },
+  "j7": {
+   "x": -520,
+   "y": 6900,
+   "w": 440,
+   "text": "JOURNEY 7\nPickup shift at a station\n\nA multi-gate place asks for the gate first, then opens one cheaper-gate suggestion if there is one.",
+   "size": "md",
+   "bold": false,
+   "fill": "teal"
+  },
+  "j8": {
+   "x": -520,
+   "y": 8000,
+   "w": 440,
+   "text": "JOURNEY 8\nNo suggestion shown\n\nShort trips and normal-price times get the normal ride options, with no pickup suggestion.",
+   "size": "md",
+   "bold": false,
+   "fill": "gray"
+  },
+  "j9": {
+   "x": -520,
+   "y": 9100,
+   "w": 440,
+   "text": "JOURNEY 9\nPickup shift at a small shop\n\nWith few gates or pickup points, such as standing in front of a small shop, the same rules apply: in surge, one cheaper spot nearby can be suggested.",
+   "size": "md",
+   "bold": false,
+   "fill": "green"
+  },
+  "j10": {
+   "x": -520,
+   "y": 10200,
+   "w": 440,
+   "size": "md",
+   "bold": false,
+   "fill": "yellow",
+   "text": "JOURNEY 10\nDriver rule for alternate pickups\n\nSpecification only, not in the prototype. Only drivers who do not have to cross the surge hotspot see the request: outside it on the destination side, or within 500 m of its edge. If nobody accepts in 10 minutes, it opens to all drivers."
+  }
+ }
+}
