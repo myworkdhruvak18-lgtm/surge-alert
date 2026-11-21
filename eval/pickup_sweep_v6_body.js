@@ -61,7 +61,7 @@ for (let ri = 0; ri < 5; ri++) for (const dow of [1, 5]) for (let m = 0; m < 144
       rec.top.forEach(c => {
         const wk = Math.abs(sel.walkMin - PICKUPS[ri].find(p => p.id === c.id).walkMin);
         const drop = hereS - Math.max(1, surgeOf(c));
-        if (wk < 7 - EPS || wk > 10 + EPS) bad('walk outside 7 to 10 min', { ...ctx, wk });
+        if (wk < 5 - EPS || wk > 10 + EPS) bad('walk outside 5 to 10 min', { ...ctx, wk });
         if (drop < 0.3 - EPS) bad('zone-surge drop under 0.30', { ...ctx, drop });
         if (supplyScore(c, t) < AVAILABLE_MIN) bad('suggested point unavailable', ctx);
         if (c.id === sel.id) bad('suggests the selected point', ctx);
@@ -145,18 +145,18 @@ const ctl = (name, ok) => { SW.controls[name] = !!ok; if (!ok) bad('control chec
   resetModel();
   state.routeIdx = 1; state.dow = 1; state.rain = 1; state.event = 0; state.minutes = 555; state.pickupId = null; state.chosenTier = 2;
   const base = pickupRecs();
-  ctl('defaults are 7-10 min, nearest walk, 2.5 km, 1.25 trigger, 1.25 ceiling, 45 min lead, 30 min advice',
-    WALK_MIN_MIN === 7 && WALK_CAP_MIN === 10 && SELECT_RULE === 'nearest' && MIN_TRIP_KM === 2.5 && PING_THRESHOLD === 1.25 && PING_EARLIER_MAX === 1.25 && PING_LEAD_MIN === 45 && START_EARLIER_MIN === 30);
+  ctl('defaults are 5-10 min, nearest walk, 2.5 km, 1.25 trigger, 1.25 ceiling, 45 min lead, 30 min advice',
+    WALK_MIN_MIN === 5 && WALK_CAP_MIN === 10 && SELECT_RULE === 'nearest' && MIN_TRIP_KM === 2.5 && PING_THRESHOLD === 1.25 && PING_EARLIER_MAX === 1.25 && PING_LEAD_MIN === 45 && START_EARLIER_MIN === 30);
   ctl('a house in rain at 9:15 gets suggestions', base.top.length >= 1);
   SELECT_RULE = 'nearest'; const near = pickupRecs().top[0]; SELECT_RULE = 'nearest';
   ctl('switching to nearest-wins can change the first suggestion or keep it, never add one', near && pickupRecs().top.length >= 1);
   WALK_CAP_MIN = 9; const cap9 = pickupRecs(); WALK_CAP_MIN = 10;
   ctl('walk cap 9 removes every point over 9 min', cap9.top.every(c => c.walkMin <= 9));
-  WALK_MIN_MIN = 10; const min10 = pickupRecs(); WALK_MIN_MIN = 8;
+  WALK_MIN_MIN = 10; const min10 = pickupRecs(); WALK_MIN_MIN = 5;
   ctl('walk minimum 10 keeps only 10 minute points', min10.top.every(c => c.walkMin === 10));
   SURGE_DROP_MIN = 1.2; const hi = pickupRecs(); SURGE_DROP_MIN = 0.3;
   ctl('zone-surge drop 1.20 removes the cards', hi.top.length === 0);
-  MIN_SAVING_BY_TIER = [500,500,500,500,500]; const rs = pickupRecs(); MIN_SAVING_BY_TIER = [15,15,40,60,70];
+  MIN_SAVING_BY_TIER = [500,500,500,500,500]; const rs = pickupRecs(); MIN_SAVING_BY_TIER = [15,15,40,60,100];
   ctl('minimum saving 500 removes the cards', rs.top.length === 0);
   MIN_TRIP_KM = 20; const sh = pickupRecs(); MIN_TRIP_KM = 2.5;
   ctl('raising the minimum trip above the route length removes the cards', sh.top.length === 0 && sh.shortTrip === true);
@@ -195,7 +195,7 @@ const ctl = (name, ok) => { SW.controls[name] = !!ok; if (!ok) bad('control chec
   PICKUPS[1].find(p => p.id === 'a').walkMin = 9;
   ctl('editing a point changes its walk time', PICKUPS[1].find(p => p.id === 'a').walkMin === 9);
   resetModel();
-  ctl('reset restores every default', WALK_CAP_MIN === 10 && WALK_MIN_MIN === 7 && MIN_TRIP_KM === 2.5 && PING_THRESHOLD === 1.25 && PING_EARLIER_MAX === 1.25 && PICKUPS[1].find(p => p.id === 'a').walkMin === 8);
+  ctl('reset restores every default', WALK_CAP_MIN === 10 && WALK_MIN_MIN === 5 && MIN_TRIP_KM === 2.5 && PING_THRESHOLD === 1.25 && PING_EARLIER_MAX === 1.25 && PICKUPS[1].find(p => p.id === 'a').walkMin === 8);
 }
 SW.scenarioTotal = SW.display.forecastsChecked + SW.pickup.scenarios + SW.ping.scenarios + Object.keys(SW.controls).length;
 globalThis.__SWEEP6 = SW;

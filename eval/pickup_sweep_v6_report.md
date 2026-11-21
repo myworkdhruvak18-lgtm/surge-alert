@@ -1,8 +1,8 @@
 # Pickup and commute-ping sweep (v6, per-ride-type engine)
 
-Replaces `pickup_sweep_report.md` (old rules, old file). This sweep runs against the **current** prototype `app/app-uber-ui.html`: per-ride-type forecasts, walk window **7-10 min**, nearest walk wins (one card, rider surge above 1.1x, per-ride-type rupee floors 15/15/40/60/70), trip over 2.5 km, commute ping at 1.25x / 1.25x, no ping between 12:00am and 6:00am. Script: `eval/pickup_sweep_v6.js` (+ `pickup_sweep_v6_body.js`); raw output: `eval/pickup_sweep_v6_results.json`. Run with `node eval/pickup_sweep_v6.js` (exit code 0 means no violations).
+Replaces `pickup_sweep_report.md` (old rules, old file). This sweep runs against the **current** prototype `app/app-uber-ui.html`: per-ride-type forecasts, walk window **5-10 min**, nearest walk wins (one card, rider surge above 1.1x, per-ride-type rupee floors 15/15/40/60/100), trip over 2.5 km, commute ping at 1.25x / 1.25x, no ping between 12:00am and 6:00am. Script: `eval/pickup_sweep_v6.js` (+ `pickup_sweep_v6_body.js`); raw output: `eval/pickup_sweep_v6_results.json`. Run with `node eval/pickup_sweep_v6.js` (exit code 0 means no violations).
 
-**Result: 0 violations across 101,072 checks (re-run 2026-11-21 after the home-card window change; 2,751 suggestion slots in `pickup_sweep_v6_results.json`).** All fare data is simulated; this sweep proves the rules are applied as written, not that real riders would behave this way.
+**Result: 0 violations across 101,072 checks (re-run 2026-11-22 after the walk window changed to 5-10 min; 2,815 suggestion slots in `pickup_sweep_v6_results.json`).** All fare data is simulated; this sweep proves the rules are applied as written, not that real riders would behave this way.
 
 ## What was checked
 
@@ -15,20 +15,20 @@ Replaces `pickup_sweep_report.md` (old rules, old file). This sweep runs against
 
 ## Pickup rules verified
 
-- Walk **7-10 min** from the point the rider is at; zone-surge drop at least 0.30x against a 1.0x floor (measured on the Standard / route-level surge); saving at least the rupee floor, computed from the **chosen ride type's own forecast**; point available; no suggestion on trips at or under 2.5 km; none when the route forecast, or the chosen ride type's own forecast, is silent.
-- Rider's own zone surge strictly above 1.1x; saving floors Rs 15 (two- and three-wheelers), Rs 40 (Standard), Rs 60 (Sedan), Rs 70 (Six-seater).
+- Walk **5-10 min** from the point the rider is at; zone-surge drop at least 0.30x against a 1.0x floor (measured on the Standard / route-level surge); saving at least the rupee floor, computed from the **chosen ride type's own forecast**; point available; no suggestion on trips at or under 2.5 km; none when the route forecast, or the chosen ride type's own forecast, is silent.
+- Rider's own zone surge strictly above 1.1x; saving floors Rs 15 (two- and three-wheelers), Rs 40 (Standard), Rs 60 (Sedan), Rs 100 (Six-seater, raised from Rs 70 on 2026-11-22).
 - Ranking: nearest walk, then on the way to and nearest the destination, then the bigger drop. One suggestion at every place type.
-- 7,680 of 38,400 scenarios are on routes at or under 2.5 km and correctly produced nothing. 928 eligible scenarios were skipped because the chosen ride type's own forecast was silent (six-seater only). In the remaining scenarios a suggestion was shown 2,751 times (1,620 at houses, 1,131 at the station); never more than one.
+- 7,680 of 38,400 scenarios are on routes at or under 2.5 km and correctly produced nothing. 928 eligible scenarios were skipped because the chosen ride type's own forecast was silent (six-seater only). In the remaining scenarios a suggestion was shown 2,815 times (1,620 at houses, 1,195 at the station); never more than one.
 - 371 equal ties were resolved by nearer walk; 0 needed the destination tie-break (the hand-set data never produces a tie that survives the walk tie-break, so that rule is untested by the data, not by the logic).
 
 ### Where suggestions appear
 
 | Ride type | Eligible scenarios with a forecast | Suggestion shown |
 |---|---|---|
-| Two-wheeler | 6,144 | 598 |
-| Three-wheeler | 6,144 | 793 |
-| Standard | 6,144 | 898 |
-| Sedan | 6,144 | 455 |
+| Two-wheeler | 6,144 | 606 |
+| Three-wheeler | 6,144 | 816 |
+| Standard | 6,144 | 922 |
+| Sedan | 6,144 | 464 |
 | Six-seater | 5,216 | 7 |
 
 Six-seaters rarely get one: their own history is thin (silent in 1,152 of the swept forecasts, mostly in rain or events) and the hand-set availability factor (0.65) keeps their points below the availability line.
@@ -36,9 +36,9 @@ Six-seaters rarely get one: their own history is thin (silent in 1,152 of the sw
 | Condition | Scenarios | Suggestion shown |
 |---|---|---|
 | rain=0 event=0 | 7,448 | 259 |
-| rain=0 event=1 | 7,448 | 718 |
-| rain=1 event=0 | 7,448 | 607 |
-| rain=1 event=1 | 7,448 | 1,167 |
+| rain=0 event=1 | 7,448 | 754 |
+| rain=1 event=0 | 7,448 | 634 |
+| rain=1 event=1 | 7,448 | 1,168 |
 
 Suggestions are far more frequent in rain, with an event, or both, as expected, since surge is higher.
 
@@ -87,7 +87,7 @@ How often the usual-time condition alone holds (forecast at or above 1.25x at th
 
 ## Controls and defaults checked
 
-- PASS: defaults are 7-10 min, nearest walk, 2.5 km, 1.25 trigger, 1.25 ceiling, 45 min lead, 30 min advice
+- PASS: defaults are 5-10 min, nearest walk, 2.5 km, 1.25 trigger, 1.25 ceiling, 45 min lead, 30 min advice
 - PASS: a house in rain at 9:15 gets suggestions
 - PASS: switching to nearest-wins can change the first suggestion or keep it, never add one
 - PASS: Work / Home shortcut hidden 46 min before the usual commute and shown 45 min before; shown 30 min after and hidden 31 min after; never shown for a route with no usual commute; a custom usual time moves the window

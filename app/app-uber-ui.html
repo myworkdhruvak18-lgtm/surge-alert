@@ -1040,14 +1040,14 @@ const pickupDismissedNow = () => state.pickupDismissed === (state.routeIdx + '|'
 const route = () => META.routes[state.routeIdx];
 
 /* ============ PICKUP POINTS (PRD §10) + COMMUTE ALERTS (PRD §8) ============ */
-const DEFAULT_RULES = { minTripKm: 2.5, walkMin: 7, walkMax: 10, dropMin: 0.3, minSaving: 15, availMin: 0.5, select: 'nearest', adv: 45, last: 30, pingThr: 1.25, earlierMax: 1.25, quiet: 360, some: 0.35, many: 0.7 };
+const DEFAULT_RULES = { minTripKm: 2.5, walkMin: 5, walkMax: 10, dropMin: 0.3, minSaving: 15, availMin: 0.5, select: 'nearest', adv: 45, last: 30, pingThr: 1.25, earlierMax: 1.25, quiet: 360, some: 0.35, many: 0.7 };
 let MIN_TRIP_KM = DEFAULT_RULES.minTripKm;
 let WALK_MIN_MIN = DEFAULT_RULES.walkMin;
 let WALK_CAP_MIN = DEFAULT_RULES.walkMax;
 let SURGE_DROP_MIN = DEFAULT_RULES.dropMin;
 let MIN_SAVING_RS = DEFAULT_RULES.minSaving;
 // Rupee floor by ride type (product-owner rule): two- and three-wheelers 15, Standard 40, Sedan 60, Six-seater 70. The control sets them all.
-let MIN_SAVING_BY_TIER = [15, 15, 40, 60, 70];
+let MIN_SAVING_BY_TIER = [15, 15, 40, 60, 100];
 const SURGE_TRIGGER_MIN = 1.1;   // suggestions only when the rider's own zone surge is strictly above this
 const minSavingFor = ti => MIN_SAVING_BY_TIER[ti];
 let AVAILABLE_MIN = DEFAULT_RULES.availMin;
@@ -1106,7 +1106,7 @@ const TIER_SUPPLY = [1.0, 0.95, 1.0, 0.85, 0.65];
 
 function resetModel() {
   WALK_MIN_MIN = DEFAULT_RULES.walkMin; WALK_CAP_MIN = DEFAULT_RULES.walkMax; SURGE_DROP_MIN = DEFAULT_RULES.dropMin;
-  MIN_SAVING_RS = DEFAULT_RULES.minSaving; MIN_SAVING_BY_TIER = [15, 15, 40, 60, 70]; MIN_TRIP_KM = DEFAULT_RULES.minTripKm; AVAILABLE_MIN = DEFAULT_RULES.availMin; SELECT_RULE = DEFAULT_RULES.select;
+  MIN_SAVING_RS = DEFAULT_RULES.minSaving; MIN_SAVING_BY_TIER = [15, 15, 40, 60, 100]; MIN_TRIP_KM = DEFAULT_RULES.minTripKm; AVAILABLE_MIN = DEFAULT_RULES.availMin; SELECT_RULE = DEFAULT_RULES.select;
   PING_LEAD_MIN = DEFAULT_RULES.adv; START_EARLIER_MIN = DEFAULT_RULES.last; PING_THRESHOLD = DEFAULT_RULES.pingThr; PING_EARLIER_MAX = DEFAULT_RULES.earlierMax; QUIET_UNTIL_MIN = DEFAULT_RULES.quiet;
   CONVERGENCE_EROSION = [0, DEFAULT_RULES.some, DEFAULT_RULES.many];
   Object.keys(PICKUPS).forEach(k => { PICKUPS[k] = JSON.parse(JSON.stringify(PICKUPS_DEFAULT[k])); });
@@ -1450,6 +1450,11 @@ function chart(points, nowMin) {
 // COMMUTE_CARD_AFTER_MIN after it; at every other time the normal home screen shows without it. A morning commute shows Work, an
 // evening one shows Home. (The prototype has one usual time per route; the PRD specifies one per direction.)
 const COMMUTE_CARD_BEFORE_MIN = 45, COMMUTE_CARD_AFTER_MIN = 30;
+// Forecast chart horizon (owner rule, 2026-11-22): show 60 minutes by default. If prices are expected back to normal
+// between 60 and 90 minutes out, extend the chart to that time; never show more than 90 minutes. "Back to normal" is
+// looked for only within those 90 minutes, so the card never claims more than it charts.
+const CHART_DEFAULT_MIN = 60, CHART_MAX_MIN = 90;
+const chartHorizon = ease => (ease == null ? CHART_MAX_MIN : Math.min(Math.max(ease, CHART_DEFAULT_MIN), CHART_MAX_MIN));
 // Reserve is Uber's own flow: it quotes its own upfront price when booked (which may include a reservation fee), so the forecast
 // price above is not a promise of the Reserve price. Whether a future-time Reserve quote reflects expected surge is unverified (PRD).
 const RESERVE_NOTE = 'Uber quotes the Reserve price when you book, and it may include a reservation fee. It can differ from this forecast.';
@@ -1511,7 +1516,7 @@ function renderHome() {
         <div class="basis">${basisLine(f)}</div>
       </div>`;
     } else if (f.risk === 'high' || f.risk === 'medium') {
-      const ease = easesIn(ROWS, state.routeIdx, state.minutes, state.dow, 180, state.rain, state.event, um);
+      const ease = easesIn(ROWS, state.routeIdx, state.minutes, state.dow, CHART_MAX_MIN, state.rain, state.event, um);
       const cheaper = TIERS.map((t, ti) => ({ t, ti })).filter(x => x.ti !== um && !modeSilent(x.ti))
         .map(x => ({ ...x, m: modeF(x.ti).multiplier, price: r.baseFare * x.t.ratio * modeF(x.ti).multiplier }))
         .filter(x => x.price < fare(f.multiplier) - 0.5).sort((p, q) => p.price - q.price).slice(0, 3);
@@ -1525,10 +1530,10 @@ function renderHome() {
           ? `<span class="mult mult-${f.risk}">${rupee(fare(f.multiplier))}</span> to ${r.destination} right now <span class="multchip">${f.multiplier.toFixed(2)}×</span>`
           : `<span class="mult mult-${f.risk}">${f.multiplier.toFixed(2)}×</span> — ${rupee(fare(f.multiplier))} to ${r.destination} right now`}</h2>
         ${chips ? `<div class="chips">${chips}</div>` : ''}
-        ${chart(trajectory(ROWS, state.routeIdx, state.minutes, state.dow, 150, 15, state.rain, state.event, um), state.minutes)}
+        ${chart(trajectory(ROWS, state.routeIdx, state.minutes, state.dow, chartHorizon(ease), 15, state.rain, state.event, um), state.minutes)}
         ${ease != null ? (() => { const at = forecast(ROWS, state.routeIdx, (state.minutes + ease) % 1440, state.dow, state.rain, state.event, um); const tenths = Math.round((at.shareNormal || 0) * 10);
                          return `<p class="fc-sub">Prices usually back to normal by <strong style="color:var(--text)">${fmtTime(state.minutes + ease)}</strong> · about ${ease} min. ${tenths} in 10 similar trips were back to normal by then.</p>`; })()
-                       : `<p class="fc-sub">No let-up inside the next three hours.</p>`}
+                       : `<p class="fc-sub">No let-up expected in the next 90 minutes.</p>`}
         <div class="actions">
           <button class="btn ${state.alertArmed ? 'armed' : ''}" data-act="alert">${state.alertArmed ? 'Alert armed ✓' : 'Alert me at 1.0×'}</button>
           <button class="btn primary" data-act="choose">Book anyway</button>
@@ -1560,7 +1565,7 @@ function renderHome() {
         <div class="fc-kicker" style="color:var(--lime)">${ut.name} \u00b7 ${slight ? 'Slightly above usual' : 'Prices are normal'}</div>
         <h2 class="fc-head">${slight ? f.multiplier.toFixed(2) + '\u00d7 \u2014 ' : 'No surge \u2014 '}about ${rupee(fare(f.multiplier))} to ${r.destination}</h2>
         ${chips ? `<div class="chips">${chips}</div>` : ''}
-        ${chart(trajectory(ROWS, state.routeIdx, state.minutes, state.dow, 150, 15, state.rain, state.event, um), state.minutes)}
+        ${chart(trajectory(ROWS, state.routeIdx, state.minutes, state.dow, CHART_DEFAULT_MIN, 15, state.rain, state.event, um), state.minutes)}
         <p class="fc-sub">${up ? 'Surge expected from <strong style="color:var(--text)">' + fmtTime(up.minutes) + '</strong> (about ' + up.multiplier.toFixed(2) + '\u00d7).' : 'No surge expected in the next 6 hours.'}</p>
         <div class="actions"><button class="btn primary" data-act="choose">See rides</button></div>
         <div class="basis">${basisLine(f)}</div>
@@ -1618,7 +1623,7 @@ function renderChoose() {
 
   let banner = '';
   if (surging) {
-    const ease = easesIn(ROWS, state.routeIdx, state.minutes, state.dow, 180, state.rain, state.event);
+    const ease = easesIn(ROWS, state.routeIdx, state.minutes, state.dow, CHART_MAX_MIN, state.rain, state.event);
     const tags = reasonTags(state.minutes, state.dow, state.rain, state.event);
     const why = tags.length ? tags.map(x => x.label).join(' · ').toLowerCase() : 'heavy demand';
     banner = `<div class="surgebar">
