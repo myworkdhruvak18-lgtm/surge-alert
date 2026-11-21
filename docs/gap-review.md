@@ -1,5 +1,7 @@
 # Gap review: PRD, research doc and prototype
 
+> **Section numbers:** entries dated before 2026-11-22 use the old PRD numbering. In the current `docs/prd.md`: §8 is now "Commute ping (R6)"; §10 and 10a are "Feature rules: pickup shift (R8, R9)"; §10c and §11 are "Home screen rules (R2, R7)" and "Commute ping (R6)"; the old Success Metrics are "Metrics, guardrails and experiment". The older long version is `docs/prd-detailed.md`.
+
 Method: three independent reviewers (Opus, Sonnet, Haiku) each read the PRD, the commute-ping research doc, the roadmap, the brainstorm notes and the current prototype (`app/app-uber-ui.html`) and listed gaps. In round 2 each reviewer received the other two lists, re-checked every claim against the files, and said agree / disagree / partly, then listed what all three had missed. This is the merged result. Raw files are in the scratch review folder (not committed). The reviewers checked each other's claims; the product owner has not yet ruled on anything below.
 
 Severity is the reviewers' consensus after round 2.
