@@ -1,5 +1,7 @@
 # PM Project — Brainstorm Notes
 
+> **Section numbers:** entries dated before 2026-11-22 use the old PRD numbering. In the current `docs/prd.md`: §8 is now "Commute ping (R6)"; §10 and 10a are "Feature rules: pickup shift (R8, R9)"; §10c and §11 are "Home screen rules (R2, R7)" and "Commute ping (R6)"; the old Success Metrics are "Metrics, guardrails and experiment". The older long version is `docs/prd-detailed.md`.
+
 ## ⭐ RESEARCH FINDING (2026-11-17) — pickup-point recommendations, Rapido correction
 
 Question raised: should the app recommend shifting to a nearby cheaper pickup point during surge, and separately, recommend moving from a narrow lane to the main road where fares are typically lower — the assumption going in was that Rapido already ships both.

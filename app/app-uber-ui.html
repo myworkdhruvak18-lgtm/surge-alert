@@ -1010,7 +1010,7 @@ const modeSilent = ti => modeF(ti).status !== 'ok';
 const modeMultAt = (ti, zf, minutes) => { const f = modeF(ti, minutes); return f.status === 'ok' ? 1 + (f.multiplier - 1) * zf : 1; };
 
 const state = {
-  routeIdx: 0, dow: 1, minutes: 555, rain: 0, event: 0,
+  routeIdx: 1, dow: 1, minutes: 555, rain: 0, event: 0,
   screen: 'home', alertArmed: false, alertBaseline: null, alertFired: false,
   chosenTier: 2, tip: 0, pickupId: null, pushTier: 2, walk: null, requoted: null, convergence: 0,
   availOverride: {}, supplyMult: 1, commuteOverride: null, bannerOn: true, bannerDismissed: null, bannerKey: null,
@@ -1039,7 +1039,7 @@ const basisLine = f => f.basis + ((f.scope === 'population' || f.nObservations <
 const pickupDismissedNow = () => state.pickupDismissed === (state.routeIdx + '|' + selectedPickup().id + '|' + state.chosenTier);
 const route = () => META.routes[state.routeIdx];
 
-/* ============ PICKUP POINTS (PRD §10) + COMMUTE ALERTS (PRD §8) ============ */
+/* ============ PICKUP POINTS (PRD: Feature rules: pickup shift, R8) + COMMUTE ALERTS (PRD: Commute ping, R6) ============ */
 const DEFAULT_RULES = { minTripKm: 2.5, walkMin: 5, walkMax: 10, dropMin: 0.3, minSaving: 15, availMin: 0.5, select: 'nearest', adv: 45, last: 30, pingThr: 1.25, earlierMax: 1.25, quiet: 360, some: 0.35, many: 0.7 };
 let MIN_TRIP_KM = DEFAULT_RULES.minTripKm;
 let WALK_MIN_MIN = DEFAULT_RULES.walkMin;
@@ -1540,7 +1540,7 @@ function renderHome() {
         </div>
         ${alts ? `<div class="sect-label" style="margin-bottom:2px">Cheaper right now</div>
         <div class="alts">${alts}</div>` : ''}
-        <div class="basis">${basisLine(f)} · typical range ${f.bandLow.toFixed(2)}–${f.bandHigh.toFixed(2)}×</div>
+        <div class="basis">${basisLine(f)} · ${f.bandLow.toFixed(2) === f.bandHigh.toFixed(2) ? 'typically ' + f.bandLow.toFixed(2) + '×' : 'typical range ' + f.bandLow.toFixed(2) + '–' + f.bandHigh.toFixed(2) + '×'}</div>
       </div>`;
     } else if (lb) {
       card = `<div class="fcard is-medium">
@@ -1558,7 +1558,7 @@ function renderHome() {
       </div>`;
     } else {
       // Known, and fine. Distinct from silence: silence means we don't know.
-      const ahead = trajectory(ROWS, state.routeIdx, state.minutes, state.dow, 360, 15, state.rain, state.event, um);
+      const ahead = trajectory(ROWS, state.routeIdx, state.minutes, state.dow, CHART_MAX_MIN, 15, state.rain, state.event, um);
       const up = ahead.find(p => p.multiplier >= RISK_MEDIUM);
       const slight = f.multiplier > 1;
       card = `<div class="fcard is-clear">
@@ -1566,7 +1566,7 @@ function renderHome() {
         <h2 class="fc-head">${slight ? f.multiplier.toFixed(2) + '\u00d7 \u2014 ' : 'No surge \u2014 '}about ${rupee(fare(f.multiplier))} to ${r.destination}</h2>
         ${chips ? `<div class="chips">${chips}</div>` : ''}
         ${chart(trajectory(ROWS, state.routeIdx, state.minutes, state.dow, CHART_DEFAULT_MIN, 15, state.rain, state.event, um), state.minutes)}
-        <p class="fc-sub">${up ? 'Surge expected from <strong style="color:var(--text)">' + fmtTime(up.minutes) + '</strong> (about ' + up.multiplier.toFixed(2) + '\u00d7).' : 'No surge expected in the next 6 hours.'}</p>
+        <p class="fc-sub">${up ? 'Surge expected from <strong style="color:var(--text)">' + fmtTime(up.minutes) + '</strong> (about ' + up.multiplier.toFixed(2) + '\u00d7).' : 'No surge expected in the next 90 minutes.'}</p>
         <div class="actions"><button class="btn primary" data-act="choose">See rides</button></div>
         <div class="basis">${basisLine(f)}</div>
       </div>`;
@@ -1583,7 +1583,7 @@ function renderHome() {
 }
 
 // Outside the rider's commute window (or with no learned commute) the home screen is the normal one: search bar, Later and recent
-// destinations. The forecast card and ride-type chips appear only inside the window (PRD section 11); forecasts, prices and
+// destinations. The forecast card and ride-type chips appear only inside the window (PRD: Home screen rules, R2); forecasts, prices and
 // cheaper-pickup suggestions still show on the ride-options screen once a destination is entered.
 function recentDestinations() {
   const rows = META.routes.map((r, i) => `
@@ -1696,7 +1696,7 @@ function renderRequested() {
     <div class="progress-rail"><i></i></div>
     <div style="background:var(--surface);border-radius:var(--radius);padding:13px;margin-top:8px">
       <div style="font-size:13.5px;font-weight:600">${t.name} details</div>
-      <div class="fc-sub" style="margin-top:5px">${state.walkedFrom ? 'Walk ~' + state.walkedFrom.min + ' min to ' + selectedPickup().name + ' · your driver meets you there' : 'Meet your driver at ' + selectedPickup().name}</div>
+      <div class="fc-sub" style="margin-top:5px">${state.walkedFrom ? (state.screen === 'requested' ? 'Once a driver accepts, walk ~' : 'Walk ~') + state.walkedFrom.min + ' min to ' + selectedPickup().name + ' · your driver meets you there' : 'Meet your driver at ' + selectedPickup().name}</div>
       <div class="fc-sub" style="margin-top:7px">Cash · ${mm >= SURGE_VISIBLE_MIN ? `<span style="color:var(--ember)">${mm.toFixed(2)}× surge</span>` : 'Normal pricing'}</div>
     </div>
     <div style="background:var(--surface);border-radius:var(--radius);padding:13px;margin-top:10px">

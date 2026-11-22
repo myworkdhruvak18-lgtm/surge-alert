@@ -305,7 +305,7 @@ Zone factors and availability factors are all hand-set. There is no per-cell sur
 #### 10c. Display rules, normal-price times and maps (added v6)
 
 - **Surge under 1.05x is normal pricing.** The app never shows a multiplier below 1.00x, and a forecast between 1.00x and 1.05x is shown as normal pricing with no multiplier. The forecast chart's axis never goes below 1.00x. (Checked on 9,600 forecasts: none below 1x, none inside 1.00-1.05x.)
-- **Every hour has data.** At times when prices are normal (or only slightly above usual), the home card still shows a chart of the next hours and a six-hour look-ahead ("Surge expected from 5:00pm" or "No surge expected in the next 6 hours"), so the rider is never shown an empty state.
+- **Every hour has data.** At times when prices are normal (or only slightly above usual), the home card still shows a chart of the next 60 minutes and a 90 minute look-ahead ("Surge expected from 5:00pm" or "No surge expected in the next 90 minutes"; shortened from six hours on 2026-11-22 to match the chart horizon), so the rider is never shown an empty state.
 - **Maps.** The prototype draws a stylised map (not real map tiles): the rider's position on the home screen; the route plus suggested pickup points on the ride-options screen at a single-entry place; the gate choices and, after a tap, the best cheaper gate on the Confirm pickup screen at a multi-gate place; the driver on the way. A real product would use the platform's own map.
 
 ### 11. Card and Ping Content (added v6, from owner review)
