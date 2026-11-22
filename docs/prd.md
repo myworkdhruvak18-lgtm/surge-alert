@@ -11,23 +11,23 @@ A forecast engine tells a ride-hailing rider, before booking, whether a surge is
 
 |  |  |
 | --- | --- |
-| **Status** | Draft v7. Prototype built, evidence simulated |
+| **Status** | Draft v8. Prototype built; all fare evidence simulated; personas from a rider survey plus verbal interviews |
 | **Owner** | Dhruva (solo PM portfolio project) |
 | **Platform** | Any ride-booking app; India first. The prototype uses an Uber-style UI as the reference build |
 | **Timeline** | 2 to 4 weeks, spec through demo |
 | **Prototype** | https://uberuideploy.vercel.app (`app/app-uber-ui.html`) |
 | **Design canvas** | Ten journeys, `design/canvas/` in the repo |
-| **Evidence** | Simulated fares, surge and drivers. Rider survey (19 responses, convenience sample) and 5 friends asked in person; no formal interviews yet |
+| **Evidence** | Simulated fares, surge and drivers (no real fare data yet). Rider survey (19 responses, convenience sample, 13 in Hyderabad) plus 5 verbal, in-person interviews with cab riders; walk timing also draws on 5 friends asked informally. A Bengaluru interview round is still planned |
 
 **Problem.** A rider sees a surge multiplier only when booking, with no context. The choice becomes pay it or abandon, and many riders open a competitor app.
 
 **Solution.** Three things before booking: price context and a short forecast per ride type; a commute ping telling regular commuters when to start earlier; and one cheaper pickup point a 5 to 10 minute walk away (about 400 to 750 m) when surge is high.
 
-**Users.** Primary: riders with a regular commute. Secondary: occasional riders booking one-off trips. Two survey personas lead: the two-wheeler price hunter (11 of 19 respondents) and the auto rider who works around the surge (7 of 19). A third, the office cab commuter, now has 6 cab riders behind it (1 from the survey, 5 follow-up answers collected directly); still a small sample.
+**Users.** Primary: riders with a regular commute. Secondary: occasional riders booking one-off trips. Three personas: the two-wheeler price hunter (11 of 19 survey respondents), the auto rider who works around the surge (7 of 19), and the cab rider who plans ahead (6 riders: 5 verbal interviews plus 1 survey response). Cab riders split into commuters (3 of 5 interviewed), who fit the ping and home card, and leisure groups (2 of 5), who walk further and book ahead. All persona evidence is a small convenience sample, Hyderabad-heavy.
 
 **Success.** North star: a surged session ends in a completed trip, not an abandoned or cancelled one. Guardrails cover riders, drivers and the marketplace. Rollout is by zone with a kill switch.
 
-**Unproven.** Driver behaviour is not modelled. The real surge shape across a zone is unknown. Reserve's future-time pricing is unchecked. Kill-criteria numbers need a control-based baseline.
+**Unproven.** Driver behaviour is not modelled. The real surge shape across a zone is unknown. Reserve's future-time pricing is unchecked. Kill-criteria numbers need a control-based baseline. Persona sizes rest on 19 survey responses and 5 interviews, not a representative sample.
 
 **Platform scope.** The forecast, ping and pickup-shift rules work in any ride-booking app with fare history, surge or dynamic pricing and pickup points; each app needs its own fare history, ride types and pricing rules. Uber is the reference build because the prototype, the pricing research (Reserve, matching, MVAG 2025) and the design canvas use Uber's flows. The feature works inside one app; comparing prices across apps stays out of scope.
 
@@ -52,7 +52,7 @@ Today a rider sees a fare's surge multiplier only at booking, with no history at
 
 ## Users and scenarios
 
-The segments below come from the CCI 2022 study and the owner's observation of friends and family. The personas after them come from the rider survey (19 responses, a convenience sample: 13 in Hyderabad, 11 two-wheeler, 7 auto and 1 cab rider) and 5 friends asked in person. No formal interviews yet.
+The segments below come from the CCI 2022 study and the owner's observation of friends and family. The personas after them come from two sources: the rider survey (19 responses, a convenience sample: 13 in Hyderabad, 11 two-wheeler, 7 auto and 1 cab rider) and 5 verbal, in-person interviews with cab riders run by the owner. Walk timing also draws on 5 friends asked informally in person. A Bengaluru interview round is still planned.
 
 | Segment | Who | What they need | Surfaces |
 | --- | --- | --- | --- |
@@ -60,23 +60,41 @@ The segments below come from the CCI 2022 study and the owner's observation of f
 | **Secondary: occasional rider** | Books a one-off trip, no history | Know whether the fare is high, and whether another ride type or nearby pickup is cheaper | Ride-options banner, per-row multipliers, pickup suggestion |
 | **Affected: drivers** | Drivers in and near a surge hotspot | Fair access to rides; not being pulled out of the zone | Dispatch rule for alternate pickups (specification only) |
 
-### Personas from the survey
+### Personas from the survey and interviews
 
-Each persona is one ride-type group's answers; counts are respondents in that group. The groups are small, so treat these as directions to test.
+Each persona is one ride-type group; counts are riders in that group. The two-wheeler and auto personas come from the survey. The cab persona comes from 5 verbal interviews plus the survey's one cab rider. Evidence behind each: 11, 7 and 6 riders, a convenience sample, Hyderabad-heavy. That is enough to design for and to predict experiment results, not to size the market.
 
-|  | Two-wheeler price hunter | Auto rider who works around the surge | Office cab commuter (6 riders, small sample) |
+|  | Two-wheeler price hunter | Auto rider who works around the surge | Cab rider who plans ahead |
 | --- | --- | --- | --- |
-| Respondents | 11 of 19 | 7 of 19 | 6 cab riders: 1 from the survey, 5 follow-up answers collected directly by the owner (not in the spreadsheet) |
-| Rides | Rs 100 to 200 a trip (8 of 11); 4 to 10 trips a month (7); a regular route for most or all trips (6) | Rs 100 to 400 a trip; 4 to 10 trips a month (6 of 7) | Standard (4 of 6), Sedan (1), six-seater (1). Standard Rs 150 to 300 for 3 of 4 (one paid Rs 400 to 800); Sedan reported as "15-200", probably Rs 150 to 200; six-seater Rs 700 to 800. Commuters take 20 to 45 trips a month; leisure riders 5 or fewer to 10 |
-| At the last high price | Switched app (8), booked anyway (5), switched ride type (4) | All 7 waited and checked again; switched app (6) and ride type (5) | All 5 follow-up riders saw a high price in the past week (Thursday to Friday for most). They were asked when, not what they did, so the action is unknown. The survey rider switched ride type |
-| Walking | Walked to pay less (7 of 11); 7 of 9 walkers went under 5 minutes; saved under Rs 20 (5) or Rs 20 to 50 (3) | Mostly under 3 minutes (4 of 7), as often for traffic or entry points as for price | 3 of the 5 follow-up riders walked to another spot: about 10 minutes (2) and 5 minutes (1); the saving was not given. The survey rider walked under 3 minutes, for an entry point |
-| Timing | Rarely leaves earlier or later because of price (7 of 11 did not) | Left earlier because of price (5 of 7); opens the app 5 to 15 minutes ahead (5); has booked in advance (4) | Opens the app 5 to 25 minutes ahead (commuters: 20 to 25, 5 to 10 and 5 minutes). 4 of 5 open it early to check prices and wait. All 5 have booked in advance, mostly for the airport |
-| Pain | Charged for a driver's wait last month (6 of 11) | Charged for a wait (3 of 7) | All 5 follow-up riders: a driver waited over 5 minutes, they were charged, and a driver asked for more money or to cancel. All five gave the same answers, so check the wording before leaning on it |
-| What it means | The pickup shift fits, but savings are small, so the Rs 15 floor and the 5 minute minimum decide whether it is worth showing; the ping fits least | Best fit for the commute ping and forecast card; "back to normal by" answers what they check when they wait | Two kinds of rider. Commuters (3 of 5, 20 to 45 trips a month) fit the ping and card. Leisure group riders (2 of 5, 4 to 5 people) walked 5 to 10 minutes and book ahead, so the pickup shift and Reserve matter more to them. Still 6 riders: a direction, not proof |
+| Respondents | 11 of 19 | 7 of 19 | 6 riders: 5 verbal interviews by the owner (in person, not in the survey spreadsheet) plus 1 survey response. Of the 5 interviewed, 3 are commuters and 2 are leisure group riders |
+| Rides | Rs 100 to 200 a trip (8 of 11); 4 to 10 trips a month (7); a regular route for most or all trips (6) | Rs 100 to 400 a trip; 4 to 10 trips a month (6 of 7) | Standard (4 of 6), Sedan (1), six-seater (1). Standard Rs 150 to 300 for 3 of 4 (one paid Rs 400 to 800); Sedan reported as "15-200", probably Rs 150 to 200; six-seater Rs 700 to 800. Commuters (office and home) take 20 to 45 trips a month; leisure riders (city trips, parties) fewer than 5 to 10 |
+| At the last high price | Switched app (8), booked anyway (5), switched ride type (4) | All 7 waited and checked again; switched app (6) and ride type (5) | All 5 interviewees saw a high price in the past week (Thursday to Friday for most). They were asked when, not what they did, so the action is unknown. The survey rider switched ride type |
+| Walking | Walked to pay less (7 of 11); 7 of 9 walkers went under 5 minutes; saved under Rs 20 (5) or Rs 20 to 50 (3) | Mostly under 3 minutes (4 of 7), as often for traffic or entry points as for price | 3 of 5 interviewees walked to another spot: about 10 minutes (2: a commuter and a 4-person group) and 5 minutes (1: a 5-person group); the saving was not given. Longer than most two-wheeler walks. The survey rider walked under 3 minutes, for an entry point |
+| Timing | Rarely leaves earlier or later because of price (7 of 11 did not) | Left earlier because of price (5 of 7); opens the app 5 to 15 minutes ahead (5); has booked in advance (4) | Opens the app 5 to 25 minutes ahead (commuters: 20 to 25, 5 to 10 and 5 minutes; leisure groups: 10 to 15). 4 of 5 waited while checking prices. All 5 have booked in advance, mostly to the airport (one also to a pub) |
+| Pain | Charged for a driver's wait last month (6 of 11) | Charged for a wait (3 of 7) | All 5 interviewees said yes to one combined question: a driver waited over 5 minutes, they were charged, and a driver asked for more money or to cancel. Identical answers to a combined question are a wording caveat; ask it as three questions before leaning on it |
+| What it means | The pickup shift fits, but savings are small, so the Rs 15 floor and the 5 minute minimum decide whether it is worth showing; the ping fits least | Best fit for the commute ping and forecast card; "back to normal by" answers what they check when they wait | Two kinds of cab rider. Commuters (3 of 5: Standard or Sedan, 20 to 45 trips a month, open the app 5 to 25 minutes ahead) fit the ping and home card. Leisure group riders (2 of 5: 4 to 5 people) walked 5 to 10 minutes and book ahead, so the pickup shift and Reserve matter more to them |
 
-**Cab rider follow-up (5 riders, collected directly by the owner, 2026-11-22).** Three book Standard (2, 4 and 2 people), one Sedan (1 person), one six-seater (5 people). Not asked or not answered, so unknown: what they did at the last high price, how much cheaper a walk made the ride, and whether an advance booking's final price matched the quote. Two groups walked: 4 people walked about 10 minutes and 5 people walked 5 minutes, which weakens the assumption that groups will not walk, though no saving amount was given, so it does not test the Rs 100 six-seater floor.
+**Cab rider interviews.** Five riders, interviewed verbally and in person by the owner (logged 2026-11-22), one row each. 4 of 5 waited while checking prices (rider 3 did not). Last high price: Friday morning, this week, this week, Friday evening and Thursday evening.
 
-Across all three: 18 of 19 compare apps at least sometimes; 11 of 19 had a driver wait over 5 minutes last month (9 charged); 10 of 19 had a driver ask for more money than the app showed.
+| # | Kind | Ride type, party | Rs a trip | Trips a month | Opens app ahead | Walked to another spot | Booked ahead to |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Commuter, office and home | Standard, 2 people | 200 to 250 | 40 to 45 | 20 to 25 min | No | Airport |
+| 2 | Leisure, around the city | Standard, 4 people | 150 to 300 | 5 to 10 | 10 to 15 min | About 10 min | Airport |
+| 3 | Commuter, office and home | Sedan, 1 person | "15-200" (probably 150 to 200) | 20 to 30 | 5 min | No | Airport |
+| 4 | Leisure, parties | Six-seater, 5 people | 700 to 800 | Fewer than 5 | 10 to 15 min | 5 min | Pub and airport |
+| 5 | Commuter, office and home | Standard, 2 people | 150 to 300 | 40 to 45 | 5 to 10 min | About 10 min | Airport |
+
+Not asked or not answered, so unknown: what they did at the last high price, how much cheaper a walk made the ride, and whether an advance booking's final price matched the quote. All five said yes to one combined question on driver waits, wait charges and drivers asking for more money; see Pain above.
+
+**What the cab interviews change.** No decided value changes; where the data argues for a revisit, it is an open question under Decision log and open questions.
+
+- **Commute ping and home card.** Cab commuters open the app 5 to 25 minutes ahead, inside the card's window (45 minutes before to 30 after). The ping, 45 minutes before, lands before they would check on their own, and cabs are where it fires most in simulation (9 to 12% of peak commute times). Cab commuters join the auto rider as the best fit.
+- **Walk window (5 to 10 minutes, 5 minimum).** 3 of 5 interviewees walked 5 to 10 minutes; 7 of 9 two-wheeler walkers went under 5. The window matches how cab riders walk better than how two-wheeler riders do. Unchanged; conversion is to be read by ride type.
+- **Six-seater floor (Rs 100).** Groups of 4 and 5 walked 5 to 10 minutes, which weakens the reasoning that groups will not walk. No saving was given, so it neither confirms nor breaks the floor. Unchanged.
+- **Reserve and advance booking.** All 5 book ahead, mostly to the airport. Reserve (P1, stubbed, pricing unchecked) matters more than the survey alone suggested, mainly for leisure and airport trips. Recommendation: check Reserve's future-time pricing early.
+- **5 minute free wait.** The combined answers point to wait charges as a real cab pain, in line with a 5 minute rather than 3 minute free wait, but they cannot be read as three separate facts. Unchanged; the seconds-over-free-wait guardrail tracks it.
+
+Across all 19 survey respondents: 18 of 19 compare apps at least sometimes; 11 of 19 had a driver wait over 5 minutes last month (9 charged); 10 of 19 had a driver ask for more money than the app showed.
 
 **How the personas map to segments and surfaces.** The requirements, metrics, experiment and go-to-market sections below refer to the personas by these names.
 
@@ -84,14 +102,15 @@ Across all three: 18 of 19 compare apps at least sometimes; 11 of 19 had a drive
 | --- | --- | --- | --- |
 | Two-wheeler price hunter (11 of 19) | Most ride a regular route (6 of 11) but rarely move their timing for price | Pickup shift (R8), but only where the saving clears the Rs 15 floor; per-ride-type chips (R3) | Commute ping (R6): it fires on 0 to 3% of simulated peak commute times for two-wheelers |
 | Auto rider who works around the surge (7 of 19) | Primary: regular commuter | Commute ping (R6) and home forecast card (R2); the "back to normal by" line answers what they check when they wait | Pickup shift (R8): their walks are mostly under 3 minutes, below the 5 minute minimum |
-| Office cab commuter (6 riders) | Primary: regular commuter, the rider the card was first designed for | Home forecast card (R2) and ride-type switching (R3) | Small sample: 6 riders, with some questions unanswered; keep collecting before trusting it |
+| Cab rider who plans ahead (6 riders) | Commuters (3 of 5 interviewed): primary, regular commuter, the rider the card was first designed for. Leisure groups (2 of 5): secondary, occasional rider | Commuters: commute ping (R6) and home forecast card (R2). Leisure groups: pickup shift (R8) and Reserve (R5). Both: ride-type switching (R3) | 6 riders (5 verbal interviews, 1 survey response), convenience sample. Reserve is stubbed and its pricing unchecked, though all 5 book ahead. Six-seater suggestions almost never fire (7 in simulation) |
 
 **Research planned (to settle owner choices with evidence)**
 
 - 8 to 10 interviews with Bengaluru riders, mostly regular commuters, run to Mom Test rules: ask about past behaviour, not opinions about the idea.
 - A 5-person walkthrough of the prototype.
 - A short survey sizing how often riders switch ride type, wait, or walk.
-- Settles: the personas, the 5 to 10 minute walk window, the rupee floors and the ping timing.
+- A cab-rider follow-up on what the 5 interviews left open: what they did at the last high price, how much cheaper the walk made the ride, and whether an advance booking's final price matched the quote. Split the combined question into three: did a driver wait over 5 minutes, were you charged for it, and did a driver ask for more money or ask you to cancel.
+- Settles: persona sizes, the 5 to 10 minute walk window by ride type, the rupee floors (the Rs 100 six-seater floor included) and the ping timing.
 
 **Scenarios (each is a journey on the design canvas)**
 
@@ -108,7 +127,7 @@ Across all three: 18 of 19 compare apps at least sometimes; 11 of 19 had a drive
 
 ### User flow
 
-[embedded content: user flow · 6 steps, from the doc's rules and survey personas\]
+[embedded content: user flow · 6 steps, from the doc's rules and the survey and interview personas\]
 
 The ping and home card reach only riders who set up a commute; ride options reach every rider who sets a destination, and the pickup suggestion adds to them only in surge.
 
@@ -146,19 +165,19 @@ P0 is needed for the core promise, P1 is important, P2 is specified but not buil
 | ID | Requirement | Serves | Priority | Status |
 | --- | --- | --- | --- | --- |
 | R1 | Forecast per ride type with a confidence floor; silence when history is thin | All riders, every ride type | P0 | Built on simulated data |
-| R2 | Home forecast card and ride-type chips, only for set-up riders inside their commute window | Regular commuters: auto rider, office cab commuter | P0 | Built |
-| R3 | Ride-options banner and a multiplier chip per ride type | Occasional riders; every persona that switches ride type at a high price | P0 | Built |
+| R2 | Home forecast card and ride-type chips, only for set-up riders inside their commute window | Regular commuters: auto rider, cab commuters (they open the app 5 to 25 minutes ahead, inside the window) | P0 | Built |
+| R3 | Ride-options banner and a multiplier chip per ride type | Occasional riders, cab leisure groups; every persona that switches ride type at a high price | P0 | Built |
 | R4 | Show the basis of every forecast ("based on n similar trips") | All riders | P0 | Built |
-| R5 | A capture action with every wait message: Alert at 1.0x (P0), Reserve (P1) | Riders who wait: auto rider (all 7 waited and checked again) | P0 / P1 | Alert built; Reserve stubbed |
-| R6 | Commute ping: one per direction per day, 45 min before, with Pause and Mute | Auto rider (best fit); fits the two-wheeler price hunter least | P0 | Built on simulated data |
+| R5 | A capture action with every wait message: Alert at 1.0x (P0), Reserve (P1) | Riders who wait or book ahead: auto rider (all 7 waited and checked again); cab rider (4 of 5 waited while checking prices; all 5 book ahead, so Reserve matters most here) | P0 / P1 | Alert built; Reserve stubbed |
+| R6 | Commute ping: one per direction per day, 45 min before, with Pause and Mute | Auto rider and cab commuters (best fit; cabs get the most pings in simulation); fits the two-wheeler price hunter least | P0 | Built on simulated data |
 | R7 | Reason tags on cards and the ping | Regular commuters who get the card or ping | P1 | Built; congestion and construction are labels only(more to be added) |
-| R8 | Cheaper pickup suggestion | Two-wheeler price hunter, where the saving clears Rs 15; occasional riders | P1 | Built on simulated data |
+| R8 | Cheaper pickup suggestion | Two-wheeler price hunter, where the saving clears Rs 15; cab leisure groups (walked 5 to 10 minutes); occasional riders | P1 | Built on simulated data |
 | R9 | Driver eligibility for alternate-pickup bookings | Drivers in and near a surge hotspot | P2 | Specification only |
 | R10 | Instrumentation, guardrails and a zone-level experiment | Everyone; results read per ride type and persona | P0 before launch | Not built |
 
 ### Acceptance criteria
 
-Each line is testable against the prototype or, for R9 and R10, against a real build. The rule sections below hold the full detail.
+Each line is testable against the prototype or, for R9 and R10, against a real build. The rule sections below hold the full detail. The cab interviews change no criterion: the R2 window already covers cab commuters' 5 to 25 minute lead time, and the walk, floor and free-wait values stay as decided.
 
 | ID | Done when |
 | --- | --- |
@@ -236,6 +255,8 @@ For a rider with a learned route, the same engine runs on a schedule against the
 
 Both thresholds are owner choices informed by simulation (`docs/ping-threshold-research.md`). On simulated data the ping fires on about 9 to 12% of dry weekday peak commute times for cabs, 7 to 8% for autos and 0 to 3% for two-wheelers. There is deliberately no rupee floor and no minimum gap between the two forecast times; the known weakness is that the earlier start can be only slightly cheaper.
 
+**Fit with the cab interviews.** The 3 cab commuters interviewed open the app 5 to 25 minutes before leaving, so a ping 45 minutes ahead reaches them before they would check on their own, with time to act on "Start by". Cabs are also where the ping fires most often in simulation. Timing, trigger and quiet hours are unchanged.
+
 ## Feature rules: pickup shift (R8, R9)
 
 In surge, a rider is offered one cheaper pickup point a short walk away, always shown against the price at their own point. The flow follows the standard booking sequence: Where to, ride options with the route, Confirm pickup (only at multi-gate places), finding a driver, driver on the way. A card with only the cheaper price is a blocking bug.
@@ -248,10 +269,10 @@ A single failed rule means no card at all; the driver-side steps inside the dash
 
 | Rule | Value | Note |
 | --- | --- | --- |
-| Walk | 5 to 10 minutes (about 400 to 750 m) from the rider's own point (or the gate they picked) | Owner rule (7 to 10 until 2026-11-22). The survey found 13 of 16 real walks under 5 minutes; the minimum keeps riders from all moving to the next corner |
+| Walk | 5 to 10 minutes (about 400 to 750 m) from the rider's own point (or the gate they picked) | Owner rule (7 to 10 until 2026-11-22). The survey found 13 of 16 real walks under 5 minutes; the minimum keeps riders from all moving to the next corner. The cab interviews add 3 walks inside the window (about 10 minutes twice, 5 minutes once) |
 | Surge drop | At least 0.30x lower than the rider's point, on underlying surge, against a 1.0x floor | One full risk band; hand-set |
 | Rider's own surge | Strictly above 1.1x | Product-level guard; changes nothing in the simulation |
-| Fare saving | At least Rs 15 (two- and three-wheelers), Rs 40 (Standard), Rs 60 (Sedan), Rs 100 (Six-seater) | Owner floors; below the floor, no card at all |
+| Fare saving | At least Rs 15 (two- and three-wheelers), Rs 40 (Standard), Rs 60 (Sedan), Rs 100 (Six-seater) | Owner floors; below the floor, no card at all. The Rs 100 Six-seater floor is untested: a 5-person group walked 5 minutes but gave no saving |
 | Availability | The point's simulated availability score is at least 0.5 | Hand-set; no driver-supply data |
 | Trip length | Over 2.5 km | Shorter trips get no suggestion |
 
@@ -265,7 +286,7 @@ A single failed rule means no card at all; the driver-side steps inside the dash
 - A dispatch hold that delays the driver was proposed and rejected by the owner.
 - No night or rain rule: the walk is the rider's choice.
 
-**How riders actually time the walk (informal evidence).** Riders usually book from home or the office and start moving only when the driver is close on the map: all 5 friends the owner asked in person said so, and Uber's India guidance to request only when ready ([Uber India blog](https://www.uber.com/en-IN/blog/request-when-youre-ready-5)) suggests the platform sees the same habit. So the 5 minute free wait is often spent on the rider's own walk even at an ordinary pickup. For an alternate pickup 5 to 10 minutes away, a rider who waits for the driver to approach before setting off will arrive late, so the driver's ETA and the free wait matter more here than for an ordinary booking. This is why the free wait is 5 minutes rather than the 3 Rapido gives: for riders who start moving only once the driver is close, the extra 2 minutes cover much of their walk before any charge starts.
+**How riders actually time the walk (informal evidence).** Riders usually book from home or the office and start moving only when the driver is close on the map: all 5 friends the owner asked in person said so, and Uber's India guidance to request only when ready ([Uber India blog](https://www.uber.com/en-IN/blog/request-when-youre-ready-5)) suggests the platform sees the same habit. So the 5 minute free wait is often spent on the rider's own walk even at an ordinary pickup. For an alternate pickup 5 to 10 minutes away, a rider who waits for the driver to approach before setting off will arrive late, so the driver's ETA and the free wait matter more here than for an ordinary booking. This is why the free wait is 5 minutes rather than the 3 Rapido gives: for riders who start moving only once the driver is close, the extra 2 minutes cover much of their walk before any charge starts. The cab interviews point the same way with a caveat: all 5 said a driver waited over 5 minutes and they were charged, but as one combined question that all five answered yes, so it is a signal, not a measure. The 5 minute free wait stays.
 
 ### Which drivers can accept an alternate-pickup ride (specification only)
 
@@ -294,7 +315,7 @@ Six-seaters almost never get a suggestion: their history is thin and the hand-se
 
 ## Metrics, guardrails and experiment
 
-No platform baselines exist yet. Kill criteria will be set relative to a control (comparable zones with the feature off), with the allowed gap set from the control's own variation. Every metric is reported per ride type, which also gives a read per persona: Two-wheeler for the price hunter, Three-wheeler for the auto rider, Standard for the office cab commuter.
+No platform baselines exist yet. Kill criteria will be set relative to a control (comparable zones with the feature off), with the allowed gap set from the control's own variation. Every metric is reported per ride type, which also gives a read per persona: Two-wheeler for the price hunter, Three-wheeler for the auto rider, Standard and Sedan for the cab rider. Split cab results by commute setup: riders with a commute set up read as cab commuters, the rest (Six-seater included) as leisure groups.
 
 **North star.** A surged session ends in a completed trip, not an abandoned or cancelled one, within the same session. A fixed time limit was rejected because it would penalise long trips.
 
@@ -308,7 +329,7 @@ No platform baselines exist yet. Kill criteria will be set relative to a control
 | Commute ping | Against the rider's chosen days and times: share who book before the advised start; share who open the app. Correctness check: every ping fired on the set date and time and under the rules |
 | Forecast quality | Coverage per ride type; precision and recall against the rush-hour baseline; margin over the strongest simple baseline (3.4 F1 points pooled on simulated data) |
 
-**Why retention is the headline.** In the survey (19 responses, convenience sample), 18 of 19 check more than one app at least sometimes, 12 often, and at the last high price switching app was the most common action (14 of 19), ahead of switching ride type (10) and waiting (8).
+**Why retention is the headline.** In the survey (19 responses, convenience sample), 18 of 19 check more than one app at least sometimes, 12 often, and at the last high price switching app was the most common action (14 of 19), ahead of switching ride type (10) and waiting (8). The cab interviews did not ask what riders did at the last high price, so they add nothing to these counts.
 
 ### Guardrails (a breach pauses rollout)
 
@@ -323,12 +344,16 @@ No platform baselines exist yet. Kill criteria will be set relative to a control
 
 This is the largest survey persona (11 of 19): most have walked to pay less (7 of 11), but the saving was usually under Rs 20 (5). Two-wheeler fares are low and the Rs 15 floor means a card shows only when the saving is worth at least that. In simulation the saving is about Rs 7 to 28, and 606 of 6,144 eligible scenarios fire. Compare every metric for two-wheelers against the other ride types, and test the floor at Rs 15, a lower value and none, plus feature off. If savings are too small to change behaviour, relax the floor or remove the pickup shift for two-wheelers.
 
+### Cab rider review (cab rider who plans ahead)
+
+Six riders stand behind this persona (5 verbal interviews, 1 survey response), so read it in two parts. Commuters (commute set up, Standard or Sedan): ping and home-card metrics, where cabs get the most pings in simulation (9 to 12% of peak commute times). Leisure groups: Book-here conversion by walk length across the 5 to 10 minute window, against two-wheelers, to see whether cab riders' longer walks hold up; and the Reserve share on airport trips once its pricing is checked. Six-seater reads will be thin (7 suggestions in simulation). Track seconds over the 5 minute free wait for cabs: all 5 interviewees reported wait charges, though through one combined question.
+
 ### Experiment design
 
 - Randomise by zone and time block, not by rider: riders in a hotspot share one marketplace (a switchback or geo experiment). Comparable zones with the feature off are the control.
 - Staged rollout: a small share of zones first, then wider, with a kill switch and written thresholds agreed before launch.
 - The pickup shift and Reserve are tested separately from the forecast card, because the pickup shift is the least validated lever.
-- Read results per persona. The survey predicts the ping and card work best for Three-wheeler riders (the auto rider) and the ping least for Two-wheeler riders, and that the pickup shift fits Two-wheeler riders only where savings clear the floor. A result against these predictions is evidence about the persona as well as the feature. Standard has one survey respondent behind it, so recruit cab riders before reading it as a persona result.
+- Read results per persona. The survey and interviews predict that the ping and card work best for Three-wheeler riders (the auto rider) and cab commuters, and the ping least for Two-wheeler riders. They predict the pickup shift fits Two-wheeler riders only where savings clear the floor, and fits cab leisure groups, who already walk 5 to 10 minutes. Reserve should matter most to cab riders, all of whom book ahead. A result against these predictions is evidence about the persona as well as the feature; the cab predictions rest on 6 riders, so weigh them with that in mind.
 
 ### Kill criteria (placeholders)
 
@@ -353,13 +378,14 @@ Design reasoning from owner review, with the open risks beside it. These are rea
 | Area | Risk or reasoning | Status |
 | --- | --- | --- |
 | Simulated data | Zone, availability and per-ride-type behaviour are our assumptions; the engine is per ride type but the data is not real | Open until real quotes are logged |
+| Persona evidence | Personas rest on a 19-response convenience survey and 5 verbal cab-rider interviews, Hyderabad-heavy. The cab persona's pain answers came from one combined question all five answered yes, and three cab questions went unanswered. Enough to design for, not to size segments | Open; Bengaluru interviews and cab follow-up planned |
 | Ping value | With trigger and ceiling both 1.25x, the earlier start can be cheaper by only a few hundredths, so "to avoid the surge" can overstate the benefit, most for two-wheelers and some autos (so it reaches the auto rider persona, the ping's best fit) | Accepted by owner; no minimum gap |
 | Ping on bad days | When surge is already high 30 minutes earlier (cabs in rain or with an event), nothing is sent, which is a gap in value on the worst days | Accepted for v1 |
 | Ping rupee floor | Deliberately none: the rider's actual ride is unknown, so a saving cannot be stated honestly in advance | Decided |
 | Walk is optional | The feature does not screen for night, rain, luggage or mobility; a rider who does not want to walk ignores the card | Decided |
 | Gaming | Booking the cheap point and asking the driver to come to the original spot is judged unlikely given a walk of at least 5 minutes (about 400 m). Not tested | Monitor cancellations and driver wait on Book here trips |
 | Marketplace effect | The feature moves demand, it does not remove it. If many riders take one suggestion, surge rises there and the suggestion stops being shown, so it limits itself. This is an argument, not a result | Measure with the hotspot-window metric |
-| Late arrival | The driver usually arrives before the rider; the 5 minute free wait can run out and wait charges apply | Decided; track seconds over the free wait |
+| Late arrival | The driver usually arrives before the rider; the 5 minute free wait can run out and wait charges apply. Cab riders walk longer (about 10 minutes for 2 of 5 interviewed), so this bites hardest for them | Decided; track seconds over the free wait |
 | Drivers | No cancellation or earnings model; the eligibility rule takes rides from drivers inside the hotspot and is untested without real driver data | Open |
 | Real-time inputs | Rain, events, congestion and construction are bench toggles; production needs live feeds 45 minutes ahead | Open |
 | Base fare | The build assumes the same base fare at every pickup point; moving the pickup changes distance and time a little | Open |
@@ -385,7 +411,7 @@ This is a portfolio prototype with no production launch. If built for real, this
 
 **Before any launch**
 
-- [ ] Interviews, walkthrough and survey done; personas and the walk window revisited
+- [ ] Bengaluru interviews, walkthrough and cab follow-up done (survey and 5 cab-rider interviews already done); personas and the walk window revisited by ride type
 - [ ] Real fare quotes logged: fixed routes, several weeks, same-time quotes at points 300 to 700 m apart
 - [ ] Control-week baselines collected; X, Y, Z and W set
 - [ ] Reserve future-time pricing checked in the app
@@ -395,15 +421,15 @@ This is a portfolio prototype with no production launch. If built for real, this
 
 This is a retention feature, not an acquisition feature. Regular riders settle on one home app and already know other apps cost about the same; a high surge is when they open a competitor anyway. The feature keeps them in the app at that moment with something to do: start earlier, switch ride type, or walk to a cheaper point.
 
-**Evidence.** The survey (19 responses, convenience sample, mostly Hyderabad two-wheeler and auto riders) supports the thesis; its numbers and the retention metric that tests it are under Metrics, guardrails and experiment.
+**Evidence.** The survey (19 responses, convenience sample, mostly Hyderabad two-wheeler and auto riders) supports the thesis. Five verbal interviews with cab riders shape who goes first among cab riders, but did not ask about switching apps; its numbers and the retention metric that tests it are under Metrics, guardrails and experiment.
 
 | Order | Who | Why first | Surfaces |
 | --- | --- | --- | --- |
-| 1 | Regular commuters on a repeat route. Personas: auto rider (best fit), office cab commuter (6 riders, small sample) | Highest frequency; setup data for ping and home card. 13 of 19 take 4 to 10 trips a month; 8 of 19 ride a regular route most or all of the time | Commute ping, home card |
-| 2 | Occasional riders | No setup needed | Ride-options banner, per-ride-type chips |
-| 3 | Pickup shift, as its own test | Least validated lever; only zones with known choke points (metro exits, malls, stations); fits the two-wheeler price hunter where the saving clears Rs 15 | Pickup suggestion |
+| 1 | Regular commuters on a repeat route. Personas: auto rider and cab commuters (best fit) | Highest frequency; setup data for ping and home card. 13 of 19 take 4 to 10 trips a month; 8 of 19 ride a regular route most or all of the time; the 3 cab commuters interviewed take 20 to 45 trips a month | Commute ping, home card |
+| 2 | Occasional riders, including cab leisure groups | No setup needed. Cab groups book ahead (mostly airport), so Reserve joins once its pricing is checked | Ride-options banner, per-ride-type chips |
+| 3 | Pickup shift, as its own test | Least validated lever; only zones with known choke points (metro exits, malls, stations); fits the two-wheeler price hunter where the saving clears Rs 15, and cab leisure groups, who walked 5 to 10 minutes | Pickup suggestion |
 
-- **Where first:** Hyderabad and Bengaluru, starting with two-wheelers and autos, the ride types respondents book most (the price hunter and auto rider personas).
+- **Where first:** Hyderabad and Bengaluru, starting with two-wheelers and autos, the ride types respondents book most (the price hunter and auto rider personas). Cab commuters (Standard and Sedan) join the first wave for the ping and home card, where they fit best.
 - **Message:** "Know before you go": an honest forecast for your usual ride type, and silence when the app is not sure.
 - **How riders discover it:** the ping and home card need commute setup, so setup needs an entry point: a prompt after a rider's second or third surged session ("Want a heads-up before this happens again?") and the bell on the home screen.
 - **Not in the GTM:** paid acquisition, and comparing prices across apps.
@@ -412,7 +438,7 @@ This is a retention feature, not an acquisition feature. Regular riders settle o
 | --- | --- |
 | Launch timing | Before a predictable surge season such as the monsoon or the festive season; the survey's own stories are festival and peak-hour surges |
 | Driver communication | Explain the pickup shift and the eligibility rule to drivers before launch, or they will read it as the app sending riders away. Trust is already fragile: 10 of 19 respondents had a driver ask for more money than the app showed |
-| Support readiness | Expect tickets on wait charges after a walk, "the price changed" and Reserve quotes. 9 of 19 respondents were charged for waiting last month. Likely cause: riders start moving only once the driver is close (see How riders actually time the walk: 5 of 5 friends asked in person; no study measures it). Small and informal: size it with one survey question |
+| Support readiness | Expect tickets on wait charges after a walk, "the price changed" and Reserve quotes. 9 of 19 respondents were charged for waiting last month, and all 5 cab interviewees reported a wait charge (one combined question). Likely cause: riders start moving only once the driver is close (see How riders actually time the walk: 5 of 5 friends asked in person; no study measures it). Small and informal: size it with one survey question |
 | Competitor response | Rapido and Ola can copy a forecast card quickly. Harder to copy is the forecast quality: a separate history per ride type, and silence when the app is not sure. So the message is "trust the forecast", not just "we show surge" |
 
 ## Decision log and open questions
@@ -421,6 +447,7 @@ This is a retention feature, not an acquisition feature. Regular riders settle o
 
 | Date | Decision |
 | --- | --- |
+| 2026-11-22 | The cab rider becomes a full persona beside the two-wheeler price hunter and the auto rider (owner): 6 cab riders, 5 verbal interviews plus 1 survey response, no longer a hypothesis. It splits into commuters (3 of 5) and leisure groups (2 of 5). No decided value changes; the walk window by ride type, the Rs 100 Six-seater floor's reasoning and the timing of the Reserve pricing check are logged as open questions |
 | 2026-11-22 | The Six-seater floor rises from Rs 70 to Rs 100, because a group of up to six splits the saving and is less willing to walk together; the simulated six-seater count is unchanged at 7 |
 | 2026-11-22 | The walk window becomes 5 to 10 minutes (about 400 to 750 m), replacing 7 to 10. A minimum stays (owner): a cheaper point only about 200 m away would move many riders a short distance, shifting the bottleneck rather than spreading demand, and a large drop that close would cut driver earnings. Evidence: 13 of 16 real walks in the survey were under 5 minutes, and a PM review recommended a 5 minute cap with no minimum; lowering the minimum to 5 moves toward that. How conversion falls between 5 and 10 minutes is to be tested by zone |
 | 2026-11-22 | Forecast horizon: a 60 minute chart, extended to the back-to-normal time up to 90 minutes |
@@ -448,5 +475,9 @@ This is a retention feature, not an acquisition feature. Regular riders settle o
 - [ ] Do real riders accept paying wait charges when they walk slowly?
 - [ ] How much does pile-on at the suggested point erode the saving? The bench uses hand-set factors (35% and 70% of the gap); real data is needed.
 - [ ] Kill-criteria numbers X, Y, Z and W need control-week data.
-- [ ] Does the cab persona hold? It rests on 6 cab riders (1 survey, 5 follow-up answers). Plan: collect the unanswered items (what they did at the last high price, how much cheaper a walk made the ride, whether an advance booking's price matched) and reword the combined waiting and cancellation question, which all five answered the same way.
-- [ ] Do the priorities fit the personas? The largest survey group, the two-wheeler price hunter (11 of 19), fits the P1 pickup shift and fits the P0 commute ping least; the ping's best fit, the auto rider, is 7 of 19.
+- [ ] Cab follow-up gaps: what did the 5 interviewees do at the last high price, how much cheaper did a walk make the ride, and did an advance booking's final price match the quote? Also split the combined waiting, wait-charge and driver question into three, since all five answered it the same way.
+- [ ] Do the priorities fit the personas? The largest survey group, the two-wheeler price hunter (11 of 19), fits the P1 pickup shift and fits the P0 commute ping least; the ping's best fits are the auto rider (7 of 19) and cab commuters (3 of the 5 cab riders interviewed).
+- [ ] Should the walk window be read, and later set, by ride type? Recommendation, not a change: 3 of 5 cab interviewees walked 5 to 10 minutes, while 7 of 9 two-wheeler walkers went under 5. Read Book-here conversion by ride type across the window before revisiting the decided 5 to 10 minutes.
+- [ ] Does the Rs 100 Six-seater floor still rest on the right reason? It was raised partly because groups are less willing to walk together, yet groups of 4 and 5 walked 5 to 10 minutes. No saving was given, so the value is untested, not broken.
+- [ ] Should the Reserve pricing check move earlier? Recommendation: all 5 cab interviewees book ahead, mostly to the airport, while Reserve is P1, stubbed and not counted as a capture action until checked. Whether their quotes matched the final price was not asked.
+- [ ] Is ride options plus Reserve enough for cab leisure groups? The home card is commute-only, so they first see a forecast on ride options, often for airport and party trips.
