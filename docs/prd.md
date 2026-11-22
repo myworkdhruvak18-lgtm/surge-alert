@@ -133,6 +133,18 @@ The ping and home card reach only riders who set up a commute; ride options reac
 
 ## Goals and non-goals
 
+### Three outcomes
+
+The feature is built to deliver three outcomes at one moment: a rider deciding what to do at a surge price. Each has a measure. Only the first has evidence so far; the second and third are design intent, to be tested in a zone experiment.
+
+| Outcome | How the feature gets there | Measured by | Evidence today |
+| --- | --- | --- | --- |
+| **1. Riders save money** | Price context, the right ride type, starting earlier, and a cheaper pickup shown against the rider's own price | Rupees saved against the rider's own point; capture-action share | Survey: 10 of 19 had walked to pay less (half saved under Rs 20); simulated savings |
+| **2. Drivers make more trips** | Riders who move to a calmer spot are matched faster, so idle drivers near it get trips instead of waiting; drivers in the hotspot keep surge-priced rides | Driver trips per online hour and idle time near the suggested points, test zones against control zones; earnings per hour for hotspot drivers must not fall | Design intent; no driver data; simulated drivers |
+| **3. Pickup congestion eases** | Demand spreads across several nearby points instead of one hotspot, without moving the bottleneck to the next corner | Pickup wait (request to driver arrival) and surge variance in the hotspot; share of alternate bookings going to the single busiest point | Design intent; hand-set zone factors; no real data |
+
+### Detailed goals
+
 **Goals**
 
 | Goal | Measured by |
@@ -318,6 +330,16 @@ Six-seaters almost never get a suggestion: their history is thin and the hand-se
 No platform baselines exist yet. Kill criteria will be set relative to a control (comparable zones with the feature off), with the allowed gap set from the control's own variation. Every metric is reported per ride type, which also gives a read per persona: Two-wheeler for the price hunter, Three-wheeler for the auto rider, Standard and Sedan for the cab rider. Split cab results by commute setup: riders with a commute set up read as cab commuters, the rest (Six-seater included) as leisure groups.
 
 **North star.** A surged session ends in a completed trip, not an abandoned or cancelled one, within the same session. A fixed time limit was rejected because it would penalise long trips.
+
+### Outcome metrics (the three goals)
+
+These measure the three outcomes in Goals. They run in the same zone-randomised experiment as the surface metrics below, and every one is read against control zones.
+
+| Goal | Primary metric | Also watch | How to read it |
+| --- | --- | --- | --- |
+| Riders save money | Rupees saved per Book-here trip, against the rider's own point | Final fare against the quote (a guardrail below); capture-action share | Per ride type. A saving that the final fare wipes out does not count |
+| Drivers make more trips | Driver trips per online hour, and the idle share of online time, for drivers near the suggested points | Time to book; acceptance and escalation rate; earnings per hour for drivers inside the hotspot, which must not fall by more than Z% | A win is trips per hour rising near the suggested points while hotspot drivers do not lose |
+| Pickup congestion eases | Pickup wait (request to driver arrival) in the hotspot and at the suggested points; surge variance inside the hotspot over the first-to-last window | Herding: the share of alternate bookings that go to the single busiest suggested point per hotspot; surge at the suggested points | "Spread, not shift": hotspot wait and surge fall, and no single suggested point becomes the new hotspot |
 
 ### Primary metrics by surface
 
